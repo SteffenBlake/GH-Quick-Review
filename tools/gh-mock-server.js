@@ -23,9 +23,10 @@ class GitHubMockServer {
     // Initialize in-memory state from loaded data
     this.pulls = new Map(data.pulls.map(pr => [pr.number, { ...pr }]));
     this.comments = new Map(data.comments.map(comment => [comment.id, { ...comment }]));
+    this.files = new Map((data.files || []).map(fileGroup => [fileGroup.pull_number, fileGroup.files]));
     this.nextCommentId = Math.max(...data.comments.map(c => c.id), 0) + 1;
     
-    console.log(`Loaded ${this.pulls.size} pull requests and ${this.comments.size} comments`);
+    console.log(`Loaded ${this.pulls.size} pull requests, ${this.comments.size} comments, and ${this.files.size} file groups`);
   }
 
   /**
@@ -120,6 +121,12 @@ class GitHubMockServer {
         handler: this.getPull.bind(this)
       },
       {
+        // List PR files: GET /repos/{owner}/{repo}/pulls/{pull_number}/files
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/files$/,
+        method: 'GET',
+        handler: this.listPullFiles.bind(this)
+      },
+      {
         // List review comments: GET /repos/{owner}/{repo}/pulls/{pull_number}/comments
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments$/,
         method: 'GET',
@@ -182,6 +189,25 @@ class GitHubMockServer {
     }
     
     this.sendResponse(res, 200, pull);
+  }
+
+  listPullFiles(req, res, match) {
+    if (this.checkConfiguredError('listPullFiles', res)) return;
+    
+    const [, owner, repo, pullNumber] = match;
+    const pull = this.pulls.get(parseInt(pullNumber));
+    
+    if (!pull) {
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/pulls#list-pull-requests-files'
+      });
+    }
+    
+    // Get files for this PR
+    const files = this.files.get(parseInt(pullNumber)) || [];
+    
+    this.sendResponse(res, 200, files);
   }
 
   listComments(req, res, match) {
@@ -351,6 +377,7 @@ function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 300
     console.log(`\nAvailable endpoints:`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
+    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
     console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
     console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
