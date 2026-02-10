@@ -293,5 +293,6 @@
       "start_side": "RIGHT",
       "in_reply_to_id": null
     }
-  ]
+  ],
+  "project_dir": "test_project"
 }

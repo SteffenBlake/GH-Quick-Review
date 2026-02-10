@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import http from 'http';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
+import { dirname, resolve, join, relative } from 'path';
+import { execSync } from 'child_process';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,7 +27,13 @@ class GitHubMockServer {
     this.comments = new Map(data.comments.map(comment => [comment.id, { ...comment }]));
     this.nextCommentId = Math.max(...data.comments.map(c => c.id), 0) + 1;
     
+    // Store project directory path for dynamic diff generation
+    this.projectDir = data.project_dir ? resolve(dirname(absolutePath), data.project_dir) : null;
+    
     console.log(`Loaded ${this.pulls.size} pull requests and ${this.comments.size} comments`);
+    if (this.projectDir) {
+      console.log(`Project directory: ${this.projectDir}`);
+    }
   }
 
   /**
@@ -96,6 +104,160 @@ class GitHubMockServer {
     return false;
   }
 
+  /**
+   * Generate file diff data dynamically using git diff
+   * @returns {Array} Array of file objects compatible with GitHub API
+   */
+  generateFileDiffs() {
+    if (!this.projectDir) {
+      return [];
+    }
+
+    const beforeDir = join(this.projectDir, 'before');
+    const afterDir = join(this.projectDir, 'after');
+
+    if (!existsSync(beforeDir) || !existsSync(afterDir)) {
+      console.warn('Before or after directory not found');
+      return [];
+    }
+
+    try {
+      // Use git diff --no-index to compare directories
+      const diffCommand = `git diff --no-index --numstat --no-color "${beforeDir}" "${afterDir}" || true`;
+      const numstatOutput = execSync(diffCommand, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+      
+      // Get the full diff with patch
+      const patchCommand = `git diff --no-index --no-color "${beforeDir}" "${afterDir}" || true`;
+      const patchOutput = execSync(patchCommand, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+
+      return this.parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir);
+    } catch (error) {
+      console.error('Error generating diffs:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Parse git diff output into GitHub API format
+   */
+  parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir) {
+    const files = [];
+    const lines = numstatOutput.split('\n').filter(line => line.trim());
+
+    for (const line of lines) {
+      const parts = line.split('\t');
+      if (parts.length < 3) continue;
+
+      const additions = parseInt(parts[0]) || 0;
+      const deletions = parseInt(parts[1]) || 0;
+      let filename = parts[2];
+
+      // Extract filename from git paths
+      if (filename.includes(' => ')) {
+        // Handle renames
+        const match = filename.match(/([^\/]+)\/(.+) => ([^\/]+)\/(.+)/);
+        if (match) {
+          filename = match[4];
+        }
+      } else {
+        // Normal file - extract relative path from after directory
+        filename = filename.replace(/^[ab]\//, '').replace(beforeDir + '/', '').replace(afterDir + '/', '');
+      }
+
+      // Determine status
+      let status = 'modified';
+      const afterPath = join(afterDir, filename);
+      const beforePath = join(beforeDir, filename);
+      
+      if (!existsSync(beforePath) && existsSync(afterPath)) {
+        status = 'added';
+      } else if (existsSync(beforePath) && !existsSync(afterPath)) {
+        status = 'removed';
+      }
+
+      // Extract patch for this file
+      const patch = this.extractFilePatch(patchOutput, filename);
+
+      // Calculate SHA (simplified - using file content hash)
+      const sha = this.calculateFileSha(afterPath);
+
+      const fileObj = {
+        sha: sha,
+        filename: filename,
+        status: status,
+        additions: additions,
+        deletions: deletions,
+        changes: additions + deletions,
+        blob_url: `https://github.com/testorg/test-repo/blob/abc123/${this.urlEncodePath(filename)}`,
+        raw_url: `https://github.com/testorg/test-repo/raw/abc123/${this.urlEncodePath(filename)}`,
+        contents_url: `https://api.github.com/repos/testorg/test-repo/contents/${this.urlEncodePath(filename)}?ref=abc123`,
+        patch: patch
+      };
+
+      files.push(fileObj);
+    }
+
+    return files;
+  }
+
+  /**
+   * Extract patch content for a specific file from full diff output
+   */
+  extractFilePatch(patchOutput, filename) {
+    const lines = patchOutput.split('\n');
+    let inFile = false;
+    let patchLines = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Check if this is the start of our file's diff
+      if (line.startsWith('diff --git') && line.includes(filename)) {
+        inFile = true;
+        continue;
+      }
+      
+      // Check if we've moved to a different file
+      if (inFile && line.startsWith('diff --git') && !line.includes(filename)) {
+        break;
+      }
+      
+      // Collect patch lines (skip the diff header lines)
+      if (inFile) {
+        if (line.startsWith('@@')) {
+          patchLines.push(line);
+        } else if (patchLines.length > 0 || line.startsWith('@@')) {
+          patchLines.push(line);
+        }
+      }
+    }
+    
+    return patchLines.join('\n');
+  }
+
+  /**
+   * Calculate SHA for a file (simplified version)
+   */
+  calculateFileSha(filePath) {
+    if (!existsSync(filePath)) {
+      return '0000000000000000000000000000000000000000';
+    }
+    
+    try {
+      const content = readFileSync(filePath);
+      return crypto.createHash('sha1').update(content).digest('hex');
+    } catch (error) {
+      return '0000000000000000000000000000000000000000';
+    }
+  }
+
+  /**
+   * URL encode file path (convert / to %2F, etc.)
+   */
+  urlEncodePath(path) {
+    return path.split('/').map(part => encodeURIComponent(part)).join('%2F');
+  }
+
   handleRequest(req, res) {
     const { method, url } = req;
     
@@ -118,6 +280,18 @@ class GitHubMockServer {
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)$/,
         method: 'GET',
         handler: this.getPull.bind(this)
+      },
+      {
+        // List PR files: GET /repos/{owner}/{repo}/pulls/{pull_number}/files
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/files$/,
+        method: 'GET',
+        handler: this.listPullFiles.bind(this)
+      },
+      {
+        // Get file contents: GET /repos/{owner}/{repo}/contents/{path}
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/contents\/(.+)$/,
+        method: 'GET',
+        handler: this.getContents.bind(this)
       },
       {
         // List review comments: GET /repos/{owner}/{repo}/pulls/{pull_number}/comments
@@ -182,6 +356,98 @@ class GitHubMockServer {
     }
     
     this.sendResponse(res, 200, pull);
+  }
+
+  listPullFiles(req, res, match) {
+    if (this.checkConfiguredError('listPullFiles', res)) return;
+    
+    const [, owner, repo, pullNumber] = match;
+    const pull = this.pulls.get(parseInt(pullNumber));
+    
+    if (!pull) {
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/pulls#list-pull-requests-files'
+      });
+    }
+    
+    // Generate files dynamically from project directory
+    const files = this.generateFileDiffs();
+    
+    this.sendResponse(res, 200, files);
+  }
+
+  getContents(req, res, match) {
+    if (this.checkConfiguredError('getContents', res)) return;
+    
+    const [, owner, repo, pathParam] = match;
+    
+    if (!this.projectDir) {
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/repos/contents#get-repository-content'
+      });
+    }
+
+    // Decode the path parameter (URL encoded)
+    const decodedPath = decodeURIComponent(pathParam).replace(/%2F/g, '/');
+    const filePath = join(this.projectDir, 'after', decodedPath);
+
+    if (!existsSync(filePath)) {
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/repos/contents#get-repository-content'
+      });
+    }
+
+    try {
+      const stats = statSync(filePath);
+      
+      if (stats.isDirectory()) {
+        // Return directory listing (simplified)
+        return this.sendResponse(res, 200, {
+          message: 'Directory listing not implemented',
+          type: 'dir'
+        });
+      }
+
+      // Read file content
+      const content = readFileSync(filePath);
+      
+      // Base64 encode with line breaks every 60 characters (matching GitHub's format)
+      const base64Content = content.toString('base64').match(/.{1,60}/g).join('\n');
+      const sha = this.calculateFileSha(filePath);
+      
+      // Use a consistent ref SHA for URLs
+      const refSha = 'abc123def456789012345678901234567890abcd';
+
+      const response = {
+        name: decodedPath.split('/').pop(),
+        path: decodedPath,
+        sha: sha,
+        size: stats.size,
+        url: `https://api.github.com/repos/${owner}/${repo}/contents/${this.urlEncodePath(decodedPath)}?ref=${refSha}`,
+        html_url: `https://github.com/${owner}/${repo}/blob/${refSha}/${this.urlEncodePath(decodedPath)}`,
+        git_url: `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}`,
+        download_url: `https://raw.githubusercontent.com/${owner}/${repo}/${refSha}/${this.urlEncodePath(decodedPath)}`,
+        type: 'file',
+        content: base64Content,
+        encoding: 'base64',
+        _links: {
+          self: `https://api.github.com/repos/${owner}/${repo}/contents/${this.urlEncodePath(decodedPath)}?ref=${refSha}`,
+          git: `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}`,
+          html: `https://github.com/${owner}/${repo}/blob/${refSha}/${this.urlEncodePath(decodedPath)}`
+        }
+      };
+
+      this.sendResponse(res, 200, response);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      this.sendResponse(res, 500, {
+        message: 'Internal Server Error',
+        documentation_url: 'https://docs.github.com/rest'
+      });
+    }
   }
 
   listComments(req, res, match) {
@@ -351,6 +617,8 @@ function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 300
     console.log(`\nAvailable endpoints:`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
+    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
+    console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
     console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
     console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
