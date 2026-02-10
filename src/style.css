@@ -223,8 +223,3 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
-
-.icon {
-  display: inline-block;
-  line-height: 1;
-}

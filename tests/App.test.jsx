@@ -32,8 +32,8 @@ describe('App', () => {
     });
 
     it('renders the app title with GitHub icon', () => {
-      const { getByText } = render(<App />);
-      expect(getByText('GH Quick Review')).toBeTruthy();
+      const { getByRole } = render(<App />);
+      expect(getByRole('heading', { level: 1, name: /GH Quick Review/i })).toBeTruthy();
     });
 
     it('renders the font picker', () => {

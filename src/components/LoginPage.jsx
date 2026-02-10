@@ -16,7 +16,7 @@ export function LoginPage({ onLogin }) {
     <div className="login-container">
       <div className="login-box">
         <h2>
-          <span className="icon">{'\udb80\udf06'}</span> Login Required
+          {'\udb80\udf06'} Login Required
         </h2>
         <p>Please enter your GitHub Personal Access Token to continue.</p>
         <form onSubmit={handleSubmit}>
@@ -29,7 +29,7 @@ export function LoginPage({ onLogin }) {
             autoFocus
           />
           <button type="submit" className="login-button">
-            Login
+            {'\udb80\udf42'} Login
           </button>
         </form>
         <div className="login-links">
@@ -39,7 +39,7 @@ export function LoginPage({ onLogin }) {
             rel="noopener noreferrer"
             className="login-link"
           >
-            <span className="icon">{'\udb80\udf06'}</span> Guide: How to generate a PAT token
+            {'\ueaa4'} Guide: How to generate a PAT token
           </a>
           <a
             href="https://github.com/SteffenBlake/GH-Quick-Review/blob/main/docs/Should-You-Trust-This-App.md"
@@ -47,7 +47,7 @@ export function LoginPage({ onLogin }) {
             rel="noopener noreferrer"
             className="login-link"
           >
-            <span className="icon">{'\uf071'}</span> Warning: Should you trust this app?
+            {'\uf071'} Warning: Should you trust this app?
           </a>
         </div>
       </div>

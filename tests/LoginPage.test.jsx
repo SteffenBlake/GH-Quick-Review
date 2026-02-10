@@ -26,10 +26,10 @@ describe('LoginPage', () => {
 
   it('calls setToken and onLogin when form is submitted with valid token', async () => {
     const onLogin = vi.fn();
-    const { getByPlaceholderText, getByText } = render(<LoginPage onLogin={onLogin} />);
+    const { getByPlaceholderText, getByRole } = render(<LoginPage onLogin={onLogin} />);
     
     const input = getByPlaceholderText('Enter your GitHub PAT');
-    const loginButton = getByText('Login');
+    const loginButton = getByRole('button', { name: /Login/i });
     
     await fireEvent.input(input, { target: { value: 'ghp_test123' } });
     await fireEvent.click(loginButton);
@@ -40,10 +40,10 @@ describe('LoginPage', () => {
 
   it('trims whitespace from token before saving', async () => {
     const onLogin = vi.fn();
-    const { getByPlaceholderText, getByText } = render(<LoginPage onLogin={onLogin} />);
+    const { getByPlaceholderText, getByRole } = render(<LoginPage onLogin={onLogin} />);
     
     const input = getByPlaceholderText('Enter your GitHub PAT');
-    const loginButton = getByText('Login');
+    const loginButton = getByRole('button', { name: /Login/i });
     
     await fireEvent.input(input, { target: { value: '  ghp_test123  ' } });
     await fireEvent.click(loginButton);
@@ -54,9 +54,9 @@ describe('LoginPage', () => {
 
   it('does not call setToken or onLogin when token is empty', async () => {
     const onLogin = vi.fn();
-    const { getByText } = render(<LoginPage onLogin={onLogin} />);
+    const { getByRole } = render(<LoginPage onLogin={onLogin} />);
     
-    const loginButton = getByText('Login');
+    const loginButton = getByRole('button', { name: /Login/i });
     await fireEvent.click(loginButton);
     
     expect(auth.setToken).not.toHaveBeenCalled();
