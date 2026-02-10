@@ -1,0 +1,29 @@
+{
+  "name": "gh-quick-review",
+  "version": "1.0.0",
+  "description": "GitHub Quick Review Tool",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SteffenBlake/GH-Quick-Review.git"
+  },
+  "keywords": [
+    "github",
+    "review",
+    "code-review"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SteffenBlake/GH-Quick-Review/issues"
+  },
+  "homepage": "https://github.com/SteffenBlake/GH-Quick-Review#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
