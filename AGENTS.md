@@ -86,6 +86,10 @@
 
 ## Project-Specific Guidelines
 
+### Nerd Font Icons
+
+This project uses Nerd Font-compatible fonts (FiraCode Nerd Font and JetBrains Mono Nerd Font) which support icon glyphs. For a reference of available icons and how to use them, see [`.github/agents/nerdfont-icons.md`](.github/agents/nerdfont-icons.md).
+
 ### GitHub API Response Formats
 
 #### GET /repos/{owner}/{repo}/pulls/{pull_number}/files

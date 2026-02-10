@@ -1,13 +1,36 @@
 import { useState } from 'preact/hooks';
+import { isAuthenticated, clearToken } from './utils/auth';
+import { LoginPage } from './components/LoginPage';
 
 export function App() {
   const [font, setFont] = useState('FiraCode');
+  const [authenticated, setAuthenticated] = useState(isAuthenticated());
+
+  const handleLogin = () => {
+    setAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    clearToken();
+    setAuthenticated(false);
+  };
+
+  if (!authenticated) {
+    return (
+      <div className="app" style={{ fontFamily: font }}>
+        <LoginPage onLogin={handleLogin} />
+      </div>
+    );
+  }
 
   return (
     <div className="app" style={{ fontFamily: font }}>
       <header className="header">
-        <h1>GH Quick Review</h1>
-        <div className="font-picker">
+        <h1>
+          <span className="icon"></span> GH Quick Review
+        </h1>
+        <div className="header-actions">
+          <div className="font-picker">
           <label htmlFor="font-select">Font: </label>
           <select
             id="font-select"
@@ -17,6 +40,10 @@ export function App() {
             <option value="FiraCode">Fira Code</option>
             <option value="JetBrainsMono">JetBrains Mono</option>
           </select>
+        </div>
+        <button onClick={handleLogout} className="logout-button" title="Logout">
+          <span className="icon">󰗽</span>
+        </button>
         </div>
       </header>
       <main className="content">
