@@ -22,11 +22,11 @@ export default function cspPlugin() {
         // Environment-specific connect-src directive
         let connectSrc;
         if (isDev) {
-          // Development: Allow Vite dev server WebSocket connections
-          connectSrc = "connect-src 'self' ws: wss:";
+          // Development: Allow connections to self and mock server
+          connectSrc = "connect-src 'self' http://localhost:3000";
         } else {
-          // Production: Only allow same-origin connections
-          connectSrc = "connect-src 'self'";
+          // Production: Allow connections to self and GitHub API
+          connectSrc = "connect-src 'self' https://api.github.com";
         }
         
         // Combine all directives

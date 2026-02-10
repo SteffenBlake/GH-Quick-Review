@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Content Security Policy', () => {
-  test('should have CSP meta tag in production build', async ({ page }) => {
+  test('should have CSP meta tag with dev environment settings', async ({ page }) => {
     await page.goto('/GH-Quick-Review/');
     
     // Get the CSP meta tag
@@ -19,7 +19,8 @@ test.describe('Content Security Policy', () => {
     expect(cspContent).toContain("style-src 'self' 'unsafe-inline'");
     expect(cspContent).toContain("font-src 'self'");
     expect(cspContent).toContain("img-src 'self' data:");
-    expect(cspContent).toContain("connect-src 'self'");
+    // In dev mode, should include mock server URL
+    expect(cspContent).toContain("connect-src 'self' http://localhost:3000");
   });
 
   test('should allow inline scripts and styles with CSP', async ({ page }) => {
