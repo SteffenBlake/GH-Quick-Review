@@ -1,0 +1,297 @@
+{
+  "pulls": [
+    {
+      "number": 1,
+      "id": 1,
+      "state": "open",
+      "title": "Add new feature for user authentication",
+      "body": "This PR implements JWT-based authentication for the API.\n\n## Changes\n- Added JWT middleware\n- Updated user model\n- Added authentication tests",
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T14:20:00Z",
+      "closed_at": null,
+      "merged_at": null,
+      "user": {
+        "login": "developer1",
+        "id": 101,
+        "type": "User",
+        "avatar_url": "https://avatars.githubusercontent.com/u/101?v=4"
+      },
+      "head": {
+        "ref": "feature/auth",
+        "sha": "abc123def456",
+        "repo": {
+          "name": "test-repo",
+          "owner": {
+            "login": "testorg"
+          }
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "def789ghi012",
+        "repo": {
+          "name": "test-repo",
+          "owner": {
+            "login": "testorg"
+          }
+        }
+      },
+      "draft": false,
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "comments": 3,
+      "review_comments": 2,
+      "commits": 5,
+      "additions": 156,
+      "deletions": 42,
+      "changed_files": 8
+    },
+    {
+      "number": 2,
+      "id": 2,
+      "state": "open",
+      "title": "Fix critical bug in payment processing",
+      "body": "Fixes #42\n\nThis PR resolves the race condition in the payment processor that was causing duplicate charges.",
+      "created_at": "2024-01-16T09:00:00Z",
+      "updated_at": "2024-01-16T15:45:00Z",
+      "closed_at": null,
+      "merged_at": null,
+      "user": {
+        "login": "developer2",
+        "id": 102,
+        "type": "User",
+        "avatar_url": "https://avatars.githubusercontent.com/u/102?v=4"
+      },
+      "head": {
+        "ref": "fix/payment-race-condition",
+        "sha": "xyz789abc123",
+        "repo": {
+          "name": "test-repo",
+          "owner": {
+            "login": "testorg"
+          }
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "def789ghi012",
+        "repo": {
+          "name": "test-repo",
+          "owner": {
+            "login": "testorg"
+          }
+        }
+      },
+      "draft": false,
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "unstable",
+      "comments": 5,
+      "review_comments": 4,
+      "commits": 3,
+      "additions": 45,
+      "deletions": 38,
+      "changed_files": 2
+    },
+    {
+      "number": 3,
+      "id": 3,
+      "state": "closed",
+      "title": "Update dependencies to latest versions",
+      "body": "Regular dependency update to keep packages current and secure.",
+      "created_at": "2024-01-10T08:00:00Z",
+      "updated_at": "2024-01-14T16:30:00Z",
+      "closed_at": "2024-01-14T16:30:00Z",
+      "merged_at": "2024-01-14T16:30:00Z",
+      "user": {
+        "login": "bot-updater",
+        "id": 103,
+        "type": "Bot",
+        "avatar_url": "https://avatars.githubusercontent.com/u/103?v=4"
+      },
+      "head": {
+        "ref": "deps/update-all",
+        "sha": "dep123upd456",
+        "repo": {
+          "name": "test-repo",
+          "owner": {
+            "login": "testorg"
+          }
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "old789ver012",
+        "repo": {
+          "name": "test-repo",
+          "owner": {
+            "login": "testorg"
+          }
+        }
+      },
+      "draft": false,
+      "merged": true,
+      "mergeable": null,
+      "mergeable_state": "clean",
+      "comments": 1,
+      "review_comments": 0,
+      "commits": 1,
+      "additions": 25,
+      "deletions": 25,
+      "changed_files": 1
+    }
+  ],
+  "comments": [
+    {
+      "id": 1001,
+      "pull_request_review_id": 1,
+      "diff_hunk": "@@ -10,7 +10,12 @@ export const authenticate = async (req, res, next) => {\n   const token = req.headers.authorization;\n-  if (!token) {\n-    return res.status(401).json({ error: 'No token provided' });\n+  if (!token || !token.startsWith('Bearer ')) {\n+    return res.status(401).json({ \n+      error: 'No token provided',\n+      message: 'Authorization header must include Bearer token'\n+    });",
+      "path": "src/middleware/auth.js",
+      "position": 5,
+      "original_position": 5,
+      "commit_id": "abc123def456",
+      "original_commit_id": "abc123def456",
+      "user": {
+        "login": "reviewer1",
+        "id": 201,
+        "type": "User"
+      },
+      "body": "Good improvement! Consider also validating the token format before attempting to verify it.",
+      "created_at": "2024-01-15T11:00:00Z",
+      "updated_at": "2024-01-15T11:00:00Z",
+      "html_url": "https://github.com/testorg/test-repo/pull/1#discussion_r1001",
+      "pull_request_url": "https://api.github.com/repos/testorg/test-repo/pulls/1",
+      "line": 15,
+      "side": "RIGHT",
+      "start_line": null,
+      "start_side": null,
+      "in_reply_to_id": null
+    },
+    {
+      "id": 1002,
+      "pull_request_review_id": 1,
+      "diff_hunk": "@@ -25,6 +30,8 @@ export const authenticate = async (req, res, next) => {\n   try {\n     const decoded = jwt.verify(token, process.env.JWT_SECRET);\n     req.user = decoded;\n+    req.authenticated = true;\n+    req.authTime = Date.now();",
+      "path": "src/middleware/auth.js",
+      "position": 8,
+      "original_position": 8,
+      "commit_id": "abc123def456",
+      "original_commit_id": "abc123def456",
+      "user": {
+        "login": "reviewer2",
+        "id": 202,
+        "type": "User"
+      },
+      "body": "Is `authTime` being used anywhere? If not, consider removing it to keep the middleware lean.",
+      "created_at": "2024-01-15T12:30:00Z",
+      "updated_at": "2024-01-15T12:30:00Z",
+      "html_url": "https://github.com/testorg/test-repo/pull/1#discussion_r1002",
+      "pull_request_url": "https://api.github.com/repos/testorg/test-repo/pulls/1",
+      "line": 32,
+      "side": "RIGHT",
+      "start_line": 31,
+      "start_side": "RIGHT",
+      "in_reply_to_id": null
+    },
+    {
+      "id": 2001,
+      "pull_request_review_id": 2,
+      "diff_hunk": "@@ -45,10 +45,15 @@ async function processPayment(userId, amount) {\n-  const payment = await Payment.create({\n-    userId,\n-    amount,\n-    status: 'pending'\n-  });\n+  const existingPayment = await Payment.findOne({\n+    where: { userId, amount, status: 'pending' }\n+  });\n+  \n+  if (existingPayment) {\n+    return existingPayment;\n+  }\n+  \n+  const payment = await Payment.create({ userId, amount, status: 'pending' });",
+      "path": "src/services/payment.js",
+      "position": 12,
+      "original_position": 12,
+      "commit_id": "xyz789abc123",
+      "original_commit_id": "xyz789abc123",
+      "user": {
+        "login": "reviewer1",
+        "id": 201,
+        "type": "User"
+      },
+      "body": "This looks good, but we should add a transaction here to ensure atomicity. What if two requests check at the same time?",
+      "created_at": "2024-01-16T10:15:00Z",
+      "updated_at": "2024-01-16T10:15:00Z",
+      "html_url": "https://github.com/testorg/test-repo/pull/2#discussion_r2001",
+      "pull_request_url": "https://api.github.com/repos/testorg/test-repo/pulls/2",
+      "line": 52,
+      "side": "RIGHT",
+      "start_line": 48,
+      "start_side": "RIGHT",
+      "in_reply_to_id": null
+    },
+    {
+      "id": 2002,
+      "pull_request_review_id": 2,
+      "diff_hunk": "@@ -60,6 +65,11 @@ async function processPayment(userId, amount) {\n   }\n   \n   payment.status = 'completed';\n+  payment.completedAt = new Date();\n+  payment.transactionId = generateTransactionId();",
+      "path": "src/services/payment.js",
+      "position": 15,
+      "original_position": 15,
+      "commit_id": "xyz789abc123",
+      "original_commit_id": "xyz789abc123",
+      "user": {
+        "login": "reviewer3",
+        "id": 203,
+        "type": "User"
+      },
+      "body": "Don't forget to save the payment after updating these fields!",
+      "created_at": "2024-01-16T11:00:00Z",
+      "updated_at": "2024-01-16T11:00:00Z",
+      "html_url": "https://github.com/testorg/test-repo/pull/2#discussion_r2002",
+      "pull_request_url": "https://api.github.com/repos/testorg/test-repo/pulls/2",
+      "line": 67,
+      "side": "RIGHT",
+      "start_line": null,
+      "start_side": null,
+      "in_reply_to_id": null
+    },
+    {
+      "id": 2003,
+      "pull_request_review_id": 2,
+      "diff_hunk": "@@ -70,5 +80,10 @@ async function processPayment(userId, amount) {\n   await payment.save();\n   \n-  return payment;\n+  // Send notification\n+  await notifyUser(userId, 'payment_completed', { amount, transactionId: payment.transactionId });\n+  \n+  return payment;",
+      "path": "src/services/payment.js",
+      "position": 18,
+      "original_position": 18,
+      "commit_id": "xyz789abc123",
+      "original_commit_id": "xyz789abc123",
+      "user": {
+        "login": "reviewer2",
+        "id": 202,
+        "type": "User"
+      },
+      "body": "Should we make the notification async/fire-and-forget so payment completion isn't blocked by notification failures?",
+      "created_at": "2024-01-16T13:20:00Z",
+      "updated_at": "2024-01-16T13:20:00Z",
+      "html_url": "https://github.com/testorg/test-repo/pull/2#discussion_r2003",
+      "pull_request_url": "https://api.github.com/repos/testorg/test-repo/pulls/2",
+      "line": 84,
+      "side": "RIGHT",
+      "start_line": null,
+      "start_side": null,
+      "in_reply_to_id": null
+    },
+    {
+      "id": 2004,
+      "pull_request_review_id": 2,
+      "diff_hunk": "@@ -1,6 +1,8 @@ import { Payment } from '../models/Payment.js';\n+import { notifyUser } from './notification.js';\n+import { generateTransactionId } from '../utils/transaction.js';",
+      "path": "src/services/payment.js",
+      "position": 2,
+      "original_position": 2,
+      "commit_id": "xyz789abc123",
+      "original_commit_id": "xyz789abc123",
+      "user": {
+        "login": "reviewer1",
+        "id": 201,
+        "type": "User"
+      },
+      "body": "LGTM - imports look good",
+      "created_at": "2024-01-16T14:00:00Z",
+      "updated_at": "2024-01-16T14:00:00Z",
+      "html_url": "https://github.com/testorg/test-repo/pull/2#discussion_r2004",
+      "pull_request_url": "https://api.github.com/repos/testorg/test-repo/pulls/2",
+      "line": 3,
+      "side": "RIGHT",
+      "start_line": 1,
+      "start_side": "RIGHT",
+      "in_reply_to_id": null
+    }
+  ]
+}
