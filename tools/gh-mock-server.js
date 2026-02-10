@@ -48,19 +48,46 @@ class GitHubMockServer {
       return true;
     }
     
-    // Handle specific error codes
+    // Handle specific error codes - use GitHub's exact error format
     if (typeof errorConfig === 'number') {
       const errorMessages = {
-        400: { message: 'Bad Request' },
-        401: { message: 'Requires authentication' },
-        403: { message: 'Forbidden' },
-        404: { message: 'Not Found' },
-        422: { message: 'Validation failed', errors: [] },
-        500: { message: 'Internal Server Error' },
-        503: { message: 'Service unavailable' }
+        400: {
+          message: 'Bad Request',
+          documentation_url: 'https://docs.github.com/rest'
+        },
+        401: {
+          message: 'Requires authentication',
+          documentation_url: 'https://docs.github.com/rest'
+        },
+        403: {
+          message: 'Forbidden',
+          documentation_url: 'https://docs.github.com/rest'
+        },
+        404: {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest'
+        },
+        422: {
+          message: 'Validation Failed',
+          documentation_url: 'https://docs.github.com/rest',
+          errors: []
+        },
+        500: {
+          message: 'Internal Server Error',
+          documentation_url: 'https://docs.github.com/rest'
+        },
+        503: {
+          code: 'service_unavailable',
+          message: 'Service unavailable',
+          documentation_url: 'https://docs.github.com/rest'
+        }
       };
       
-      const errorData = errorMessages[errorConfig] || { message: 'Error' };
+      const errorData = errorMessages[errorConfig] || {
+        message: 'Error',
+        documentation_url: 'https://docs.github.com/rest'
+      };
+      
       console.log(`  → Configured to return ${errorConfig}`);
       this.sendResponse(res, errorConfig, errorData);
       return true;
@@ -127,7 +154,10 @@ class GitHubMockServer {
     }
     
     // No route matched
-    this.sendResponse(res, 404, { message: 'Not Found' });
+    this.sendResponse(res, 404, {
+      message: 'Not Found',
+      documentation_url: 'https://docs.github.com/rest'
+    });
   }
 
   listPulls(req, res, match) {
@@ -145,7 +175,10 @@ class GitHubMockServer {
     const pull = this.pulls.get(parseInt(pullNumber));
     
     if (!pull) {
-      return this.sendResponse(res, 404, { message: 'Not Found' });
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/pulls#get-a-pull-request'
+      });
     }
     
     this.sendResponse(res, 200, pull);
@@ -158,7 +191,10 @@ class GitHubMockServer {
     const pull = this.pulls.get(parseInt(pullNumber));
     
     if (!pull) {
-      return this.sendResponse(res, 404, { message: 'Pull request not found' });
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/comments#list-review-comments-on-a-pull-request'
+      });
     }
     
     // Get all comments for this PR
@@ -177,7 +213,10 @@ class GitHubMockServer {
       const pull = this.pulls.get(parseInt(pullNumber));
       
       if (!pull) {
-        return this.sendResponse(res, 404, { message: 'Pull request not found' });
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/comments#create-a-review-comment-for-a-pull-request'
+        });
       }
       
       const newComment = {
@@ -220,7 +259,10 @@ class GitHubMockServer {
       const comment = this.comments.get(parseInt(commentId));
       
       if (!comment) {
-        return this.sendResponse(res, 404, { message: 'Not Found' });
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/comments#update-a-review-comment-for-a-pull-request'
+        });
       }
       
       // Update comment
@@ -240,7 +282,10 @@ class GitHubMockServer {
     const comment = this.comments.get(parseInt(commentId));
     
     if (!comment) {
-      return this.sendResponse(res, 404, { message: 'Not Found' });
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/comments#delete-a-review-comment-for-a-pull-request'
+      });
     }
     
     this.comments.delete(parseInt(commentId));
