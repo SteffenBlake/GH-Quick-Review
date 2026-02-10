@@ -115,7 +115,7 @@ class GitHubMockServer {
     
     // Get all comments for this PR
     const comments = Array.from(this.comments.values())
-      .filter(comment => comment.pull_request_review_id === parseInt(pullNumber));
+      .filter(comment => comment.pull_number === parseInt(pullNumber));
     
     this.sendResponse(res, 200, comments);
   }
@@ -132,7 +132,7 @@ class GitHubMockServer {
       
       const newComment = {
         id: this.nextCommentId++,
-        pull_request_review_id: parseInt(pullNumber),
+        pull_number: parseInt(pullNumber),
         diff_hunk: body.diff_hunk || '',
         path: body.path || '',
         position: body.position || null,
@@ -261,7 +261,7 @@ function startServer() {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   startServer();
 }
 
