@@ -19,8 +19,8 @@ test.describe('Content Security Policy', () => {
     expect(cspContent).toContain("style-src 'self' 'unsafe-inline'");
     expect(cspContent).toContain("font-src 'self'");
     expect(cspContent).toContain("img-src 'self' data:");
-    // In dev mode, should include mock server URL
-    expect(cspContent).toContain("connect-src 'self' http://localhost:3000");
+    // In dev mode, should include mock server URL and WebSocket for HMR
+    expect(cspContent).toContain("connect-src 'self' http://localhost:3000 ws://localhost:*");
   });
 
   test('should allow inline scripts and styles with CSP', async ({ page }) => {

@@ -30,7 +30,7 @@ describe('CSP Plugin', () => {
       expect(result).toContain("style-src 'self' 'unsafe-inline'");
       expect(result).toContain("font-src 'self'");
       expect(result).toContain("img-src 'self' data:");
-      expect(result).toContain("connect-src 'self' http://localhost:3000");
+      expect(result).toContain("connect-src 'self' http://localhost:3000 ws://localhost:*");
     });
 
     it('injects CSP meta tag in production mode', () => {
@@ -68,8 +68,10 @@ describe('CSP Plugin', () => {
 
       expect(devResult).not.toBe(prodResult);
       expect(devResult).toContain('http://localhost:3000');
+      expect(devResult).toContain('ws://localhost:*');
       expect(prodResult).toContain('https://api.github.com');
       expect(prodResult).not.toContain('localhost:3000');
+      expect(prodResult).not.toContain('ws://');
       expect(devResult).not.toContain('api.github.com');
     });
   });
