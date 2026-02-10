@@ -626,14 +626,18 @@ function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 300
     console.log(`\nPress Ctrl+C to stop\n`);
   });
   
-  return server;
+  const close = (callback) => {
+    server.close(callback);
+  };
+  
+  return { server, close };
 }
 
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
   const dataFile = args[0] || resolve(__dirname, 'test-data.json');
   const port = parseInt(args[1]) || 3000;
-  startServer(dataFile, port);
+  const { server } = startServer(dataFile, port);
 }
 
 export { GitHubMockServer, startServer };

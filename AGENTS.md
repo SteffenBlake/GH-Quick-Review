@@ -86,6 +86,42 @@
 
 ## Project-Specific Guidelines
 
+### Testing Requirements
+
+This project uses **two types of tests** that must BOTH be run:
+
+1. **Unit Tests** (Vitest): Run with `npm test`
+   - Component tests
+   - Utility function tests
+   - Uses jsdom environment
+
+2. **Integration Tests** (Playwright): Run with `npm run test:playwright`
+   - End-to-end browser tests located in `/tests/playwright/`
+   - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
+     - **IMPORTANT**: Each test should opt-in to using the mock server and configure it as needed
+     - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
+     - Tests that need the mock server should start/stop it themselves with their specific configuration
+     - Example:
+       ```javascript
+       test('my test', async ({ page }) => {
+         const mockServer = new MockServerManager();
+         await mockServer.start(null, 0, { /* custom config */ });
+         // ... test code ...
+         await mockServer.stop();
+       });
+       ```
+   - **MANDATORY**: Playwright browsers must be installed before running integration tests
+   - **Installation command**: `npx playwright install chromium`
+   - **DO NOT SKIP** integration tests when asked to run tests
+
+**Complete Test Suite**: Run `npm run test:all` to execute both unit and integration tests.
+
+**When asked to run tests, ALWAYS run both unit tests AND integration tests.** Integration tests are NOT optional.
+
+### Nerd Font Icons
+
+This project uses Nerd Font-compatible fonts (FiraCode Nerd Font and JetBrains Mono Nerd Font) which support icon glyphs. For a reference of available icons and how to use them, see [`.github/agents/nerdfont-icons.md`](.github/agents/nerdfont-icons.md).
+
 ### GitHub API Response Formats
 
 #### GET /repos/{owner}/{repo}/pulls/{pull_number}/files
