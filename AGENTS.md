@@ -97,7 +97,19 @@ This project uses **two types of tests** that must BOTH be run:
 
 2. **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
-   - Each test spins up a fresh mock server instance
+   - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
+     - **IMPORTANT**: Each test should opt-in to using the mock server and configure it as needed
+     - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
+     - Tests that need the mock server should start/stop it themselves with their specific configuration
+     - Example:
+       ```javascript
+       test('my test', async ({ page }) => {
+         const mockServer = new MockServerManager();
+         await mockServer.start(null, 0, { /* custom config */ });
+         // ... test code ...
+         await mockServer.stop();
+       });
+       ```
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
    - **DO NOT SKIP** integration tests when asked to run tests
