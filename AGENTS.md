@@ -239,3 +239,42 @@ index 40ef199..532858c 100644
 6. **Required Fields**: All file objects include `sha`, `filename`, `status`, `additions`, `deletions`, `changes`, `blob_url`, `raw_url`, `contents_url`, and optionally `patch`
 
 This documentation serves as the definitive reference for understanding how GitHub represents file changes in PR responses.
+
+#### GET /repos/{owner}/{repo}/contents/{path}
+
+This endpoint returns the contents of a file in a repository. Below is the **actual response format** from GitHub's API.
+
+**Real API Response Example (for package.json):**
+
+```json
+{
+  "name": "package.json",
+  "path": "package.json",
+  "sha": "7fbee256cbb8008cf046af3c2ea887b2f2961699",
+  "size": 1014,
+  "url": "https://api.github.com/repos/SteffenBlake/GH-Quick-Review/contents/package.json?ref=5b5b1a856ede9e26a9ff5c804566c007c13ed862",
+  "html_url": "https://github.com/SteffenBlake/GH-Quick-Review/blob/5b5b1a856ede9e26a9ff5c804566c007c13ed862/package.json",
+  "git_url": "https://api.github.com/repos/SteffenBlake/GH-Quick-Review/git/blobs/7fbee256cbb8008cf046af3c2ea887b2f2961699",
+  "download_url": "https://raw.githubusercontent.com/SteffenBlake/GH-Quick-Review/5b5b1a856ede9e26a9ff5c804566c007c13ed862/package.json",
+  "type": "file",
+  "content": "ewogICJuYW1lIjogImdoLXF1aWNrLXJldmlldyIsCiAgInZlcnNpb24iOiAi\nMS4wLjAiLAogICJkZXNjcmlwdGlvbiI6ICJHaXRIdWIgUXVpY2sgUmV2aWV3\nIFRvb2wiLAogICJtYWluIjogInNyYy9pbmRleC5qcyIsCiAgInR5cGUiOiAi\nbW9kdWxlIiwKICAic2NyaXB0cyI6IHsKICAgICJkZXYiOiAidml0ZSIsCiAg\nICAiYnVpbGQiOiAidml0ZSBidWlsZCIsCiAgICAicHJldmlldyI6ICJ2aXRl\nIHByZXZpZXciLAogICAgInRlc3QiOiAidml0ZXN0IHJ1biIsCiAgICAic3Rh\ncnQiOiAibm9kZSBzcmMvaW5kZXguanMiLAogICAgIm1vY2stc2VydmVyIjog\nIm5vZGUgdG9vbHMvZ2gtbW9jay1zZXJ2ZXIuanMgdG9vbHMvdGVzdC1kYXRh\nLmpzb24iCiAgfSwKICAicmVwb3NpdG9yeSI6IHsKICAgICJ0eXBlIjogImdp\ndCIsCiAgICAidXJsIjogImdpdCtodHRwczovL2dpdGh1Yi5jb20vU3RlZmZl\nbkJsYWtlL0dILVF1aWNrLVJldmlldy5naXQiCiAgfSwKICAia2V5d29yZHMi\nOiBbCiAgICAiZ2l0aHViIiwKICAgICJyZXZpZXciLAogICAgImNvZGUtcmV2\naWV3IgogIF0sCiAgImF1dGhvciI6ICIiLAogICJsaWNlbnNlIjogIklTQyIs\nCiAgImJ1Z3MiOiB7CiAgICAidXJsIjogImh0dHBzOi8vZ2l0aHViLmNvbS9T\ndGVmZmVuQmxha2UvR0gtUXVpY2stUmV2aWV3L2lzc3VlcyIKICB9LAogICJo\nb21lcGFnZSI6ICJodHRwczovL2dpdGh1Yi5jb20vU3RlZmZlbkJsYWtlL0dI\nLVF1aWNrLVJldmlldyNyZWFkbWUiLAogICJlbmdpbmVzIjogewogICAgIm5v\nZGUiOiAiPj0yMC4wLjAiCiAgfSwKICAiZGVwZW5kZW5jaWVzIjogewogICAg\nInByZWFjdCI6ICJeMTAuMjguMyIKICB9LAogICJkZXZEZXBlbmRlbmNpZXMi\nOiB7CiAgICAiQHByZWFjdC9wcmVzZXQtdml0ZSI6ICJeMi4xMC4zIiwKICAg\nICJAdGVzdGluZy1saWJyYXJ5L3ByZWFjdCI6ICJeMy4yLjQiLAogICAgImpz\nZG9tIjogIl4yOC4wLjAiLAogICAgInZpdGUiOiAiXjcuMy4xIiwKICAgICJ2\naXRlc3QiOiAiXjQuMC4xOCIKICB9Cn0K\n",
+  "encoding": "base64",
+  "_links": {
+    "self": "https://api.github.com/repos/SteffenBlake/GH-Quick-Review/contents/package.json?ref=5b5b1a856ede9e26a9ff5c804566c007c13ed862",
+    "git": "https://api.github.com/repos/SteffenBlake/GH-Quick-Review/git/blobs/7fbee256cbb8008cf046af3c2ea887b2f2961699",
+    "html": "https://github.com/SteffenBlake/GH-Quick-Review/blob/5b5b1a856ede9e26a9ff5c804566c007c13ed862/package.json"
+  }
+}
+```
+
+**Key Observations:**
+
+1. **Content Encoding**: The `content` field contains base64-encoded file content with line breaks every 60 characters (per RFC 2045)
+2. **SHA Format**: Full 40-character SHA-1 hash of the file blob
+3. **Type Field**: Indicates whether this is a `file` or `dir`
+4. **Size**: File size in bytes (not the base64 encoded size)
+5. **URLs**: All URLs include the ref (commit SHA) as a query parameter or in the path
+6. **Links Object**: Contains `self`, `git`, and `html` links for different access methods
+7. **Required Fields**: All responses include `name`, `path`, `sha`, `size`, `url`, `html_url`, `git_url`, `download_url`, `type`, `content`, `encoding`, and `_links`
+
+This documentation serves as the definitive reference for understanding how GitHub represents file contents in API responses.
