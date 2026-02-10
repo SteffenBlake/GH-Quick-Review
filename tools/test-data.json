@@ -293,5 +293,94 @@
       "start_side": "RIGHT",
       "in_reply_to_id": null
     }
+  ],
+  "files": [
+    {
+      "pull_number": 1,
+      "files": [
+        {
+          "sha": "a1b2c3d4e5f6",
+          "filename": "src/middleware/auth.js",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 2,
+          "changes": 10,
+          "blob_url": "https://github.com/testorg/test-repo/blob/abc123def456/src/middleware/auth.js",
+          "raw_url": "https://github.com/testorg/test-repo/raw/abc123def456/src/middleware/auth.js",
+          "contents_url": "https://api.github.com/repos/testorg/test-repo/contents/src/middleware/auth.js?ref=abc123def456",
+          "patch": "@@ -10,7 +10,12 @@ export const authenticate = async (req, res, next) => {\n   const token = req.headers.authorization;\n-  if (!token) {\n-    return res.status(401).json({ error: 'No token provided' });\n+  if (!token || !token.startsWith('Bearer ')) {\n+    return res.status(401).json({ \n+      error: 'No token provided',\n+      message: 'Authorization header must include Bearer token'\n+    });\n@@ -25,6 +30,8 @@ export const authenticate = async (req, res, next) => {\n   try {\n     const decoded = jwt.verify(token, process.env.JWT_SECRET);\n     req.user = decoded;\n+    req.authenticated = true;\n+    req.authTime = Date.now();"
+        },
+        {
+          "sha": "b2c3d4e5f6a7",
+          "filename": "src/models/User.js",
+          "status": "modified",
+          "additions": 15,
+          "deletions": 3,
+          "changes": 18,
+          "blob_url": "https://github.com/testorg/test-repo/blob/abc123def456/src/models/User.js",
+          "raw_url": "https://github.com/testorg/test-repo/raw/abc123def456/src/models/User.js",
+          "contents_url": "https://api.github.com/repos/testorg/test-repo/contents/src/models/User.js?ref=abc123def456",
+          "patch": "@@ -5,7 +5,10 @@ const UserSchema = new Schema({\n   email: { type: String, required: true, unique: true },\n   password: { type: String, required: true },\n-  created_at: { type: Date, default: Date.now }\n+  created_at: { type: Date, default: Date.now },\n+  last_login: { type: Date },\n+  login_count: { type: Number, default: 0 },\n+  is_active: { type: Boolean, default: true }"
+        },
+        {
+          "sha": "c3d4e5f6a7b8",
+          "filename": "tests/auth.test.js",
+          "status": "added",
+          "additions": 45,
+          "deletions": 0,
+          "changes": 45,
+          "blob_url": "https://github.com/testorg/test-repo/blob/abc123def456/tests/auth.test.js",
+          "raw_url": "https://github.com/testorg/test-repo/raw/abc123def456/tests/auth.test.js",
+          "contents_url": "https://api.github.com/repos/testorg/test-repo/contents/tests/auth.test.js?ref=abc123def456",
+          "patch": "@@ -0,0 +1,45 @@\n+import { describe, it, expect } from 'vitest';\n+import { authenticate } from '../src/middleware/auth.js';\n+\n+describe('Authentication Middleware', () => {\n+  it('should reject requests without token', async () => {\n+    // Test implementation\n+  });\n+});"
+        }
+      ]
+    },
+    {
+      "pull_number": 2,
+      "files": [
+        {
+          "sha": "d4e5f6a7b8c9",
+          "filename": "src/services/payment.js",
+          "status": "modified",
+          "additions": 12,
+          "deletions": 5,
+          "changes": 17,
+          "blob_url": "https://github.com/testorg/test-repo/blob/xyz789abc123/src/services/payment.js",
+          "raw_url": "https://github.com/testorg/test-repo/raw/xyz789abc123/src/services/payment.js",
+          "contents_url": "https://api.github.com/repos/testorg/test-repo/contents/src/services/payment.js?ref=xyz789abc123",
+          "patch": "@@ -1,6 +1,8 @@ import { Payment } from '../models/Payment.js';\n+import { notifyUser } from './notification.js';\n+import { generateTransactionId } from '../utils/transaction.js';\n@@ -45,10 +45,15 @@ async function processPayment(userId, amount) {\n-  const payment = await Payment.create({\n-    userId,\n-    amount,\n-    status: 'pending'\n-  });\n+  const existingPayment = await Payment.findOne({\n+    where: { userId, amount, status: 'pending' }\n+  });\n+  \n+  if (existingPayment) {\n+    return existingPayment;\n+  }\n+  \n+  const payment = await Payment.create({ userId, amount, status: 'pending' });"
+        },
+        {
+          "sha": "e5f6a7b8c9d0",
+          "filename": "src/services/notification.js",
+          "status": "added",
+          "additions": 23,
+          "deletions": 0,
+          "changes": 23,
+          "blob_url": "https://github.com/testorg/test-repo/blob/xyz789abc123/src/services/notification.js",
+          "raw_url": "https://github.com/testorg/test-repo/raw/xyz789abc123/src/services/notification.js",
+          "contents_url": "https://api.github.com/repos/testorg/test-repo/contents/src/services/notification.js?ref=xyz789abc123",
+          "patch": "@@ -0,0 +1,23 @@\n+export async function notifyUser(userId, event, data) {\n+  // Send notification\n+}"
+        }
+      ]
+    },
+    {
+      "pull_number": 3,
+      "files": [
+        {
+          "sha": "f6a7b8c9d0e1",
+          "filename": "package.json",
+          "status": "modified",
+          "additions": 25,
+          "deletions": 25,
+          "changes": 50,
+          "blob_url": "https://github.com/testorg/test-repo/blob/dep123upd456/package.json",
+          "raw_url": "https://github.com/testorg/test-repo/raw/dep123upd456/package.json",
+          "contents_url": "https://api.github.com/repos/testorg/test-repo/contents/package.json?ref=dep123upd456",
+          "patch": "@@ -5,15 +5,15 @@\n   \"dependencies\": {\n-    \"express\": \"^4.17.1\",\n-    \"mongoose\": \"^5.12.3\"\n+    \"express\": \"^4.18.2\",\n+    \"mongoose\": \"^6.9.1\"\n   }"
+        }
+      ]
+    }
   ]
 }
