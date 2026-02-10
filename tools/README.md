@@ -6,6 +6,7 @@ A lightweight, stateful mock server for GitHub API endpoints, specifically desig
 
 - **Stateful**: Changes made during runtime (add, edit, delete comments) persist in memory
 - **File-based initialization**: Load test data from JSON files
+- **Error simulation**: Configure specific endpoints to return errors or timeout for negative testing
 - **Simple to use**: Start with a single npm command
 - **RESTful**: Implements authentic GitHub API patterns
 
@@ -51,6 +52,66 @@ node tools/gh-mock-server.js path/to/your-data.json
 
 ```bash
 node tools/gh-mock-server.js path/to/your-data.json 8080
+```
+
+## Error Configuration for Testing
+
+The mock server supports error simulation to test how your application handles failures. You can configure endpoints to return specific HTTP error codes or timeout.
+
+### Programmatic Usage with Error Configuration
+
+```javascript
+import { startServer } from './tools/gh-mock-server.js';
+
+// Configure specific endpoints to return errors
+const errorConfig = {
+  listPulls: 404,        // Return 404 for list PRs
+  getPull: 500,          // Return 500 for get PR
+  addComment: 403,       // Return 403 for add comment
+  listComments: 'timeout' // Don't respond (timeout)
+};
+
+const server = startServer('./tools/test-data.json', 3000, errorConfig);
+```
+
+### Supported Error Codes
+
+- `400` - Bad Request
+- `401` - Requires authentication
+- `403` - Forbidden
+- `404` - Not Found
+- `422` - Validation failed
+- `500` - Internal Server Error
+- `503` - Service unavailable
+- `'timeout'` - No response (simulates timeout)
+
+### Endpoint Configuration Names
+
+- `listPulls` - GET /repos/{owner}/{repo}/pulls
+- `getPull` - GET /repos/{owner}/{repo}/pulls/{pull_number}
+- `listComments` - GET /repos/{owner}/{repo}/pulls/{pull_number}/comments
+- `addComment` - POST /repos/{owner}/{repo}/pulls/{pull_number}/comments
+- `editComment` - PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}
+- `deleteComment` - DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
+
+### Example: Testing Error Handling
+
+```javascript
+import { GitHubMockServer } from './tools/gh-mock-server.js';
+import http from 'http';
+
+// Create a mock server that returns 404 for get comments
+const mockServer = new GitHubMockServer('./tools/test-data.json', {
+  listComments: 404
+});
+
+const server = http.createServer((req, res) => {
+  mockServer.handleRequest(req, res);
+});
+
+server.listen(3000);
+
+// Your integration test can now verify that the app handles 404 gracefully
 ```
 
 ## Test Data Format

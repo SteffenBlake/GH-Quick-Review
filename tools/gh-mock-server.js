@@ -9,8 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 class GitHubMockServer {
-  constructor(dataFilePath) {
+  constructor(dataFilePath, config = {}) {
     this.dataFilePath = dataFilePath;
+    this.config = config;
     this.loadData();
   }
 
@@ -25,6 +26,47 @@ class GitHubMockServer {
     this.nextCommentId = Math.max(...data.comments.map(c => c.id), 0) + 1;
     
     console.log(`Loaded ${this.pulls.size} pull requests and ${this.comments.size} comments`);
+  }
+
+  /**
+   * Check if endpoint should return an error based on config
+   * @param {string} endpointName - Name of the endpoint (e.g., 'listPulls', 'getPull')
+   * @param {object} res - HTTP response object
+   * @returns {boolean} - true if error was handled, false otherwise
+   */
+  checkConfiguredError(endpointName, res) {
+    const errorConfig = this.config[endpointName];
+    
+    if (!errorConfig) {
+      return false;
+    }
+    
+    // Handle timeout - don't respond at all
+    if (errorConfig === 'timeout') {
+      console.log(`  → Configured to timeout (no response)`);
+      // Don't send any response - let it hang
+      return true;
+    }
+    
+    // Handle specific error codes
+    if (typeof errorConfig === 'number') {
+      const errorMessages = {
+        400: { message: 'Bad Request' },
+        401: { message: 'Requires authentication' },
+        403: { message: 'Forbidden' },
+        404: { message: 'Not Found' },
+        422: { message: 'Validation failed', errors: [] },
+        500: { message: 'Internal Server Error' },
+        503: { message: 'Service unavailable' }
+      };
+      
+      const errorData = errorMessages[errorConfig] || { message: 'Error' };
+      console.log(`  → Configured to return ${errorConfig}`);
+      this.sendResponse(res, errorConfig, errorData);
+      return true;
+    }
+    
+    return false;
   }
 
   handleRequest(req, res) {
@@ -89,12 +131,16 @@ class GitHubMockServer {
   }
 
   listPulls(req, res, match) {
+    if (this.checkConfiguredError('listPulls', res)) return;
+    
     const [, owner, repo] = match;
     const pulls = Array.from(this.pulls.values());
     this.sendResponse(res, 200, pulls);
   }
 
   getPull(req, res, match) {
+    if (this.checkConfiguredError('getPull', res)) return;
+    
     const [, owner, repo, pullNumber] = match;
     const pull = this.pulls.get(parseInt(pullNumber));
     
@@ -106,6 +152,8 @@ class GitHubMockServer {
   }
 
   listComments(req, res, match) {
+    if (this.checkConfiguredError('listComments', res)) return;
+    
     const [, owner, repo, pullNumber] = match;
     const pull = this.pulls.get(parseInt(pullNumber));
     
@@ -121,6 +169,8 @@ class GitHubMockServer {
   }
 
   addComment(req, res, match) {
+    if (this.checkConfiguredError('addComment', res)) return;
+    
     const [, owner, repo, pullNumber] = match;
     
     this.readBody(req, (body) => {
@@ -162,6 +212,8 @@ class GitHubMockServer {
   }
 
   editComment(req, res, match) {
+    if (this.checkConfiguredError('editComment', res)) return;
+    
     const [, owner, repo, commentId] = match;
     
     this.readBody(req, (body) => {
@@ -182,6 +234,8 @@ class GitHubMockServer {
   }
 
   deleteComment(req, res, match) {
+    if (this.checkConfiguredError('deleteComment', res)) return;
+    
     const [, owner, repo, commentId] = match;
     const comment = this.comments.get(parseInt(commentId));
     
@@ -224,16 +278,19 @@ class GitHubMockServer {
 }
 
 // Main execution
-function startServer() {
-  const args = process.argv.slice(2);
-  const dataFile = args[0] || resolve(__dirname, 'test-data.json');
-  const port = parseInt(args[1]) || 3000;
+function startServer(dataFile, port, config) {
+  dataFile = dataFile || resolve(__dirname, 'test-data.json');
+  port = port || 3000;
+  config = config || {};
   
   console.log(`Starting GitHub Mock Server...`);
   console.log(`Data file: ${dataFile}`);
   console.log(`Port: ${port}`);
+  if (Object.keys(config).length > 0) {
+    console.log(`Error config:`, JSON.stringify(config, null, 2));
+  }
   
-  const mockServer = new GitHubMockServer(dataFile);
+  const mockServer = new GitHubMockServer(dataFile, config);
   
   const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
@@ -259,10 +316,16 @@ function startServer() {
     console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
     console.log(`\nPress Ctrl+C to stop\n`);
   });
+  
+  return server;
 }
 
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
-  startServer();
+  const args = process.argv.slice(2);
+  const dataFile = args[0] || resolve(__dirname, 'test-data.json');
+  const port = parseInt(args[1]) || 3000;
+  startServer(dataFile, port);
 }
 
+export { GitHubMockServer, startServer };
 export default GitHubMockServer;
