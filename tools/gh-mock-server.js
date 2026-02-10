@@ -413,25 +413,30 @@ class GitHubMockServer {
 
       // Read file content
       const content = readFileSync(filePath);
-      const base64Content = content.toString('base64');
+      
+      // Base64 encode with line breaks every 60 characters (matching GitHub's format)
+      const base64Content = content.toString('base64').match(/.{1,60}/g).join('\n');
       const sha = this.calculateFileSha(filePath);
+      
+      // Use a consistent ref SHA for URLs
+      const refSha = 'abc123def456789012345678901234567890abcd';
 
       const response = {
         name: decodedPath.split('/').pop(),
         path: decodedPath,
         sha: sha,
         size: stats.size,
-        url: `https://api.github.com/repos/${owner}/${repo}/contents/${this.urlEncodePath(decodedPath)}`,
-        html_url: `https://github.com/${owner}/${repo}/blob/main/${this.urlEncodePath(decodedPath)}`,
+        url: `https://api.github.com/repos/${owner}/${repo}/contents/${this.urlEncodePath(decodedPath)}?ref=${refSha}`,
+        html_url: `https://github.com/${owner}/${repo}/blob/${refSha}/${this.urlEncodePath(decodedPath)}`,
         git_url: `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}`,
-        download_url: `https://raw.githubusercontent.com/${owner}/${repo}/main/${this.urlEncodePath(decodedPath)}`,
+        download_url: `https://raw.githubusercontent.com/${owner}/${repo}/${refSha}/${this.urlEncodePath(decodedPath)}`,
         type: 'file',
         content: base64Content,
         encoding: 'base64',
         _links: {
-          self: `https://api.github.com/repos/${owner}/${repo}/contents/${this.urlEncodePath(decodedPath)}`,
+          self: `https://api.github.com/repos/${owner}/${repo}/contents/${this.urlEncodePath(decodedPath)}?ref=${refSha}`,
           git: `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}`,
-          html: `https://github.com/${owner}/${repo}/blob/main/${this.urlEncodePath(decodedPath)}`
+          html: `https://github.com/${owner}/${repo}/blob/${refSha}/${this.urlEncodePath(decodedPath)}`
         }
       };
 
