@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+/**
+ * CSP Integration Tests
+ * 
+ * Note: These tests run against the Vite dev server (configured in playwright.config.js),
+ * so they validate the development CSP configuration. Production CSP is validated through:
+ * 1. Unit tests in tests/vite-plugin-csp.test.js
+ * 2. Manual inspection of dist/index.html after build
+ */
+
 test.describe('Content Security Policy', () => {
   test('should have CSP meta tag with dev environment settings', async ({ page }) => {
     await page.goto('/GH-Quick-Review/');

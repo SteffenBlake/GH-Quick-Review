@@ -23,6 +23,7 @@ export default function cspPlugin() {
         let connectSrc;
         if (isDev) {
           // Development: Allow connections to self, mock server, and Vite HMR WebSocket
+          // Using wildcard port for WebSocket to handle any Vite dev server port (flexible)
           connectSrc = "connect-src 'self' http://localhost:3000 ws://localhost:*";
         } else {
           // Production: Allow connections to self and GitHub API
