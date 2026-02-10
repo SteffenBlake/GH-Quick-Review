@@ -1,0 +1,32 @@
+application:
+  name: User Management System
+  version: 2.0.0
+  environment: production
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  timeout: 60
+  ssl:
+    enabled: true
+    cert: /path/to/cert.pem
+    key: /path/to/key.pem
+
+database:
+  type: postgresql
+  host: db.example.com
+  port: 5432
+  name: userdb
+  pool:
+    min: 5
+    max: 20
+  ssl: true
+
+logging:
+  level: warn
+  format: json
+  output: file
+
+caching:
+  enabled: true
+  ttl: 3600
