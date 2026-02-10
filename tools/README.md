@@ -75,7 +75,7 @@ The test data JSON file should have the following structure:
   "comments": [
     {
       "id": 1001,
-      "pull_request_review_id": 1,
+      "pull_number": 1,
       "body": "Comment text",
       "path": "src/file.js",
       "position": 5,
@@ -98,7 +98,7 @@ The test data JSON file should have the following structure:
 
 **Comments:**
 - `id` (integer): Unique comment ID
-- `pull_request_review_id` (integer): Associated PR number
+- `pull_number` (integer): Associated PR number
 - `body` (string): Comment text
 
 ## Usage Examples
