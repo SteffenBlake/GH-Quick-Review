@@ -27,7 +27,7 @@ export function App() {
     <div className="app" style={{ fontFamily: font }}>
       <header className="header">
         <h1>
-          <span className="icon"></span> GH Quick Review
+          <span className="icon">{'\ue709'}</span> GH Quick Review
         </h1>
         <div className="header-actions">
           <div className="font-picker">

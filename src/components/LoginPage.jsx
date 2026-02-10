@@ -47,7 +47,7 @@ export function LoginPage({ onLogin }) {
             rel="noopener noreferrer"
             className="login-link"
           >
-            <span className="icon"></span> Warning: Should you trust this app?
+            <span className="icon">{'\uf071'}</span> Warning: Should you trust this app?
           </a>
         </div>
       </div>

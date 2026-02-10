@@ -4,20 +4,20 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 
 ## Available Icons
 
-- GitHub: 
+- GitHub: \ue709
 - Key: 󰌆
-- Warning: 
+- Warning: \uf071
 - Logout: 󰗽
 
 ## Usage
 
-To use these icons in the application, simply include them as text in your JSX/HTML:
+To use these icons in the application, simply include them as UTF-16 escape sequences in your JSX:
 
 ```jsx
-<span></span>  // GitHub icon
-<span>󰌆</span>  // Key icon
-<span></span>  // Warning icon
-<span>󰗽</span>  // Logout icon
+<span>{'\ue709'}</span>  // GitHub icon
+<span>󰌆</span>           // Key icon
+<span>{'\uf071'}</span>  // Warning icon
+<span>󰗽</span>           // Logout icon
 ```
 
 The icons will render correctly as long as the element inherits from or is styled with a Nerd Font.
