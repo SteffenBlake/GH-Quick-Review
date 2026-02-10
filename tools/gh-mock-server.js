@@ -323,11 +323,7 @@ class GitHubMockServer {
 }
 
 // Main execution
-function startServer(dataFile, port, config) {
-  dataFile = dataFile || resolve(__dirname, 'test-data.json');
-  port = port || 3000;
-  config = config || {};
-  
+function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 3000, config = {}) {
   console.log(`Starting GitHub Mock Server...`);
   console.log(`Data file: ${dataFile}`);
   console.log(`Port: ${port}`);
