@@ -5,8 +5,11 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "mock-server": "node tools/gh-mock-server.js tools/test-data.json"
   },
   "repository": {
@@ -26,5 +29,15 @@
   "homepage": "https://github.com/SteffenBlake/GH-Quick-Review#readme",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "preact": "^10.28.3"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.3",
+    "@testing-library/preact": "^3.2.4",
+    "jsdom": "^28.0.0",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }
