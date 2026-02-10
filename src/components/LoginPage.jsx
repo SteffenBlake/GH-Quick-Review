@@ -16,7 +16,7 @@ export function LoginPage({ onLogin }) {
     <div className="login-container">
       <div className="login-box">
         <h2>
-          <span className="icon">󰌆</span> Login Required
+          <span className="icon">{'\udb80\udf06'}</span> Login Required
         </h2>
         <p>Please enter your GitHub Personal Access Token to continue.</p>
         <form onSubmit={handleSubmit}>
@@ -39,7 +39,7 @@ export function LoginPage({ onLogin }) {
             rel="noopener noreferrer"
             className="login-link"
           >
-            <span className="icon">󰌆</span> Guide: How to generate a PAT token
+            <span className="icon">{'\udb80\udf06'}</span> Guide: How to generate a PAT token
           </a>
           <a
             href="https://github.com/SteffenBlake/GH-Quick-Review/blob/main/docs/Should-You-Trust-This-App.md"

@@ -42,7 +42,7 @@ export function App() {
           </select>
         </div>
         <button onClick={handleLogout} className="logout-button" title="Logout">
-          <span className="icon">󰗽</span>
+          <span className="icon">{'\udb81\uddfd'}</span>
         </button>
         </div>
       </header>
