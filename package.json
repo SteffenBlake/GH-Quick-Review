@@ -9,6 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:playwright": "playwright test",
+    "test:all": "npm run test && npm run test:playwright",
     "start": "node src/index.js",
     "mock-server": "node tools/gh-mock-server.js tools/test-data.json"
   },
@@ -34,9 +36,11 @@
     "preact": "^10.28.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@preact/preset-vite": "^2.10.3",
     "@testing-library/preact": "^3.2.4",
     "jsdom": "^28.0.0",
+    "playwright": "^1.58.2",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
   }
