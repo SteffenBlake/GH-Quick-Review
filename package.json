@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mock-server": "node tools/gh-mock-server.js tools/test-data.json"
   },
   "repository": {
     "type": "git",
