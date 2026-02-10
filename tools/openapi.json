@@ -267,6 +267,119 @@
         }
       }
     },
+    "/repos/{owner}/{repo}/contents/{path}": {
+      "get": {
+        "summary": "Get repository content",
+        "description": "Gets the contents of a file or directory in a repository. Specify the file path or directory in `:path`. This endpoint supports the following custom media types. For more information, see \"[Media types](https://docs.github.com/rest/using-the-rest-api/getting-started-with-the-rest-api#media-types).\"\n\n- **`application/vnd.github.raw+json`**: Returns the raw file contents for files and symlinks.\n- **`application/vnd.github.html+json`**: Returns the file contents in HTML. Markup languages are rendered to HTML using GitHub's open-source [Markup library](https://github.com/github/markup).\n- **`application/vnd.github.object+json`**: Returns the contents in a consistent object format regardless of the content type. For example, instead of an array of objects for a directory, the response will be an object with an `entries` attribute containing the array of objects.\n\nIf the content is a directory, the response will be an array of objects, one object for each item in the directory.\n\nIf the content is a symlink:\n*   If the requested `:path` points to a symlink, and the symlink's target is a normal file in the repository, then the API responds with the content of the file (in the format shown in the example).\n*   Otherwise, the API responds with an object describing the symlink itself.\n\nIf the content is a submodule, the `submodule_git_url` identifies the location of the submodule repository, and the `sha` identifies a specific commit within the submodule repository.",
+        "tags": [
+          "repos"
+        ],
+        "operationId": "repos/get-content",
+        "externalDocs": {
+          "description": "API method documentation",
+          "url": "https://docs.github.com/rest/repos/contents#get-repository-content"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/owner"
+          },
+          {
+            "$ref": "#/components/parameters/repo"
+          },
+          {
+            "name": "path",
+            "description": "path parameter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ref",
+            "description": "The name of the commit/branch/tag. Default: the repository's default branch.",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "html_url": {
+                      "type": "string"
+                    },
+                    "git_url": {
+                      "type": "string"
+                    },
+                    "download_url": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["file", "dir", "symlink", "submodule"]
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Base64 encoded content (only for files)"
+                    },
+                    "encoding": {
+                      "type": "string",
+                      "description": "Encoding type (only for files)"
+                    },
+                    "_links": {
+                      "type": "object",
+                      "properties": {
+                        "self": {
+                          "type": "string"
+                        },
+                        "git": {
+                          "type": "string"
+                        },
+                        "html": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/not_found"
+          }
+        },
+        "x-github": {
+          "githubCloudOnly": false,
+          "enabledForGitHubApps": true,
+          "category": "repos",
+          "subcategory": "contents"
+        }
+      }
+    },
     "/repos/{owner}/{repo}/pulls/{pull_number}/comments": {
       "get": {
         "summary": "List review comments on a pull request",
