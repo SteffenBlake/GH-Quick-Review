@@ -177,6 +177,15 @@ ISC License - See `LICENSE` file
 
 ---
 
+## Licenses
+
+This project includes icon mappings derived from [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons):
+- Copyright (c) 2023 nvim-tree
+- Licensed under the MIT License
+- Used for file extension and filename to Nerd Font icon mappings
+
+---
+
 ## Disclaimer
 
 This app automatically deploys to GitHub Pages when changes are merged. Use at your own discretion. For maximum control, run it locally.
