@@ -746,11 +746,11 @@ body {
   outline-offset: -2px;
 }
 
-.directory-entry-content:hover {
+.directory-entry-content:hover:not(.selected) {
   outline-color: var(--accent);
 }
 
-.directory-entry-content:focus {
+.directory-entry-content:focus:not(.selected) {
   outline-color: var(--accent);
 }
 
