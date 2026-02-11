@@ -156,21 +156,6 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 - Do NOT just save screenshots without showing them to the user
 - The user needs to see the actual images in the chat, not just file paths
 
-**Example workflow:**
-```
-1. Take screenshot: playwright-browser_take_screenshot -> Returns URL
-2. Show in chat: ![Login Page](https://github.com/user-attachments/assets/...)
-3. User can verify it looks correct
-4. Include same URL in PR description
-```
-
-**Example:**
-If implementing a repos dropdown:
-- Screenshot 1: Loading state (spinner visible) - Show in chat immediately
-- Screenshot 2: Success state (dropdown with repos) - Show in chat immediately
-- Screenshot 3: Error state (error message displayed) - Show in chat immediately
-- Screenshot 4: Selected state (if applicable) - Show in chat immediately
-
 ## Project-Specific Guidelines
 
 ### Architecture: MVVM with Reactive Stores
@@ -301,20 +286,6 @@ This project uses **Playwright integration tests ONLY**.
 
 **Why this matters**: If you fix the bug first, then write a test that passes immediately, you have NO proof that your test actually covers the bug case. The test might be passing for the wrong reasons or not testing what you think it's testing.
 
-**Example workflow**:
-```bash
-# 1. Write test that reproduces bug
-# 2. Run test - should FAIL
-npm run test:playwright -- my-bug.spec.js
-# See test fail with error showing the bug
-
-# 3. Apply fix to code
-
-# 4. Run test again - should PASS
-npm run test:playwright -- my-bug.spec.js
-# See test pass, confirming fix works
-```
-
 **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
    - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
@@ -344,8 +315,6 @@ npm run test:playwright -- my-bug.spec.js
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
    - **CRITICAL**: There is NO such thing as "pre-existing test failures" - if tests fail, YOU broke them or didn't install Playwright browsers correctly. Always install browsers first and ensure ALL tests pass.
-
-**When asked to run tests, run integration tests with `npm run test:playwright`.** Unit tests are NOT used in this project.
 
 ### Nerd Font Icons
 
