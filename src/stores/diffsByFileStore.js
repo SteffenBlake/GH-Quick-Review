@@ -240,6 +240,8 @@ function processDiffsByFile(prData, tree) {
         deletions: file.deletions,
         diffs: [
           {
+            // Special synthetic hunk for deleted files (not standard diff format)
+            // This provides a placeholder for displaying unresolved comments
             hunkHeader: '@@ Deleted File @@',
             startLine: 1,
             endLine: 1,
