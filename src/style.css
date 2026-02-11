@@ -64,15 +64,8 @@ body {
 .font-picker {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   width: 12rem;
   flex-shrink: 0;
-}
-
-.font-picker label {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  white-space: nowrap;
 }
 
 .font-picker .fuzzy-dropdown {
@@ -102,15 +95,8 @@ body {
 .theme-picker {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 12rem;
+  width: 15.6rem;
   flex-shrink: 0;
-}
-
-.theme-picker label {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  white-space: nowrap;
 }
 
 .theme-picker .fuzzy-dropdown {
