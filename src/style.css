@@ -627,26 +627,29 @@ body {
   transform: translateX(0);
 }
 
-/* Toggle button - always visible, sticks out on the right */
+/* Toggle button - always visible, sticks out on the right, overlaps to hide content border */
 .directory-browser-toggle {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   border-left: none;
   padding: 0.75rem 0.5rem;
   cursor: pointer;
   font-family: inherit;
   font-size: 1.2rem;
   transition: all 0.2s;
-  border-radius: 0 0.25rem 0.25rem 0;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 3rem;
   position: absolute;
-  right: 0;
+  right: -0.0625rem;
   top: 20vh;
   transform: translateX(100%);
+  box-shadow: none;
 }
 
 /* Show expand icon when collapsed */
@@ -661,8 +664,8 @@ body {
 
 .directory-browser-toggle:hover {
   background-color: var(--bg-primary);
-  border-color: var(--accent);
   color: var(--accent);
+  box-shadow: none;
 }
 
 /* Content panel */
