@@ -532,6 +532,7 @@ body {
   color: var(--text-secondary);
   font-size: 0.8rem;
   flex-shrink: 0;
+  margin-right: 0.25rem;
 }
 
 .fuzzy-dropdown-loading,
