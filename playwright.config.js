@@ -5,6 +5,37 @@
  */
 
 import { defineConfig, devices } from '@playwright/test';
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
+
+// Check if Chromium browser is installed
+function checkBrowserInstalled() {
+  const possiblePaths = [
+    join(homedir(), '.cache', 'ms-playwright'),
+    join(process.env.PLAYWRIGHT_BROWSERS_PATH || '', ''),
+  ].filter(Boolean);
+
+  const hasChromium = possiblePaths.some(path => {
+    const chromiumPath = join(path, 'chromium-1208');
+    return existsSync(chromiumPath);
+  });
+
+  if (!hasChromium) {
+    console.error('\n' + '='.repeat(80));
+    console.error('❌ CRITICAL ERROR: Chromium browser is NOT installed!');
+    console.error('='.repeat(80));
+    console.error('\nYou MUST install the chromium browser before running tests.');
+    console.error('All tests must pass before your PR will be merged.\n');
+    console.error('To install chromium, run:');
+    console.error('  npx playwright install chromium\n');
+    console.error('='.repeat(80) + '\n');
+    process.exit(1);
+  }
+}
+
+checkBrowserInstalled();
 
 export default defineConfig({
   testDir: './tests/playwright',

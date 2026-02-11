@@ -307,6 +307,7 @@ This project uses **Playwright integration tests ONLY**.
        ```
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
+   - **CRITICAL**: There is NO such thing as "pre-existing test failures" - if tests fail, YOU broke them or didn't install Playwright browsers correctly. Always install browsers first and ensure ALL tests pass.
 
 **When asked to run tests, run integration tests with `npm run test:playwright`.** Unit tests are NOT used in this project.
 
