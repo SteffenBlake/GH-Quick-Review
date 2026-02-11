@@ -1,3 +1,9 @@
+# ⚠️ YOU MUST READ THIS ENTIRE FILE - NOT JUST PART OF IT ⚠️
+
+**CRITICAL: Read ALL of AGENTS.md before proceeding with ANY work. Reading only the first 50 lines is NOT acceptable. You MUST read the ENTIRE file to understand all requirements, patterns, and testing procedures.**
+
+---
+
 # Agent Instructions for GH-Quick-Review
 
 ## Core Principles
@@ -84,39 +90,187 @@
 ### Self-Correction Protocol
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
 
+### PR Description Screenshots
+**When completing work and updating PR descriptions, include screenshots of ALL relevant screen states that were requested:**
+- Show all UI states (loading, success, error, empty, etc.)
+- For dropdowns/lists: show populated state
+- For error handling: show error messages displayed
+- For async operations: show loading spinners
+- Use mock server error configs to test and screenshot error states
+- Include before/after screenshots when modifying existing UI
+
+**CRITICAL: Always display screenshots in the agent chat immediately after taking them:**
+- After taking each screenshot with `playwright-browser_take_screenshot`, the system returns a GitHub URL
+- IMMEDIATELY display that screenshot in the chat using markdown: `![Description](url)`
+- This allows the user to verify the screenshot is correct before finalizing the PR
+- Do NOT just save screenshots without showing them to the user
+- The user needs to see the actual images in the chat, not just file paths
+
+**Example workflow:**
+```
+1. Take screenshot: playwright-browser_take_screenshot -> Returns URL
+2. Show in chat: ![Login Page](https://github.com/user-attachments/assets/...)
+3. User can verify it looks correct
+4. Include same URL in PR description
+```
+
+**Example:**
+If implementing a repos dropdown:
+- Screenshot 1: Loading state (spinner visible) - Show in chat immediately
+- Screenshot 2: Success state (dropdown with repos) - Show in chat immediately
+- Screenshot 3: Error state (error message displayed) - Show in chat immediately
+- Screenshot 4: Selected state (if applicable) - Show in chat immediately
+
 ## Project-Specific Guidelines
+
+### Architecture: MVVM with Reactive Stores
+
+This project follows **MVVM (Model-View-ViewModel) pattern** with reactive state management using **@preact/signals** and **@tanstack/react-query**.
+
+#### State Management
+
+**Two types of state:**
+
+1. **Synchronous State**: Use `@preact/signals`
+   - UI state (selected font, modals open/closed)
+   - Auth state (token presence)
+   - Any state that changes immediately
+
+2. **Asynchronous State**: Use `@tanstack/react-query`
+   - API data (repos, pull requests, comments)
+   - Any data fetched from network
+   - Automatically handles loading/error/success states
+   - Built-in caching, refetching, and invalidation
+
+**Never manually manage async state with `{status, data, error}` objects.** Use TanStack Query.
+
+**Example - Auth Store (Synchronous):**
+```javascript
+import { signal } from '@preact/signals';
+
+export const token = signal(localStorage.getItem('github_pat'));
+
+export function setToken(newToken) {
+  token.value = newToken;
+  localStorage.setItem('github_pat', newToken);
+}
+```
+
+**Example - Repos Query (Asynchronous):**
+```javascript
+import { useQuery } from '@tanstack/react-query';
+import { token } from './authStore.js';
+import { githubClient } from '../utils/github-client.js';
+
+export function useRepos() {
+  return useQuery({
+    queryKey: ['repos'],
+    queryFn: () => githubClient.listUserRepos(),
+    enabled: !!token.value, // Only fetch when token exists
+  });
+}
+```
+
+**Component Usage:**
+```javascript
+import { useRepos } from '../stores/reposStore';
+
+function ReposDropdown() {
+  const { data, isLoading, error } = useRepos();
+  
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <div>Error: {error.message}</div>;
+  return <select>{data.map(repo => <option>{repo.name}</option>)}</select>;
+}
+```
+
+#### View Responsibilities
+
+**Views (Components) must NEVER:**
+- Make API calls directly
+- Contain business logic
+- Manage application state beyond local UI state
+
+**Views should ONLY:**
+- Render UI based on store state
+- Handle user input and dispatch to stores
+- Manage local UI state (form inputs, toggles, etc.)
+
+**Example - LoginPage should NOT validate tokens:**
+```javascript
+// WRONG - View making API calls
+const handleLogin = async () => {
+  const result = await api.validateToken(token);
+  if (result.ok) { ... }
+}
+
+// CORRECT - View just sets state, store handles logic
+const handleLogin = () => {
+  setToken(token.trim());  // Store observes and handles validation
+}
+```
+
+#### API Calls
+
+**API calls belong ONLY in TanStack Query hooks:**
+
+```javascript
+// In stores/reposStore.js
+export function useRepos() {
+  return useQuery({
+    queryKey: ['repos'],
+    queryFn: () => githubClient.listUserRepos(),
+    enabled: !!token.value,
+  });
+}
+```
+
+**Views call hooks and render based on query state:**
+```javascript
+function MyComponent() {
+  const { data: repos, isLoading, error } = useRepos();
+  // TanStack Query automatically provides isLoading, error, data
+}
+```
+
+**Never call API methods directly in components.** Always use query hooks.
 
 ### Testing Requirements
 
-This project uses **two types of tests** that must BOTH be run:
+This project uses **Playwright integration tests ONLY**. 
 
-1. **Unit Tests** (Vitest): Run with `npm test`
-   - Component tests
-   - Utility function tests
-   - Uses jsdom environment
+**DO NOT write unit tests that mock services!** Tests that mock everything and just assert mocked results are pointless and should be deleted immediately.
 
-2. **Integration Tests** (Playwright): Run with `npm run test:playwright`
+**Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
    - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
-     - **IMPORTANT**: Each test should opt-in to using the mock server and configure it as needed
+     - **CRITICAL**: Each test MUST start its own instance of the mock server
+     - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)
+     - **CRITICAL**: Each test MUST stand up the server, run the test, then stop/release it
+     - **CRITICAL**: All tests use the SAME fixed port (3000) since they run serially
      - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
-     - Tests that need the mock server should start/stop it themselves with their specific configuration
+     - **DO NOT** pollute the mock server state between tests
+     - **ONLY** the mock server should be mocked - everything else must be real end-to-end
+     - **Environment**: Tests use `.env.test` which sets `VITE_GITHUB_API_URL=http://localhost:3000`
      - Example:
        ```javascript
        test('my test', async ({ page }) => {
          const mockServer = new MockServerManager();
-         await mockServer.start(null, 0, { /* custom config */ });
-         // ... test code ...
-         await mockServer.stop();
+         const port = await mockServer.start(null, 3000); // Fixed port 3000
+         try {
+           // Navigate and interact with the real app
+           // The app will use http://localhost:3000 from .env.test
+           await page.goto('/GH-Quick-Review/');
+           // ... test interactions ...
+         } finally {
+           await mockServer.stop();
+         }
        });
        ```
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
-   - **DO NOT SKIP** integration tests when asked to run tests
 
-**Complete Test Suite**: Run `npm run test:all` to execute both unit and integration tests.
-
-**When asked to run tests, ALWAYS run both unit tests AND integration tests.** Integration tests are NOT optional.
+**When asked to run tests, run integration tests with `npm run test:playwright`.** Unit tests are NOT used in this project.
 
 ### Nerd Font Icons
 

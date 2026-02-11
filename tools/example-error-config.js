@@ -14,10 +14,12 @@ import http from 'http';
 console.log('Example 1: Programmatic server with error config\n');
 
 const errorConfig = {
-  listPulls: 404,      // List PRs will return 404
-  getPull: 500,        // Get PR will return 500
-  addComment: 403,     // Add comment will return 403
-  listComments: 'timeout' // List comments will timeout
+  listPulls: 404,         // List PRs will return 404
+  getPull: 500,           // Get PR will return 500
+  addComment: 403,        // Add comment will return 403
+  listComments: 'timeout',// List comments will timeout
+  listUserRepos: 401,     // List user repos will return 401 (useful for testing login errors)
+  getUser: 403            // Get user will return 403
 };
 
 console.log('Starting server with error configuration:', errorConfig);
@@ -29,10 +31,11 @@ setTimeout(() => {
   server.close();
   
   // Example 2: Create custom server instance
-  console.log('Example 2: Custom server instance\n');
+  console.log('Example 2: Custom server instance with latency\n');
   
   const mockServer = new GitHubMockServer('./test-data.json', {
-    getPull: 404  // Only this endpoint will error
+    latency: 1000,    // Add 1 second delay to all responses
+    getPull: 404      // Only this endpoint will error
   });
   
   const customServer = http.createServer((req, res) => {
@@ -41,6 +44,7 @@ setTimeout(() => {
   
   customServer.listen(3101, () => {
     console.log('Custom server running on port 3101');
+    console.log('All responses delayed by 1000ms');
     console.log('Only getPull endpoint configured to return 404\n');
     
     setTimeout(() => {

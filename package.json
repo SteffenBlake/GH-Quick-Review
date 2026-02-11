@@ -33,6 +33,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@preact/signals": "^2.7.1",
+    "@tanstack/react-query": "^5.90.20",
     "preact": "^10.28.3"
   },
   "devDependencies": {

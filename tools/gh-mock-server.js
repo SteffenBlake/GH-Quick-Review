@@ -19,6 +19,7 @@ class GitHubMockServer {
   constructor(userDirPath, config = {}) {
     this.userDirPath = userDirPath;
     this.config = config;
+    this.latency = config.latency || 0; // Artificial delay in ms
     this.loadUserData();
   }
 
@@ -444,7 +445,7 @@ class GitHubMockServer {
     return path.split('/').map(part => encodeURIComponent(part)).join('%2F');
   }
 
-  handleRequest(req, res) {
+  async handleRequest(req, res) {
     const { method, url } = req;
     
     // Parse URL and extract path
@@ -528,6 +529,15 @@ class GitHubMockServer {
 
   listUserRepos(req, res, match) {
     if (this.checkConfiguredError('listUserRepos', res)) return;
+    
+    // Check for authorization header
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return this.sendResponse(res, 401, {
+        message: 'Requires authentication',
+        documentation_url: 'https://docs.github.com/rest/reference/repos#list-repositories-for-the-authenticated-user'
+      });
+    }
     
     this.sendResponse(res, 200, this.repos);
   }
@@ -814,11 +824,16 @@ class GitHubMockServer {
     });
   }
 
-  sendResponse(res, statusCode, data) {
+  async sendResponse(res, statusCode, data) {
+    // Apply artificial latency if configured
+    if (this.latency > 0) {
+      await new Promise(resolve => setTimeout(resolve, this.latency));
+    }
+    
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
     res.statusCode = statusCode;
     
     if (statusCode === 204) {
@@ -844,7 +859,7 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
       res.statusCode = 204;
       res.end();
       return;
@@ -854,7 +869,8 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
   });
   
   server.listen(port, () => {
-    console.log(`\n✓ GitHub Mock Server running on http://localhost:${port}`);
+    const actualPort = server.address().port;
+    console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
     console.log(`\nAvailable endpoints:`);
     console.log(`  GET    /user/repos`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls`);

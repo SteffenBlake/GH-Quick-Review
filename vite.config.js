@@ -4,16 +4,25 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import preact from '@preact/preset-vite';
 import cspPlugin from './vite-plugin-csp.js';
 
-export default defineConfig({
-  plugins: [preact(), cspPlugin()],
-  base: '/GH-Quick-Review/',
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    exclude: ['**/node_modules/**', '**/playwright/**'],
-  },
+export default defineConfig(({ mode }) => {
+  // Load env file based on mode (.env.test for test mode)
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  return {
+    plugins: [preact(), cspPlugin()],
+    base: '/GH-Quick-Review/',
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      exclude: ['**/node_modules/**', '**/playwright/**'],
+    },
+    define: {
+      // Make env variables available to the app
+      'import.meta.env.VITE_GITHUB_API_URL': JSON.stringify(env.VITE_GITHUB_API_URL),
+    },
+  };
 });

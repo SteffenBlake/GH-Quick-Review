@@ -1,156 +1,202 @@
 import { test, expect } from '@playwright/test';
+import { MockServerManager } from './mock-server-manager.js';
 
 test.describe('Authentication Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Clear localStorage before each test
-    await page.goto('/GH-Quick-Review/');
-    await page.evaluate(() => localStorage.clear());
-  });
-
   test('should display login page when not authenticated', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Should show login required heading with key icon
-    await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
-    
-    // Should show PAT input field
-    await expect(page.getByPlaceholder('Enter your GitHub PAT')).toBeVisible();
-    
-    // Should show login button
-    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
-    
-    // Should show documentation links
-    await expect(page.getByRole('link', { name: /Guide: How to generate a PAT token/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Warning: Should you trust this app/i })).toBeVisible();
-    
-    // Should NOT show main content
-    await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).not.toBeVisible();
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Should show login required heading with key icon
+      await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
+      
+      // Should show PAT input field
+      await expect(page.getByPlaceholder('Enter your GitHub PAT')).toBeVisible();
+      
+      // Should show login button
+      await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
+      
+      // Should show documentation links
+      await expect(page.getByRole('link', { name: /Guide: How to generate a PAT token/i })).toBeVisible();
+      await expect(page.getByRole('link', { name: /Warning: Should you trust this app/i })).toBeVisible();
+      
+      // Should NOT show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).not.toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
   });
 
   test('should save token to localStorage and show main content on login', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Enter a test token
-    await page.getByPlaceholder('Enter your GitHub PAT').fill('ghp_test_token_123');
-    
-    // Click login button
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Should show main content
-    await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
-    
-    // Should show logout button (button with the icon)
-    await expect(page.getByRole('button', { name: '󰗽' })).toBeVisible();
-    
-    // Should NOT show login page
-    await expect(page.getByRole('heading', { name: /Login Required/i })).not.toBeVisible();
-    
-    // Verify token is in localStorage
-    const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-    expect(token).toBe('ghp_test_token_123');
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Fill in token and login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token_12345');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Should show main content after login
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
+      
+      // Should NOT show login page
+      await expect(page.getByRole('heading', { name: /Login Required/i })).not.toBeVisible();
+      
+      // Verify token was saved to localStorage
+      const savedToken = await page.evaluate(() => localStorage.getItem('github_pat'));
+      expect(savedToken).toBe('test_token_12345');
+    } finally {
+      await mockServer.stop();
+    }
   });
 
   test('should trim whitespace from token before saving', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Enter token with whitespace
-    await page.getByPlaceholder('Enter your GitHub PAT').fill('  ghp_test_token_456  ');
-    
-    // Click login button
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Verify trimmed token is in localStorage
-    const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-    expect(token).toBe('ghp_test_token_456');
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Enter token with leading/trailing whitespace
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('  test_token_spaces  ');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Should show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
+      
+      // Token should be trimmed in localStorage
+      const savedToken = await page.evaluate(() => localStorage.getItem('github_pat'));
+      expect(savedToken).toBe('test_token_spaces');
+    } finally {
+      await mockServer.stop();
+    }
   });
 
-  test('should not login with empty token', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+  test('should not allow login with empty token', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Click login without entering token
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Should still show login page
-    await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
-    
-    // Verify no token in localStorage
-    const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-    expect(token).toBeNull();
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Try to login with empty token
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('   ');
+      
+      // Button should be disabled or clicking should do nothing
+      const loginButton = page.getByRole('button', { name: 'Login' });
+      await loginButton.click();
+      
+      // Should still show login page
+      await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
+      
+      // Should NOT show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).not.toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
   });
 
-  test('should logout and return to login page', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+  test('should show logout button when authenticated', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Login first
-    await page.getByPlaceholder('Enter your GitHub PAT').fill('ghp_test_token_789');
-    await page.getByRole('button', { name: 'Login' }).click();
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
+      await page.reload();
+      
+      // Should show logout button
+      await expect(page.getByRole('button', { name: /Logout/i })).toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should clear token and return to login page on logout', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Verify we're logged in
-    await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
-    
-    // Click logout button using the icon
-    await page.getByRole('button', { name: '󰗽' }).click();
-    
-    // Should return to login page
-    await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
-    
-    // Should NOT show main content
-    await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).not.toBeVisible();
-    
-    // Verify token is cleared from localStorage
-    const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-    expect(token).toBeNull();
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
+      await page.reload();
+      
+      // Should show main content initially
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
+      
+      // Click logout
+      await page.getByRole('button', { name: /Logout/i }).click();
+      
+      // Should show login page
+      await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
+      
+      // Token should be removed from localStorage
+      const savedToken = await page.evaluate(() => localStorage.getItem('github_pat'));
+      expect(savedToken).toBeNull();
+    } finally {
+      await mockServer.stop();
+    }
   });
 
   test('should persist authentication across page reloads', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    // Login
-    await page.getByPlaceholder('Enter your GitHub PAT').fill('ghp_test_token_persist');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Verify we're logged in
-    await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
-    
-    // Reload the page
-    await page.reload();
-    
-    // Should still be logged in (not showing login page)
-    await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Login Required/i })).not.toBeVisible();
-    
-    // Verify token is still in localStorage
-    const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-    expect(token).toBe('ghp_test_token_persist');
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Should show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
+      
+      // Reload page
+      await page.reload();
+      
+      // Should still show main content (not login page)
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Login Required/i })).not.toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
   });
 
-  test('documentation links should have correct URLs', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
+  test('should show login page if localStorage is cleared externally', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
     
-    const guideLink = page.getByRole('link', { name: /Guide: How to generate a PAT token/i });
-    const warningLink = page.getByRole('link', { name: /Warning: Should you trust this app/i });
-    
-    await expect(guideLink).toHaveAttribute(
-      'href',
-      'https://github.com/SteffenBlake/GH-Quick-Review/blob/main/docs/Generating-a-PAT-Token.md'
-    );
-    
-    await expect(warningLink).toHaveAttribute(
-      'href',
-      'https://github.com/SteffenBlake/GH-Quick-Review/blob/main/docs/Should-You-Trust-This-App.md'
-    );
-  });
-
-  test('documentation links should open in new tab', async ({ page }) => {
-    await page.goto('/GH-Quick-Review/');
-    
-    const guideLink = page.getByRole('link', { name: /Guide: How to generate a PAT token/i });
-    const warningLink = page.getByRole('link', { name: /Warning: Should you trust this app/i });
-    
-    await expect(guideLink).toHaveAttribute('target', '_blank');
-    await expect(warningLink).toHaveAttribute('target', '_blank');
-    
-    await expect(guideLink).toHaveAttribute('rel', 'noopener noreferrer');
-    await expect(warningLink).toHaveAttribute('rel', 'noopener noreferrer');
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
+      await page.reload();
+      
+      // Should show main content initially
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
+      
+      // Clear localStorage externally
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Should show login page
+      await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
   });
 });

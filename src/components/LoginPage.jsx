@@ -5,16 +5,16 @@
  */
 
 import { useState } from 'preact/hooks';
-import { setToken } from '../utils/auth';
+import { setToken } from '../stores/authStore';
 
-export function LoginPage({ onLogin }) {
+export function LoginPage() {
   const [token, setTokenInput] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (token.trim()) {
+      // Just set the token - the store will notify listeners and trigger repo loading
       setToken(token.trim());
-      onLogin();
     }
   };
 

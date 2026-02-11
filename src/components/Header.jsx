@@ -4,13 +4,18 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
+import { ReposDropdown } from './ReposDropdown';
+
 export function Header({ font, setFont, authenticated, onLogout }) {
   return (
     <header className="header">
-      <h1>
-        {'\ue709'} GH Quick Review
-      </h1>
-      <div className="header-actions">
+      <div className="header-left">
+        <h1>
+          {'\ue709'} GH Quick Review
+        </h1>
+        {authenticated && <ReposDropdown />}
+      </div>
+      <div className="header-right">
         <div className="font-picker">
           <label htmlFor="font-select">Font: </label>
           <select
