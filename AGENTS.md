@@ -21,6 +21,14 @@
 
 ### 3. Code Quality Standards
 
+#### Font Consistency
+**CRITICAL: ALL UI elements must use the selected font from the font dropdown.** This is non-negotiable:
+- Every dropdown, button, input, text element, and UI component MUST inherit the app's selected font
+- Never use `font-family: inherit` on individual elements - the font is set at the `.app` level
+- All `<select>` elements MUST explicitly inherit the font via CSS
+- Test font consistency by switching fonts in the UI and verifying ALL elements change
+- This applies to: dropdowns, inputs, buttons, text, headings, footers, headers - EVERYTHING
+
 #### Nesting
 **Avoid excessive nesting.** Keep code flat and readable:
 - Prefer early returns over deep nesting
