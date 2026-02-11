@@ -30,7 +30,7 @@ describe('CSP Plugin', () => {
       expect(result).toContain("style-src 'self' 'unsafe-inline'");
       expect(result).toContain("font-src 'self'");
       expect(result).toContain("img-src 'self' data:");
-      expect(result).toContain("connect-src 'self' http://localhost:3000 ws://localhost:*");
+      expect(result).toContain("connect-src 'self' http://localhost:* ws://localhost:*");
     });
 
     it('injects CSP meta tag in production mode', () => {
@@ -44,7 +44,7 @@ describe('CSP Plugin', () => {
       expect(result).toContain("font-src 'self'");
       expect(result).toContain("img-src 'self' data:");
       expect(result).toContain("connect-src 'self' https://api.github.com");
-      expect(result).not.toContain('localhost:3000');
+      expect(result).not.toContain('localhost:');
     });
 
     it('inserts CSP meta tag after charset meta tag', () => {
@@ -67,10 +67,10 @@ describe('CSP Plugin', () => {
       const prodResult = handler(sampleHtml, prodCtx);
 
       expect(devResult).not.toBe(prodResult);
-      expect(devResult).toContain('http://localhost:3000');
+      expect(devResult).toContain('http://localhost:*');
       expect(devResult).toContain('ws://localhost:*');
       expect(prodResult).toContain('https://api.github.com');
-      expect(prodResult).not.toContain('localhost:3000');
+      expect(prodResult).not.toContain('localhost:');
       expect(prodResult).not.toContain('ws://');
       expect(devResult).not.toContain('api.github.com');
     });

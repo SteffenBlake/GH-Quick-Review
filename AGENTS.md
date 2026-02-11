@@ -1,3 +1,9 @@
+# ⚠️ YOU MUST READ THIS ENTIRE FILE - NOT JUST PART OF IT ⚠️
+
+**CRITICAL: Read ALL of AGENTS.md before proceeding with ANY work. Reading only the first 50 lines is NOT acceptable. You MUST read the ENTIRE file to understand all requirements, patterns, and testing procedures.**
+
+---
+
 # Agent Instructions for GH-Quick-Review
 
 ## Core Principles
