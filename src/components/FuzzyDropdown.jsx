@@ -119,12 +119,23 @@ export function FuzzyDropdown({
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
         setSearchText('');
+        setHighlightedIndex(-1);
       }
     }
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Reset highlighted index when dropdown opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setHighlightedIndex(-1);
+    } else {
+      // Set to 0 when dropdown opens
+      setHighlightedIndex(0);
+    }
+  }, [isOpen]);
 
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
@@ -140,7 +151,7 @@ export function FuzzyDropdown({
       case 'ArrowDown':
         e.preventDefault();
         setHighlightedIndex((prev) => 
-          prev < filteredOptions.length - 1 ? prev + 1 : prev
+          prev < filteredOptions.length - 1 ? prev + 1 : filteredOptions.length - 1
         );
         break;
       case 'ArrowUp':
