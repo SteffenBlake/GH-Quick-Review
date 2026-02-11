@@ -223,3 +223,16 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.footer {
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 2rem;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-content {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}

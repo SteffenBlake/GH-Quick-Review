@@ -1,7 +1,14 @@
+/*
+ * Copyright (c) 2026 Steffen Blake
+ * Licensed under the MIT License. See LICENSE file in the project root.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
 import { useState } from 'preact/hooks';
 import { isAuthenticated, clearToken } from './utils/auth';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 
 export function App() {
   const [font, setFont] = useState('FiraCode');
@@ -50,6 +57,7 @@ export function App() {
           </div>
         </main>
       )}
+      <Footer />
     </div>
   );
 }

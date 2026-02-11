@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 Steffen Blake
+ * Licensed under the MIT License. See LICENSE file in the project root.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
 /**
  * Vite plugin to inject Content Security Policy meta tags
  * Different CSP policies for development and production environments
