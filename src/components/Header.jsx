@@ -7,12 +7,32 @@
 import { ReposDropdown } from './ReposDropdown';
 import { PullsDropdown } from './PullsDropdown';
 import { FuzzyDropdown } from './FuzzyDropdown';
+import { 
+  highlightTheme, 
+  setHighlightTheme, 
+  HIGHLIGHT_THEMES 
+} from '../stores/highlightThemeStore.js';
 
 export function Header({ font, setFont, authenticated, onLogout }) {
   const fontOptions = [
     { value: 'FiraCode', label: 'Fira Code', searchableText: 'Fira Code FiraCode' },
     { value: 'JetBrainsMono', label: 'JetBrains Mono', searchableText: 'JetBrains Mono JetBrainsMono' },
   ];
+
+  // Convert theme names to readable labels
+  const themeOptions = HIGHLIGHT_THEMES.map(theme => {
+    // Convert kebab-case to Title Case
+    const label = theme
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    return {
+      value: theme,
+      label: label,
+      searchableText: `${label} ${theme}`
+    };
+  });
 
   return (
     <header className="header">
@@ -32,6 +52,16 @@ export function Header({ font, setFont, authenticated, onLogout }) {
             options={fontOptions}
             placeholder="Select font..."
             className="font-fuzzy-select"
+          />
+        </div>
+        <div className="theme-picker">
+          <label htmlFor="theme-select">Theme: </label>
+          <FuzzyDropdown
+            value={highlightTheme.value}
+            onChange={setHighlightTheme}
+            options={themeOptions}
+            placeholder="Select theme..."
+            className="theme-fuzzy-select"
           />
         </div>
         {authenticated && (

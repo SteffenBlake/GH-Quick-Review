@@ -99,6 +99,44 @@ body {
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
 }
 
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 12rem;
+  flex-shrink: 0;
+}
+
+.theme-picker label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.theme-picker .fuzzy-dropdown {
+  flex: 1;
+}
+
+.theme-picker select {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.theme-picker select:hover {
+  border-color: var(--accent);
+}
+
+.theme-picker select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
 .content {
   flex: 1;
   padding: 2rem;
