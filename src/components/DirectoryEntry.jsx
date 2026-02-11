@@ -43,7 +43,7 @@ export function DirectoryEntry({ node, depth = 0 }) {
   const isSelected = isFile && selectedFile.value === node.path;
   
   // Get chevron icon for directories
-  const chevronIcon = !isFile ? (isExpanded ? '\udb80\udd40' : '\udb80\udd42') : null;
+  const chevronIcon = !isFile ? (isExpanded ? '\udb82\uddd7' : '\udb82\udddb') : null;
   
   return (
     <li className="directory-entry">
