@@ -98,7 +98,7 @@ export const HIGHLIGHT_THEMES = [
  * Persisted to localStorage
  */
 export const highlightTheme = signal(
-  localStorage.getItem('highlight_theme') || 'github'
+  localStorage.getItem('highlight_theme') || 'github-dark'
 );
 
 /**

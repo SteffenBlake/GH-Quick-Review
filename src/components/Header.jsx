@@ -38,7 +38,7 @@ export function Header({ font, setFont, authenticated, onLogout }) {
     <header className="header">
       <div className="header-left">
         <h1>
-          {'\ue709'} GH Quick Review
+          {'\ue709'}
         </h1>
         {authenticated && <ReposDropdown />}
         {authenticated && <PullsDropdown />}
