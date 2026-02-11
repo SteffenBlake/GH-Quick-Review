@@ -480,6 +480,7 @@ body {
   cursor: pointer;
   transition: border-color 0.2s;
   gap: 0.5rem;
+  min-width: 0; /* Prevent growth beyond flex container */
 }
 
 .fuzzy-dropdown-control:hover:not(.disabled) {
