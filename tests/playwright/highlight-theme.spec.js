@@ -16,12 +16,11 @@ test.describe('Highlight Theme', () => {
       await page.reload();
       
       // Theme dropdown should be visible even before login
-      const themeLabel = page.getByText('Theme:');
-      await expect(themeLabel).toBeVisible();
+      const themeDropdown = page.locator('.theme-fuzzy-select');
+      await expect(themeDropdown).toBeVisible();
       
-      // Default theme should be 'github'
-      const themeValue = await page.evaluate(() => localStorage.getItem('highlight_theme'));
-      expect(themeValue).toBeNull(); // Not set yet, will use default
+      // Should show default theme 'github-dark'
+      await expect(themeDropdown).toContainText('Github Dark');
     } finally {
       await mockServer.stop();
     }
