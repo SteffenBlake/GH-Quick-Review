@@ -10,8 +10,21 @@ import { getToken } from './auth';
  * GitHub API client for making authenticated requests
  */
 class GitHubClient {
-  constructor(baseUrl = 'https://api.github.com') {
-    this.baseUrl = baseUrl;
+  /**
+   * Get the base URL for API requests
+   * Checks window.VITE_GITHUB_API_URL first (for tests), then environment, then defaults to GitHub API
+   */
+  getBaseUrl() {
+    // Check window.VITE_GITHUB_API_URL (set by Playwright tests)
+    if (typeof window !== 'undefined' && window.VITE_GITHUB_API_URL) {
+      return window.VITE_GITHUB_API_URL;
+    }
+    // Check Vite environment variable
+    if (typeof import.meta.env !== 'undefined' && import.meta.env.VITE_GITHUB_API_URL) {
+      return import.meta.env.VITE_GITHUB_API_URL;
+    }
+    // Default to real GitHub API
+    return 'https://api.github.com';
   }
 
   /**
@@ -27,7 +40,8 @@ class GitHubClient {
       throw new Error('No authentication token provided');
     }
 
-    const url = `${this.baseUrl}${endpoint}`;
+    const baseUrl = this.getBaseUrl();
+    const url = `${baseUrl}${endpoint}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -75,11 +89,6 @@ class GitHubClient {
 }
 
 // Export singleton instance
-export const githubClient = new GitHubClient(
-  // Use window.VITE_GITHUB_API_URL if set (for Playwright tests), otherwise use environment variable
-  typeof window !== 'undefined' && window.VITE_GITHUB_API_URL 
-    ? window.VITE_GITHUB_API_URL 
-    : (typeof import.meta.env !== 'undefined' ? import.meta.env.VITE_GITHUB_API_URL : undefined)
-);
+export const githubClient = new GitHubClient();
 
 export default GitHubClient;
