@@ -63,17 +63,44 @@ export function getGitStatusIcon(status) {
 
   const statusLower = status.toLowerCase();
   
+  // Added files show a plus sign in green
   if (statusLower === 'added') {
     return { icon: '+', color: '#4ade80' }; // green
   }
   
+  // Removed files show a minus sign in red
   if (statusLower === 'removed') {
     return { icon: '-', color: '#f87171' }; // red
   }
   
+  // Modified/changed files show a tilde in green
   if (statusLower === 'modified' || statusLower === 'changed') {
     return { icon: '~', color: '#4ade80' }; // green
   }
   
   return null;
+}
+
+/**
+ * Check if a file is a binary file based on extension
+ * 
+ * @param {string} filename - The file name
+ * @returns {boolean} - True if the file is likely binary
+ */
+export function isBinaryFile(filename) {
+  const binaryExtensions = [
+    'png', 'jpg', 'jpeg', 'gif', 'bmp', 'ico', 'svg',
+    'zip', 'tar', 'gz', 'rar', '7z',
+    'exe', 'dll', 'so', 'dylib',
+    'pdf', 'doc', 'docx', 'xls', 'xlsx',
+    'ttf', 'otf', 'woff', 'woff2', 'eot',
+  ];
+  
+  const parts = filename.split('.');
+  if (parts.length > 1) {
+    const extension = parts[parts.length - 1].toLowerCase();
+    return binaryExtensions.includes(extension);
+  }
+  
+  return false;
 }

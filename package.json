@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:playwright": "playwright test",
     "test:all": "npm run test && npm run test:playwright",
+    "test:debug": "playwright test --debug",
     "start": "node src/index.js",
     "mock-server": "node tools/gh-mock-server.js tools/test_user"
   },
