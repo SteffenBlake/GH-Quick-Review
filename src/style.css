@@ -971,18 +971,22 @@ body {
 .diff-line-code {
   flex: 1;
   margin: 0;
-  padding: 0.25rem 0.5rem;
+  padding: 0;
   overflow-x: auto;
   white-space: pre;
   font-family: inherit;
-  color: var(--text-primary);
-  background: transparent;
 }
 
 .diff-line-code code {
   font-family: inherit;
-  background: transparent;
-  color: inherit;
+  display: block;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Ensure hljs background is visible */
+.diff-line-code code.hljs {
+  background: var(--hljs-bg, inherit);
+  padding: 0.25rem 0.5rem;
 }
 
 

@@ -15,6 +15,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { DirectoryBrowser } from './components/DirectoryBrowser';
 import { DiffViewer } from './components/DiffViewer';
+import { HighlightThemeLoader } from './components/HighlightThemeLoader';
 
 function MainContent() {
   // Check for any errors in the unified error store
@@ -66,6 +67,7 @@ export function App() {
           authenticated={!!token.value}
           onLogout={handleLogout}
         />
+        <HighlightThemeLoader />
         <DirectoryBrowser />
         {!token.value ? (
           <LoginPage />

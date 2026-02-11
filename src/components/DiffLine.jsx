@@ -4,6 +4,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
+import { useEffect, useRef } from 'preact/hooks';
+import hljs from 'highlight.js';
+
 // Icon constants
 const ICON_MESSAGE_ALERT = '\udb80\udf62';
 const ICON_MESSAGE_PLUS = '\udb81\ude53';
@@ -54,9 +57,18 @@ export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
   const lineInfo = getLineType(line);
   const codeContent = getCodeContent(line);
   const isHunkHeader = lineInfo.type === 'hunk';
+  const codeRef = useRef(null);
   
   // For now, no messages exist (we'll implement this when comments are integrated)
   const hasMessage = false;
+  
+  // Apply syntax highlighting when code content changes
+  useEffect(() => {
+    if (codeRef.current && !isHunkHeader) {
+      // Apply highlight.js to the code element
+      hljs.highlightElement(codeRef.current);
+    }
+  }, [codeContent, isHunkHeader]);
   
   return (
     <div 
@@ -84,11 +96,9 @@ export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
       </span>
       
       {/* Git icon */}
-      {!isHunkHeader && (
-        <span className="diff-line-git-icon" style={{ color: lineInfo.color }}>
-          {lineInfo.icon}
-        </span>
-      )}
+      <span className="diff-line-git-icon" style={{ color: lineInfo.color }}>
+        {!isHunkHeader ? lineInfo.icon : ''}
+      </span>
       
       {/* Line number - only show for non-hunk-header lines that have a line number */}
       {!isHunkHeader && lineNumber !== null && (
@@ -104,7 +114,7 @@ export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
       
       {/* Code content */}
       <pre className="diff-line-code">
-        <code>{codeContent}</code>
+        <code ref={codeRef} className="language-javascript">{codeContent}</code>
       </pre>
     </div>
   );
