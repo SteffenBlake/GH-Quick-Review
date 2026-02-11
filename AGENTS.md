@@ -84,6 +84,22 @@
 ### Self-Correction Protocol
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
 
+### PR Description Screenshots
+**When completing work and updating PR descriptions, include screenshots of ALL relevant screen states that were requested:**
+- Show all UI states (loading, success, error, empty, etc.)
+- For dropdowns/lists: show populated state
+- For error handling: show error messages displayed
+- For async operations: show loading spinners
+- Use mock server error configs to test and screenshot error states
+- Include before/after screenshots when modifying existing UI
+
+**Example:**
+If implementing a repos dropdown:
+- Screenshot 1: Loading state (spinner visible)
+- Screenshot 2: Success state (dropdown with repos)
+- Screenshot 3: Error state (error message displayed)
+- Screenshot 4: Selected state (if applicable)
+
 ## Project-Specific Guidelines
 
 ### Architecture: MVVM with Reactive Stores

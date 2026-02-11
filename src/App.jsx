@@ -11,6 +11,7 @@ import { token, clearToken } from './stores/authStore';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { ReposDropdown } from './components/ReposDropdown';
 
 export function App() {
   const [font, setFont] = useState('FiraCode');
@@ -34,6 +35,7 @@ export function App() {
         ) : (
           <main className="content">
             <h2>Welcome to GH Quick Review</h2>
+            <ReposDropdown />
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
               eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
