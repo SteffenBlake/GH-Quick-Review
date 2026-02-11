@@ -37,7 +37,6 @@ body {
   gap: 1.5rem;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .header-right {

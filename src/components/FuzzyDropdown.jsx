@@ -100,10 +100,14 @@ export function FuzzyDropdown({
     if (options.length > 0) {
       fuse.current = new Fuse(options, {
         keys: ['searchableText', 'label'],
-        threshold: 0.4,
+        threshold: 0.6, // Higher = more fuzzy (0.0 = perfect match, 1.0 = match anything)
+        distance: 100, // Maximum distance between characters
         includeScore: true,
         includeMatches: true,
         minMatchCharLength: 1,
+        ignoreLocation: true, // Don't weight matches by position
+        useExtendedSearch: false,
+        findAllMatches: true, // Find all matching characters
       });
     }
   }, [options]);
@@ -134,6 +138,10 @@ export function FuzzyDropdown({
     } else {
       // Set to 0 when dropdown opens
       setHighlightedIndex(0);
+      // Focus the input when dropdown opens
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   }, [isOpen]);
 
@@ -228,6 +236,7 @@ export function FuzzyDropdown({
                   setHighlightedIndex(0);
                 }}
                 onKeyDown={handleKeyDown}
+                onClick={(e) => e.stopPropagation()} // Prevent control's onClick from closing dropdown
                 placeholder="Type to search..."
                 autoFocus
               />
