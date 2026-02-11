@@ -5,7 +5,6 @@
   --text-secondary: #b0b0b0;
   --accent: #4a9eff;
   --border: #404040;
-  --directory-browser-width: 20rem;
 }
 
 body {
@@ -613,7 +612,10 @@ body {
   left: 0;
   z-index: 1000;
   display: flex;
-  transform: translateX(calc(-1 * var(--directory-browser-width)));
+  width: 25vw;
+  min-width: 15vw;
+  max-width: 30vw;
+  transform: translateX(-99%);
   transition: transform 0.3s ease;
   outline: none;
 }
@@ -623,7 +625,7 @@ body {
   transform: translateX(0);
 }
 
-/* Toggle button - always visible */
+/* Toggle button - always visible, sticks out on the right */
 .directory-browser-toggle {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
@@ -655,7 +657,7 @@ body {
   border: 1px solid var(--border);
   border-left: none;
   border-radius: 0 4px 4px 0;
-  width: var(--directory-browser-width);
+  width: 100%;
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
