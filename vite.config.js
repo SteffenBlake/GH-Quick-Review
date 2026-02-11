@@ -22,7 +22,10 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       // Make env variables available to the app
-      'import.meta.env.VITE_GITHUB_API_URL': JSON.stringify(env.VITE_GITHUB_API_URL),
+      // Default to localhost:3000 for development with mock server
+      'import.meta.env.VITE_GITHUB_API_URL': JSON.stringify(
+        env.VITE_GITHUB_API_URL || 'http://localhost:3000'
+      ),
     },
   };
 });

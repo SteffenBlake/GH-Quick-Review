@@ -539,3 +539,106 @@ This endpoint returns the contents of a file in a repository. Below is the **act
 7. **Required Fields**: All responses include `name`, `path`, `sha`, `size`, `url`, `html_url`, `git_url`, `download_url`, `type`, `content`, `encoding`, and `_links`
 
 This documentation serves as the definitive reference for understanding how GitHub represents file contents in API responses.
+
+## Development Server Setup Guide
+
+**CRITICAL: Follow these steps EXACTLY to start the development environment correctly.**
+
+### Step-by-Step Server Setup
+
+**1. Start the Mock Server (FIRST)**
+```bash
+cd /home/runner/work/GH-Quick-Review/GH-Quick-Review
+node tools/gh-mock-server.js tools/test_user 2>&1 &
+```
+- Mock server runs on `http://localhost:3000`
+- Provides test data from `tools/test_user/` directory
+- Must be started BEFORE dev server
+
+**2. Verify Mock Server is Running**
+```bash
+sleep 2
+curl -s http://localhost:3000/user/repos | head -20
+```
+- Should return JSON with test repositories
+- If no response, mock server didn't start
+
+**3. Install Dependencies (if needed)**
+```bash
+cd /home/runner/work/GH-Quick-Review/GH-Quick-Review
+npm install
+```
+
+**4. Start Dev Server (SECOND)**
+```bash
+cd /home/runner/work/GH-Quick-Review/GH-Quick-Review
+npm run dev 2>&1 &
+```
+- Dev server runs on `http://localhost:5173/GH-Quick-Review/`
+- By default, connects to mock server at `http://localhost:3000`
+- Vite config has default: `VITE_GITHUB_API_URL || 'http://localhost:3000'`
+
+**5. Verify Dev Server is Running**
+```bash
+sleep 3
+curl -s http://localhost:5173 > /dev/null && echo "✓ Dev server ready"
+```
+
+**6. Take Screenshots with Playwright MCP Tools**
+```javascript
+// Navigate to app
+await playwright-browser_navigate({ url: 'http://localhost:5173/GH-Quick-Review/' })
+
+// Set up test state via localStorage
+await playwright-browser_evaluate({
+  function: `() => {
+    localStorage.setItem('github_pat', 'test_token_12345');
+    localStorage.setItem('selected_repo', 'test_repo_1');
+    localStorage.setItem('selected_pr', '1');
+  }`
+})
+
+// Reload to apply state
+await playwright-browser_navigate({ url: 'http://localhost:5173/GH-Quick-Review/' })
+
+// Wait for transition if needed
+sleep 1
+
+// Take screenshot
+await playwright-browser_take_screenshot({ 
+  filename: 'my-screenshot.png',
+  fullPage: true 
+})
+// This returns a GitHub URL - IMMEDIATELY display it in chat with markdown
+```
+
+**7. Stop Servers When Done**
+```bash
+# Find PIDs
+ps aux | grep "node tools/gh-mock-server" | grep -v grep | awk '{print $2}'
+ps aux | grep "vite" | grep -v grep | awk '{print $2}'
+
+# Kill specific PIDs (replace with actual PIDs)
+kill <mock_server_pid> <vite_pid>
+```
+
+### Common Issues
+
+**Issue: 404 API Errors in Screenshots**
+- Cause: Dev server not connected to mock server
+- Fix: Verify vite.config.js has default `VITE_GITHUB_API_URL || 'http://localhost:3000'`
+- Fix: Ensure mock server is running on port 3000
+
+**Issue: "vite: not found" or "vite: command not found"**
+- Cause: Dependencies not installed or vite not in PATH
+- Fix: Run `npm install` first
+- Fix: Use `npm run dev` (uses package.json script) instead of `vite` directly
+
+**Issue: Can't kill processes**
+- Don't use: `pkill` or `killall` (not allowed)
+- Do use: `kill <PID>` with specific process ID from `ps aux`
+
+**Issue: Screenshots show outdated code**
+- Cause: Browser cache or HMR not updating
+- Fix: Hard reload page with `playwright-browser_navigate` (always reloads)
+- Fix: Make sure dev server restarted after code changes

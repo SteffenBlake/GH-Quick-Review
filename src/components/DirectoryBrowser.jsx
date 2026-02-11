@@ -42,9 +42,8 @@ export function DirectoryBrowser() {
       <button 
         className="directory-browser-toggle"
         onClick={handleExpandClick}
-        aria-label="Expand directory browser"
+        aria-label="Toggle directory browser"
       >
-        {'\udb80\udd3e'}
       </button>
       
       <div className="directory-browser-content">
