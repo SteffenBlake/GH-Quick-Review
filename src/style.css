@@ -336,6 +336,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1;
 }
 
 .repos-dropdown label {
@@ -345,7 +346,7 @@ body {
 }
 
 .repo-select {
-  min-width: 125px;
+  flex: 1;
   padding: 0.5rem;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -394,11 +395,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1;
 }
 
 .pr-select {
-  min-width: 200px;
-  max-width: 300px;
+  flex: 1;
   padding: 0.5rem;
   background-color: var(--bg-primary);
   color: var(--text-primary);

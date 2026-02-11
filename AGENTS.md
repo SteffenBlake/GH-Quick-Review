@@ -29,6 +29,28 @@
 - Test font consistency by switching fonts in the UI and verifying ALL elements change
 - This applies to: dropdowns, inputs, buttons, text, headings, footers, headers - EVERYTHING
 
+#### Responsive Sizing
+**CRITICAL: NEVER use pixel-based measurements for widths or heights.** Screen sizes vary greatly:
+- **ALWAYS** use relative units: `rem`, `em`, `%`, `vh`, `vw`
+- **ALWAYS** use flexbox (`flex`, `flex-grow`, `flex-shrink`) for layout sizing
+- **NEVER** use fixed pixel widths like `width: 200px` or `min-width: 125px`
+- Components must adapt to different screen sizes automatically
+- Use `flex: 1` to make elements grow and share space equally
+- Use CSS Grid for two-dimensional layouts when appropriate
+- Exception: Small, truly fixed elements like borders (`1px solid`) or icons are acceptable
+
+**Examples:**
+```css
+/* WRONG - Fixed pixel widths */
+.dropdown { min-width: 200px; max-width: 300px; }
+
+/* CORRECT - Flexbox sizing */
+.dropdown { flex: 1; }
+
+/* CORRECT - Relative units */
+.container { padding: 1rem; gap: 0.5rem; }
+```
+
 #### Nesting
 **Avoid excessive nesting.** Keep code flat and readable:
 - Prefer early returns over deep nesting
