@@ -71,6 +71,74 @@ class GitHubClient {
     }
     return this.get(`/repos/${repo}/pulls`);
   }
+
+  /**
+   * Get a single pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @returns {Promise<Object>} - Pull request object
+   */
+  async getPull(repo, pullNumber) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    return this.get(`/repos/${repo}/pulls/${pullNumber}`);
+  }
+
+  /**
+   * List files changed in a pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @returns {Promise<Array>} - Array of file objects with diff information
+   */
+  async listPullFiles(repo, pullNumber) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    return this.get(`/repos/${repo}/pulls/${pullNumber}/files`);
+  }
+
+  /**
+   * Get contents of a file from a repository
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {string} path - File path in the repository
+   * @param {string} ref - Optional git reference (branch, tag, or commit SHA)
+   * @returns {Promise<Object>} - File content object (base64 encoded)
+   */
+  async getContents(repo, path, ref = null) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!path) {
+      throw new Error('File path is required');
+    }
+    const endpoint = ref 
+      ? `/repos/${repo}/contents/${path}?ref=${ref}`
+      : `/repos/${repo}/contents/${path}`;
+    return this.get(endpoint);
+  }
+
+  /**
+   * List review comments on a pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @returns {Promise<Array>} - Array of review comment objects
+   */
+  async listPullComments(repo, pullNumber) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    return this.get(`/repos/${repo}/pulls/${pullNumber}/comments`);
+  }
 }
 
 // Export singleton instance
