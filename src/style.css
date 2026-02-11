@@ -741,16 +741,17 @@ body {
   cursor: pointer;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: box-shadow 0.2s;
-  outline: none;
+  transition: outline 0.2s;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
 }
 
 .directory-entry-content:hover {
-  box-shadow: 0 0 0 2px var(--accent);
+  outline-color: var(--accent);
 }
 
 .directory-entry-content:focus {
-  box-shadow: 0 0 0 2px var(--accent);
+  outline-color: var(--accent);
 }
 
 /* Selected file */
