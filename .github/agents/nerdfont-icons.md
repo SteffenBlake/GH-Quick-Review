@@ -10,6 +10,8 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - Logout: \udb81\uddfd
 - Login: \udb80\udf42
 - OpenBook: \ueaa4
+- Copyright: \udb81\udde6
+- Bug: \uf188
 
 ## Usage
 

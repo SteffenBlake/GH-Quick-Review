@@ -223,3 +223,41 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.footer {
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 2rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.footer-copyright {
+  padding-right: 0.5rem;
+}
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #3a8eef;
+  text-decoration: underline;
+}
