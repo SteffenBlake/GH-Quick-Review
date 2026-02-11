@@ -664,9 +664,8 @@ body {
 }
 
 .directory-browser-toggle:hover {
-  background-color: var(--bg-primary);
-  color: var(--accent);
-  box-shadow: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 /* Content panel */

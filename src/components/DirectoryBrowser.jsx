@@ -10,38 +10,46 @@ import { selectedPr } from '../stores/selectedPrStore';
 
 export function DirectoryBrowser() {
   const containerRef = useRef(null);
+  const previousPrRef = useRef(selectedPr.value);
   
   // Hide if not logged in or no PR selected
   if (!token.value || !selectedPr.value) {
     return null;
   }
 
-  // Auto-expand when PR selection changes
+  // Auto-expand when PR selection changes (but NOT on initial mount/reload)
   useEffect(() => {
-    if (containerRef.current && selectedPr.value) {
-      containerRef.current.focus();
+    // Only focus if the PR value actually changed (not on mount)
+    if (previousPrRef.current !== selectedPr.value && previousPrRef.current !== null) {
+      containerRef.current?.focus();
     }
+    // Update the previous PR value
+    previousPrRef.current = selectedPr.value;
   }, [selectedPr.value]);
 
-  // Also focus on mount if PR is already selected
-  useEffect(() => {
-    if (containerRef.current && selectedPr.value) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        containerRef.current?.focus();
-      }, 100);
+  const handleToggleClick = (e) => {
+    e.preventDefault(); // Prevent default mouse behavior
+    
+    // Check if currently focused (expanded)
+    const isFocused = containerRef.current?.matches(':focus-within');
+    
+    if (isFocused) {
+      // Collapse by blurring whatever has focus
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    } else {
+      // Expand by focusing the container
+      containerRef.current?.focus();
     }
-  }, []);
-
-  const handleExpandClick = () => {
-    containerRef.current?.focus();
   };
 
   return (
     <div ref={containerRef} className="directory-browser" tabIndex={-1}>
       <button 
         className="directory-browser-toggle"
-        onClick={handleExpandClick}
+        onMouseDown={handleToggleClick}
+        tabIndex={-1}
         aria-label="Toggle directory browser"
       >
       </button>
