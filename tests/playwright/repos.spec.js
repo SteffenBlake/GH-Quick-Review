@@ -125,4 +125,89 @@ test.describe('Repos Dropdown', () => {
       await mockServer.stop();
     }
   });
+
+  test('should persist selected repo across page reloads', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Wait for dropdown
+      await expect(page.locator('#repo-select')).toBeVisible();
+      
+      // Select a repo
+      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      
+      // Verify selection persisted to localStorage
+      const storedRepo = await page.evaluate(() => localStorage.getItem('selected_repo'));
+      expect(storedRepo).toBe('test_user/test_repo_1');
+      
+      // Reload the page
+      await page.reload();
+      
+      // Wait for dropdown to appear again
+      await expect(page.locator('#repo-select')).toBeVisible();
+      
+      // Verify selection is still there
+      const selectedValue = await page.locator('#repo-select').inputValue();
+      expect(selectedValue).toBe('test_user/test_repo_1');
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should clear selected repo on logout and reset on login', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Wait for dropdown
+      await expect(page.locator('#repo-select')).toBeVisible();
+      
+      // Select a repo
+      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      
+      // Verify selection
+      let selectedValue = await page.locator('#repo-select').inputValue();
+      expect(selectedValue).toBe('test_user/test_repo_1');
+      
+      // Logout
+      await page.getByRole('button', { name: /Logout/i }).click();
+      
+      // Verify we're back at login page
+      await expect(page.getByPlaceholder('Enter your GitHub PAT')).toBeVisible();
+      
+      // Verify selected repo was cleared from localStorage
+      const storedRepo = await page.evaluate(() => localStorage.getItem('selected_repo'));
+      expect(storedRepo).toBeNull();
+      
+      // Login again
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Wait for dropdown
+      await expect(page.locator('#repo-select')).toBeVisible();
+      
+      // Verify dropdown is reset to empty (no selection)
+      selectedValue = await page.locator('#repo-select').inputValue();
+      expect(selectedValue).toBe('');
+    } finally {
+      await mockServer.stop();
+    }
+  });
 });

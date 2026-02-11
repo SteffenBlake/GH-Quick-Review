@@ -4,8 +4,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useState } from 'preact/hooks';
 import { useRepos } from '../stores/reposStore';
+import { selectedRepo, setSelectedRepo } from '../stores/selectedRepoStore';
 import { LoadingSpinner } from './LoadingSpinner';
 
 /**
@@ -14,7 +14,6 @@ import { LoadingSpinner } from './LoadingSpinner';
  */
 export function ReposDropdown() {
   const { data: repos, isLoading, error } = useRepos();
-  const [selectedRepo, setSelectedRepo] = useState('');
 
   if (isLoading) {
     return (
@@ -40,7 +39,7 @@ export function ReposDropdown() {
     <div className="repos-dropdown">
       <select
         id="repo-select"
-        value={selectedRepo}
+        value={selectedRepo.value}
         onChange={(e) => setSelectedRepo(e.target.value)}
         className="repo-select"
       >
