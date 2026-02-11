@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2026 Steffen Blake
+ * Licensed under the MIT License. See LICENSE file in the project root.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
+/**
+ * Get line type and git icon from the line content
+ * @param {string} line - The line content
+ * @returns {Object} - { type: 'added'|'removed'|'context'|'hunk', icon, color }
+ */
+function getLineType(line) {
+  if (line.startsWith('@@')) {
+    return { type: 'hunk', icon: null, color: '#a0a0a0' };
+  }
+  if (line.startsWith('+')) {
+    return { type: 'added', icon: '+', color: '#4ade80' };
+  }
+  if (line.startsWith('-')) {
+    return { type: 'removed', icon: '-', color: '#f87171' };
+  }
+  return { type: 'context', icon: ' ', color: 'inherit' };
+}
+
+/**
+ * Extract the actual code content from a diff line
+ * @param {string} line - The line content with git prefix
+ * @returns {string} - The code without the +/- prefix
+ */
+function getCodeContent(line) {
+  if (line.startsWith('@@')) {
+    return line; // Hunk headers stay as-is
+  }
+  if (line.startsWith('+') || line.startsWith('-') || line.startsWith(' ')) {
+    return line.substring(1); // Remove first character
+  }
+  return line;
+}
+
+/**
+ * Component for rendering a single line in a diff
+ * @param {Object} props
+ * @param {string} props.line - The line content
+ * @param {number} props.index - Line index in the hunk
+ * @param {boolean} props.isSelected - Whether this line is selected/picked
+ * @param {Function} props.onClick - Click handler
+ */
+export function DiffLine({ line, index, isSelected, onClick }) {
+  const lineInfo = getLineType(line);
+  const codeContent = getCodeContent(line);
+  const isHunkHeader = lineInfo.type === 'hunk';
+  
+  // For now, no messages exist (we'll implement this when comments are integrated)
+  const hasMessage = false;
+  
+  return (
+    <div 
+      className={`diff-line diff-line-${lineInfo.type} ${isSelected ? 'selected' : ''}`}
+      onClick={onClick}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      {/* Message button gutter */}
+      <span className="diff-line-message-gutter">
+        {hasMessage ? (
+          <button className="diff-line-message-btn has-message">
+            {'\udb80\udf62'}
+          </button>
+        ) : (
+          <button className="diff-line-message-btn add-message">
+            {'\udb81\ude53'}
+          </button>
+        )}
+      </span>
+      
+      {/* Git icon */}
+      {!isHunkHeader && (
+        <span className="diff-line-git-icon" style={{ color: lineInfo.color }}>
+          {lineInfo.icon}
+        </span>
+      )}
+      
+      {/* Line number - only show for non-hunk-header lines */}
+      {!isHunkHeader && (
+        <span className="diff-line-number">
+          {index}
+        </span>
+      )}
+      
+      {/* Code content */}
+      <pre className="diff-line-code">
+        <code>{codeContent}</code>
+      </pre>
+    </div>
+  );
+}

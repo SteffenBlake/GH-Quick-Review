@@ -796,3 +796,193 @@ body {
   text-align: center;
 }
 
+/* Diff Viewer */
+.diff-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.diff-viewer-loading,
+.diff-viewer-error,
+.diff-viewer-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.diff-viewer-error {
+  color: #ff6b6b;
+}
+
+/* File Card */
+.file-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.file-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.file-card-status {
+  font-weight: bold;
+  min-width: 1rem;
+  text-align: center;
+}
+
+.file-card-icon {
+  min-width: 1rem;
+  text-align: center;
+}
+
+.file-card-filename {
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.file-card-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+  font-family: inherit;
+}
+
+.file-card-additions {
+  color: #4ade80;
+}
+
+.file-card-deletions {
+  color: #f87171;
+}
+
+.file-card-body {
+  padding: 0;
+}
+
+/* Diff Hunk */
+.diff-hunk {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Diff Line */
+.diff-line {
+  display: flex;
+  align-items: center;
+  font-family: inherit;
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s;
+  position: relative;
+}
+
+.diff-line:hover:not(.selected) {
+  background-color: #3a3a3a;
+}
+
+.diff-line.selected {
+  background-color: #454545;
+}
+
+/* Line type backgrounds */
+.diff-line-added {
+  background-color: rgba(74, 222, 128, 0.1);
+}
+
+.diff-line-removed {
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+.diff-line-hunk {
+  background-color: var(--bg-primary);
+  cursor: default;
+}
+
+.diff-line-hunk:hover {
+  background-color: var(--bg-primary);
+}
+
+/* Message button gutter */
+.diff-line-message-gutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+  min-width: 2rem;
+}
+
+.diff-line-message-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  display: none;
+  color: var(--text-primary);
+}
+
+.diff-line-message-btn.has-message {
+  display: block;
+  color: var(--text-primary);
+}
+
+.diff-line:hover .diff-line-message-btn.add-message,
+.diff-line.selected .diff-line-message-btn.add-message {
+  display: block;
+  color: #4ade80;
+}
+
+.diff-line-message-btn:hover {
+  opacity: 0.8;
+}
+
+/* Git icon */
+.diff-line-git-icon {
+  min-width: 1rem;
+  text-align: center;
+  font-weight: bold;
+  padding: 0 0.5rem;
+}
+
+/* Line number */
+.diff-line-number {
+  min-width: 3rem;
+  text-align: right;
+  padding: 0 0.5rem;
+  color: var(--text-secondary);
+  user-select: none;
+  font-family: inherit;
+}
+
+/* Code content */
+.diff-line-code {
+  flex: 1;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.diff-line-code code {
+  font-family: inherit;
+  background: transparent;
+  color: inherit;
+}
+
+
