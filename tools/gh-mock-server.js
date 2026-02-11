@@ -901,7 +901,8 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
   });
   
   server.listen(port, () => {
-    console.log(`\n✓ GitHub Mock Server running on http://localhost:${port}`);
+    const actualPort = server.address().port;
+    console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
     console.log(`\nAvailable endpoints:`);
     console.log(`  GET    /user/repos`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls`);
