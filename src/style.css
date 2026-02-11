@@ -43,21 +43,41 @@ body {
 .header-repo-picker {
   flex: 2 1 0;
   min-width: 0;
+  display: flex;
+}
+
+.header-repo-picker .fuzzy-dropdown {
+  width: 100%;
 }
 
 .header-pr-picker {
   flex: 3 1 0;
   min-width: 0;
+  display: flex;
+}
+
+.header-pr-picker .fuzzy-dropdown {
+  width: 100%;
 }
 
 .header-font-picker {
   flex: 1 1 0;
   min-width: 0;
+  display: flex;
+}
+
+.header-font-picker .fuzzy-dropdown {
+  width: 100%;
 }
 
 .header-theme-picker {
   flex: 2 1 0;
   min-width: 0;
+  display: flex;
+}
+
+.header-theme-picker .fuzzy-dropdown {
+  width: 100%;
 }
 
 .header-logout-button {
@@ -329,9 +349,7 @@ body {
 .repos-dropdown {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 15rem;
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .repos-dropdown label {
@@ -389,9 +407,7 @@ body {
 .pulls-dropdown {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 20rem;
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .pr-select {
