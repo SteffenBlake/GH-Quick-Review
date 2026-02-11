@@ -5,14 +5,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { signal } from '@preact/signals';
 import { token } from './authStore.js';
+import { setError, clearError } from './errorStore.js';
 import { githubClient } from '../utils/github-client.js';
-
-/**
- * Error state for repos - tracks any error that occurs
- */
-export const reposError = signal(null);
 
 /**
  * React Query hook for repos - professional async state management
@@ -25,10 +20,10 @@ export function useRepos() {
     queryFn: async () => {
       try {
         const data = await githubClient.listUserRepos();
-        reposError.value = null; // Clear error on success
+        clearError(); // Clear error on success
         return data;
       } catch (error) {
-        reposError.value = error.message || 'Failed to load repositories';
+        setError(error.message || 'Failed to load repositories');
         throw error;
       }
     },

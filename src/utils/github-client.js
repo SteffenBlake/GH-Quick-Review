@@ -4,7 +4,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { getToken } from './auth';
+import { getToken } from '../stores/authStore.js';
 
 /**
  * GitHub API client for making authenticated requests
@@ -12,19 +12,10 @@ import { getToken } from './auth';
 class GitHubClient {
   /**
    * Get the base URL for API requests
-   * Checks window.VITE_GITHUB_API_URL first (for tests), then environment, then defaults to GitHub API
+   * Uses VITE_GITHUB_API_URL environment variable or defaults to GitHub API
    */
   getBaseUrl() {
-    // Check window.VITE_GITHUB_API_URL (set by Playwright tests)
-    if (typeof window !== 'undefined' && window.VITE_GITHUB_API_URL) {
-      return window.VITE_GITHUB_API_URL;
-    }
-    // Check Vite environment variable
-    if (typeof import.meta.env !== 'undefined' && import.meta.env.VITE_GITHUB_API_URL) {
-      return import.meta.env.VITE_GITHUB_API_URL;
-    }
-    // Default to real GitHub API
-    return 'https://api.github.com';
+    return import.meta.env.VITE_GITHUB_API_URL || 'https://api.github.com';
   }
 
   /**
@@ -41,7 +32,7 @@ class GitHubClient {
     }
 
     const baseUrl = this.getBaseUrl();
-    const url = `${baseUrl}${endpoint}`;
+    const url = new URL(endpoint, baseUrl);
     const response = await fetch(url, {
       method: 'GET',
       headers: {

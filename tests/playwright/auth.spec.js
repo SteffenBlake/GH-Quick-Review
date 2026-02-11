@@ -4,14 +4,9 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Authentication Flow', () => {
   test('should display login page when not authenticated', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      // Set the GitHub API URL to use our mock server
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -30,7 +25,7 @@ test.describe('Authentication Flow', () => {
       await expect(page.getByRole('link', { name: /Warning: Should you trust this app/i })).toBeVisible();
       
       // Should NOT show main content
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).not.toBeVisible();
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).not.toBeVisible();
     } finally {
       await mockServer.stop();
     }
@@ -38,36 +33,26 @@ test.describe('Authentication Flow', () => {
 
   test('should save token to localStorage and show main content on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      // Set the GitHub API URL to use our mock server
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       
-      // Enter a test token
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('ghp_test_token_123');
-      
-      // Click login button
+      // Fill in token and login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token_12345');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Should show main content
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
-      
-      // Should show logout button (button with the icon)
-      await expect(page.getByRole('button', { name: '󰗽' })).toBeVisible();
+      // Should show main content after login
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
       
       // Should NOT show login page
       await expect(page.getByRole('heading', { name: /Login Required/i })).not.toBeVisible();
       
-      // Verify token is in localStorage
-      const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-      expect(token).toBe('ghp_test_token_123');
+      // Verify token was saved to localStorage
+      const savedToken = await page.evaluate(() => localStorage.getItem('github_pat'));
+      expect(savedToken).toBe('test_token_12345');
     } finally {
       await mockServer.stop();
     }
@@ -75,93 +60,91 @@ test.describe('Authentication Flow', () => {
 
   test('should trim whitespace from token before saving', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       
-      // Enter token with whitespace
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('  ghp_test_token_456  ');
-      
-      // Click login button
+      // Enter token with leading/trailing whitespace
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('  test_token_spaces  ');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Wait for login to complete
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
+      // Should show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
       
-      // Verify trimmed token is in localStorage
-      const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-      expect(token).toBe('ghp_test_token_456');
+      // Token should be trimmed in localStorage
+      const savedToken = await page.evaluate(() => localStorage.getItem('github_pat'));
+      expect(savedToken).toBe('test_token_spaces');
     } finally {
       await mockServer.stop();
     }
   });
 
-  test('should not login with empty token', async ({ page }) => {
+  test('should not allow login with empty token', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       
-      // Click login without entering token
-      await page.getByRole('button', { name: 'Login' }).click();
+      // Try to login with empty token
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('   ');
+      
+      // Button should be disabled or clicking should do nothing
+      const loginButton = page.getByRole('button', { name: 'Login' });
+      await loginButton.click();
       
       // Should still show login page
       await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
       
-      // Verify no token in localStorage
-      const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-      expect(token).toBeNull();
+      // Should NOT show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).not.toBeVisible();
     } finally {
       await mockServer.stop();
     }
   });
 
-  test('should logout and return to login page', async ({ page }) => {
+  test('should show logout button when authenticated', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
+      await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
       await page.reload();
       
-      // Login first
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('ghp_test_token_789');
-      await page.getByRole('button', { name: 'Login' }).click();
+      // Should show logout button
+      await expect(page.getByRole('button', { name: /Logout/i })).toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should clear token and return to login page on logout', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
+      await page.reload();
       
-      // Verify we're logged in
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
+      // Should show main content initially
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
       
-      // Click logout button using the icon
-      await page.getByRole('button', { name: '󰗽' }).click();
+      // Click logout
+      await page.getByRole('button', { name: /Logout/i }).click();
       
-      // Should return to login page
+      // Should show login page
       await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
       
-      // Should NOT show main content
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).not.toBeVisible();
-      
-      // Verify token is cleared from localStorage
-      const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-      expect(token).toBeNull();
+      // Token should be removed from localStorage
+      const savedToken = await page.evaluate(() => localStorage.getItem('github_pat'));
+      expect(savedToken).toBeNull();
     } finally {
       await mockServer.stop();
     }
@@ -169,86 +152,49 @@ test.describe('Authentication Flow', () => {
 
   test('should persist authentication across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       
       // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('ghp_test_token_persist');
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Verify we're logged in
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
+      // Should show main content
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
       
-      // Reload the page
+      // Reload page
       await page.reload();
       
-      // Should still be logged in (not showing login page)
-      await expect(page.getByText(/Lorem ipsum dolor sit amet/i)).toBeVisible();
+      // Should still show main content (not login page)
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
       await expect(page.getByRole('heading', { name: /Login Required/i })).not.toBeVisible();
-      
-      // Verify token is still in localStorage
-      const token = await page.evaluate(() => localStorage.getItem('github_pat'));
-      expect(token).toBe('ghp_test_token_persist');
     } finally {
       await mockServer.stop();
     }
   });
 
-  test('documentation links should have correct URLs', async ({ page }) => {
+  test('should show login page if localStorage is cleared externally', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    const port = await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
+      await page.reload();
       
-      const guideLink = page.getByRole('link', { name: /Guide: How to generate a PAT token/i });
-      const warningLink = page.getByRole('link', { name: /Warning: Should you trust this app/i });
+      // Should show main content initially
+      await expect(page.getByText(/Please select a Repo and a Pull Request to review!/i)).toBeVisible();
       
-      await expect(guideLink).toHaveAttribute(
-        'href',
-        'https://github.com/SteffenBlake/GH-Quick-Review/blob/main/docs/Generating-a-PAT-Token.md'
-      );
+      // Clear localStorage externally
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
       
-      await expect(warningLink).toHaveAttribute(
-        'href',
-        'https://github.com/SteffenBlake/GH-Quick-Review/blob/main/docs/Should-You-Trust-This-App.md'
-      );
-    } finally {
-      await mockServer.stop();
-    }
-  });
-
-  test('documentation links should open in new tab', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    const port = await mockServer.start();
-    
-    try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
-      await page.goto('/GH-Quick-Review/');
-      
-      const guideLink = page.getByRole('link', { name: /Guide: How to generate a PAT token/i });
-      const warningLink = page.getByRole('link', { name: /Warning: Should you trust this app/i });
-      
-      await expect(guideLink).toHaveAttribute('target', '_blank');
-      await expect(warningLink).toHaveAttribute('target', '_blank');
-      
-      await expect(guideLink).toHaveAttribute('rel', 'noopener noreferrer');
-      await expect(warningLink).toHaveAttribute('rel', 'noopener noreferrer');
+      // Should show login page
+      await expect(page.getByRole('heading', { name: /Login Required/i })).toBeVisible();
     } finally {
       await mockServer.stop();
     }

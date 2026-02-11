@@ -1,22 +1,12 @@
-/*
- * Copyright (c) 2026 Steffen Blake
- * Licensed under the MIT License. See LICENSE file in the project root.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
- */
-
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
 test.describe('Repos Dropdown', () => {
   test('should show loading spinner while fetching repos', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 0, { latency: 2000 }); // Add latency to see loading
+    await mockServer.start(null, 3000, { latency: 2000 }); // Add latency to see loading
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -37,13 +27,9 @@ test.describe('Repos Dropdown', () => {
 
   test('should display repos dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -58,27 +44,20 @@ test.describe('Repos Dropdown', () => {
       // Should have "Repo..." option
       await expect(page.locator('#repo-select option').first()).toHaveText('Repo...');
       
-      // Should have repos from mock server
+      // Should have repo options (without username prefix)
       const options = await page.locator('#repo-select option').allTextContents();
-      expect(options.length).toBeGreaterThan(1); // At least the placeholder + repos
-      expect(options.some(opt => opt.includes('test_repo'))).toBeTruthy();
+      expect(options).toContain('test_repo_1');
+      expect(options).toContain('test_repo_2');
     } finally {
       await mockServer.stop();
     }
   });
 
-  test('should display error message when repos fetch fails', async ({ page }) => {
+  test('should show error page when repos fetch returns 500', async ({ page }) => {
     const mockServer = new MockServerManager();
-    // Configure mock server to return 500 error for listUserRepos
-    const port = await mockServer.start(null, 0, {
-      listUserRepos: 500
-    });
+    await mockServer.start(null, 3000, { listUserRepos: 500 });
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -87,40 +66,30 @@ test.describe('Repos Dropdown', () => {
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Should see error message
-      await expect(page.locator('.repos-error')).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(/Error:/i)).toBeVisible();
-      
-      // Should NOT see the dropdown
-      await expect(page.locator('#repo-select')).not.toBeVisible();
+      // Should show error page
+      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
+      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
     } finally {
       await mockServer.stop();
     }
   });
 
-  test('should display error message for 401 unauthorized', async ({ page }) => {
+  test('should show error page when repos fetch returns 401', async ({ page }) => {
     const mockServer = new MockServerManager();
-    // Configure mock server to return 401 for listUserRepos
-    const port = await mockServer.start(null, 0, {
-      listUserRepos: 401
-    });
+    await mockServer.start(null, 3000, { listUserRepos: 401 });
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
       
-      // Login with token (will fail on repos fetch)
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('bad_token');
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Should see error message indicating auth failure
-      await expect(page.locator('.repos-error')).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(/Error:/i)).toBeVisible();
+      // Should show error page
+      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
+      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
     } finally {
       await mockServer.stop();
     }
@@ -128,13 +97,9 @@ test.describe('Repos Dropdown', () => {
 
   test('should allow selecting a repository from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start();
+    await mockServer.start(null, 3000);
     
     try {
-      await page.addInitScript((mockPort) => {
-        window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-      }, port);
-      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -148,16 +113,14 @@ test.describe('Repos Dropdown', () => {
       
       // Get available repos
       const options = await page.locator('#repo-select option').allTextContents();
-      const repoOption = options.find(opt => opt.includes('test_repo'));
-      expect(repoOption).toBeTruthy();
+      expect(options.length).toBeGreaterThan(1); // Should have placeholder + repos
       
       // Select a repo
-      await page.locator('#repo-select').selectOption({ label: repoOption });
+      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
       
       // Verify selection
       const selectedValue = await page.locator('#repo-select').inputValue();
-      expect(selectedValue).toBeTruthy();
-      expect(selectedValue.length).toBeGreaterThan(0);
+      expect(selectedValue).toBe('test_user/test_repo_1');
     } finally {
       await mockServer.stop();
     }

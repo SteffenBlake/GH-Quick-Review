@@ -241,21 +241,19 @@ This project uses **Playwright integration tests ONLY**.
      - **CRITICAL**: Each test MUST start its own instance of the mock server
      - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)
      - **CRITICAL**: Each test MUST stand up the server, run the test, then stop/release it
+     - **CRITICAL**: All tests use the SAME fixed port (3000) since they run serially
      - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
      - **DO NOT** pollute the mock server state between tests
      - **ONLY** the mock server should be mocked - everything else must be real end-to-end
+     - **Environment**: Tests use `.env.test` which sets `VITE_GITHUB_API_URL=http://localhost:3000`
      - Example:
        ```javascript
        test('my test', async ({ page }) => {
          const mockServer = new MockServerManager();
-         const port = await mockServer.start(null, 0, { /* custom config */ });
+         const port = await mockServer.start(null, 3000); // Fixed port 3000
          try {
-           // Set the GitHub API URL for the app to use mock server
-           await page.addInitScript((mockPort) => {
-             window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
-           }, port);
-           
            // Navigate and interact with the real app
+           // The app will use http://localhost:3000 from .env.test
            await page.goto('/GH-Quick-Review/');
            // ... test interactions ...
          } finally {
