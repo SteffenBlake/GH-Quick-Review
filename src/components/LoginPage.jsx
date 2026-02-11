@@ -6,15 +6,39 @@
 
 import { useState } from 'preact/hooks';
 import { setToken } from '../utils/auth';
+import { githubClient } from '../utils/github-client';
+import { LoadingSpinner } from './LoadingSpinner';
 
 export function LoginPage({ onLogin }) {
   const [token, setTokenInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (token.trim()) {
+    if (!token.trim()) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Verify the token with GitHub API
+      await githubClient.verifyToken(token.trim());
+      
+      // Token is valid, save it and trigger login
       setToken(token.trim());
       onLogin();
+    } catch (err) {
+      // Token validation failed
+      setError(
+        err.status === 401
+          ? 'Invalid token. Please check your GitHub Personal Access Token.'
+          : 'Failed to verify token. Please try again.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,9 +57,19 @@ export function LoginPage({ onLogin }) {
             onInput={(e) => setTokenInput(e.target.value)}
             className="pat-input"
             autoFocus
+            disabled={loading}
           />
-          <button type="submit" className="login-button">
-            {'\udb80\udf42'} Login
+          {error && (
+            <div className="error-message">
+              {'\uf071'} {error}
+            </div>
+          )}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? (
+              <LoadingSpinner text="Verifying token..." />
+            ) : (
+              <>{'\udb80\udf42'} Login</>
+            )}
           </button>
         </form>
         <div className="login-links">

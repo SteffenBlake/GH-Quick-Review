@@ -12,6 +12,12 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - OpenBook: \ueaa4
 - Copyright: \udb81\udde6
 - Bug: \uf188
+- Spinner1: \uee06
+- Spinner2: \uee07
+- Spinner3: \uee08
+- Spinner4: \uee09
+- Spinner5: \uee0a
+- Spinner6: \uee0b
 
 ## Usage
 
