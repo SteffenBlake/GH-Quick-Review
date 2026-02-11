@@ -5,6 +5,7 @@
   --text-secondary: #b0b0b0;
   --accent: #4a9eff;
   --border: #404040;
+  --directory-browser-width: 20rem;
 }
 
 body {
@@ -603,5 +604,66 @@ body {
   font-weight: 600;
   padding: 0;
   border-radius: 2px;
+}
+
+/* Directory Browser - CSS-only expand/collapse using :focus-within */
+.directory-browser {
+  position: fixed;
+  top: 20vh;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  transform: translateX(calc(-1 * var(--directory-browser-width)));
+  transition: transform 0.3s ease;
+  outline: none;
+}
+
+/* Slide in when focused */
+.directory-browser:focus-within {
+  transform: translateX(0);
+}
+
+/* Toggle button - always visible */
+.directory-browser-toggle {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-left: none;
+  padding: 0.75rem 0.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  position: absolute;
+  right: -2.5rem;
+}
+
+.directory-browser-toggle:hover {
+  background-color: var(--bg-primary);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Content panel */
+.directory-browser-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  width: var(--directory-browser-width);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.directory-browser-placeholder {
+  padding: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
 }
 

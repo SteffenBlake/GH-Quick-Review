@@ -18,6 +18,8 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - Spinner4: \uee09
 - Spinner5: \uee0a
 - Spinner6: \uee0b
+- Double Chevron Right: \udb80\udd3e
+- Double Chevron Left: \udb80\udd3d
 
 ## Usage
 

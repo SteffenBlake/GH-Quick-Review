@@ -12,6 +12,7 @@ import { errorMessage, clearError } from './stores/errorStore';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { DirectoryBrowser } from './components/DirectoryBrowser';
 
 function MainContent() {
   // Check for any errors in the unified error store
@@ -54,6 +55,7 @@ export function App() {
           authenticated={!!token.value}
           onLogout={handleLogout}
         />
+        <DirectoryBrowser />
         {!token.value ? (
           <LoginPage />
         ) : (

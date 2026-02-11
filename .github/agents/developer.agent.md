@@ -77,6 +77,24 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 - Split long parameter lists across multiple lines
 - Keep string concatenation readable
 
+#### CSS-First Solutions
+**CRITICAL: Always try to solve problems using CSS first before using JavaScript/React logic.**
+- Modern CSS has powerful selectors and pseudo-classes that handle many UI behaviors
+- CSS solutions are more performant and have less complexity than JavaScript
+- Common CSS solutions: `:hover`, `:focus`, `:focus-within`, `:has()`, `:not()`, media queries, flexbox, grid
+- Only use JavaScript when CSS cannot handle the requirement
+- Don't re-invent problems already solved by CSS with brute-force JavaScript
+
+**Examples:**
+```css
+/* WRONG - Using JavaScript to handle hover/focus states */
+/* Component with onMouseEnter/onMouseLeave/onFocus/onBlur handlers */
+
+/* CORRECT - Using CSS pseudo-classes */
+.element:hover { background-color: var(--accent); }
+.element:focus-within { border-color: var(--accent); }
+```
+
 ## Modern JavaScript Best Practices
 
 ### ES Modules
