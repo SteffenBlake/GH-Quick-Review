@@ -6,7 +6,7 @@
  */
 
 import http from 'http';
-import { readFileSync, existsSync, statSync } from 'fs';
+import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve, join, relative } from 'path';
 import { execSync } from 'child_process';
@@ -16,29 +16,177 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 class GitHubMockServer {
-  constructor(dataFilePath, config = {}) {
-    this.dataFilePath = dataFilePath;
+  constructor(userDirPath, config = {}) {
+    this.userDirPath = userDirPath;
     this.config = config;
-    this.loadData();
+    this.loadUserData();
   }
 
-  loadData() {
-    const absolutePath = resolve(this.dataFilePath);
-    const rawData = readFileSync(absolutePath, 'utf8');
-    const data = JSON.parse(rawData);
+  loadUserData() {
+    const absolutePath = resolve(this.userDirPath);
     
-    // Initialize in-memory state from loaded data
-    this.pulls = new Map(data.pulls.map(pr => [pr.number, { ...pr }]));
-    this.comments = new Map(data.comments.map(comment => [comment.id, { ...comment }]));
-    this.nextCommentId = Math.max(...data.comments.map(c => c.id), 0) + 1;
+    // Dynamically build repos list from directory structure
+    this.repos = this.scanRepositories(absolutePath);
     
-    // Store project directory path for dynamic diff generation
-    this.projectDir = data.project_dir ? resolve(dirname(absolutePath), data.project_dir) : null;
+    // Cache for repo data (loaded on demand)
+    this.repoDataCache = new Map();
     
-    console.log(`Loaded ${this.pulls.size} pull requests and ${this.comments.size} comments`);
-    if (this.projectDir) {
-      console.log(`Project directory: ${this.projectDir}`);
+    console.log(`Loaded ${this.repos.length} repositories for user`);
+  }
+
+  /**
+   * Scan directory structure to build list of repositories
+   */
+  scanRepositories(userDir) {
+    const repos = [];
+    
+    if (!existsSync(userDir)) {
+      return repos;
     }
+
+    const entries = readdirSync(userDir);
+    
+    for (const entry of entries) {
+      const entryPath = join(userDir, entry);
+      const stats = statSync(entryPath);
+      
+      // Skip files and look only at directories
+      if (!stats.isDirectory()) {
+        continue;
+      }
+      
+      // Check if this directory has a data.json file (indicating it's a repo)
+      const dataJsonPath = join(entryPath, 'data.json');
+      if (!existsSync(dataJsonPath)) {
+        continue;
+      }
+      
+      // Load basic metadata from data.json
+      try {
+        const data = JSON.parse(readFileSync(dataJsonPath, 'utf8'));
+        const pulls = data.pulls || [];
+        
+        // Count open issues (open PRs)
+        const openIssuesCount = pulls.filter(pr => pr.state === 'open').length;
+        
+        // Find latest update time
+        const latestUpdate = pulls.reduce((latest, pr) => {
+          const prUpdate = new Date(pr.updated_at);
+          return prUpdate > latest ? prUpdate : latest;
+        }, new Date(0));
+        
+        // Determine primary language (simplified - could be from first PR or default)
+        const language = pulls.length > 0 ? this.guessLanguageFromRepo(entryPath) : 'Unknown';
+        
+        repos.push({
+          id: repos.length + 1,
+          node_id: `R_kgDO${entry}`,
+          name: entry,
+          full_name: `test_user/${entry}`,
+          owner: {
+            login: 'test_user',
+            id: 1000,
+            node_id: 'U_kgDOTestUser',
+            avatar_url: 'https://avatars.githubusercontent.com/u/1000?v=4',
+            type: 'User'
+          },
+          private: false,
+          html_url: `https://github.com/test_user/${entry}`,
+          description: `Test repository ${entry}`,
+          fork: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: latestUpdate.toISOString(),
+          pushed_at: latestUpdate.toISOString(),
+          homepage: '',
+          size: 256,
+          stargazers_count: repos.length + 1,
+          watchers_count: repos.length + 1,
+          language: language,
+          has_issues: true,
+          has_projects: true,
+          has_downloads: true,
+          has_wiki: true,
+          has_pages: false,
+          has_discussions: false,
+          forks_count: 0,
+          archived: false,
+          disabled: false,
+          open_issues_count: openIssuesCount,
+          license: {
+            key: 'mit',
+            name: 'MIT License',
+            spdx_id: 'MIT',
+            url: 'https://api.github.com/licenses/mit'
+          },
+          topics: ['testing'],
+          visibility: 'public',
+          default_branch: 'main'
+        });
+      } catch (error) {
+        console.warn(`Failed to load repository metadata for ${entry}:`, error.message);
+      }
+    }
+    
+    return repos;
+  }
+
+  /**
+   * Guess primary language from files in repository
+   */
+  guessLanguageFromRepo(repoPath) {
+    // Look for files in PR directories to determine language
+    const prDirs = readdirSync(repoPath).filter(name => !isNaN(name));
+    
+    for (const prDir of prDirs) {
+      const afterDir = join(repoPath, prDir, 'after');
+      if (existsSync(afterDir)) {
+        const files = readdirSync(afterDir);
+        
+        // Check file extensions
+        for (const file of files) {
+          if (file.endsWith('.js')) return 'JavaScript';
+          if (file.endsWith('.py')) return 'Python';
+          if (file.endsWith('.cs')) return 'C#';
+          if (file.endsWith('.java')) return 'Java';
+          if (file.endsWith('.yaml') || file.endsWith('.yml')) return 'YAML';
+          if (file.endsWith('.json')) return 'JSON';
+          if (file.endsWith('.html')) return 'HTML';
+          if (file.endsWith('.xml')) return 'XML';
+        }
+      }
+    }
+    
+    return 'Unknown';
+  }
+
+  /**
+   * Load data for a specific repository
+   */
+  loadRepoData(repoName) {
+    if (this.repoDataCache.has(repoName)) {
+      return this.repoDataCache.get(repoName);
+    }
+
+    const repoPath = join(this.userDirPath, repoName);
+    const dataPath = join(repoPath, 'data.json');
+
+    if (!existsSync(dataPath)) {
+      console.warn(`Data file not found for repo: ${repoName}`);
+      return { pulls: new Map(), comments: new Map(), nextCommentId: 1 };
+    }
+
+    const rawData = readFileSync(dataPath, 'utf8');
+    const data = JSON.parse(rawData);
+
+    const repoData = {
+      pulls: new Map(data.pulls.map(pr => [pr.number, { ...pr }])),
+      comments: new Map(data.comments.map(comment => [comment.id, { ...comment }])),
+      nextCommentId: Math.max(...data.comments.map(c => c.id), 0) + 1
+    };
+
+    this.repoDataCache.set(repoName, repoData);
+    console.log(`Loaded ${repoData.pulls.size} PRs and ${repoData.comments.size} comments for ${repoName}`);
+    return repoData;
   }
 
   /**
@@ -111,18 +259,17 @@ class GitHubMockServer {
 
   /**
    * Generate file diff data dynamically using git diff
+   * @param {string} repoName - Repository name
+   * @param {number} pullNumber - Pull request number
    * @returns {Array} Array of file objects compatible with GitHub API
    */
-  generateFileDiffs() {
-    if (!this.projectDir) {
-      return [];
-    }
-
-    const beforeDir = join(this.projectDir, 'before');
-    const afterDir = join(this.projectDir, 'after');
+  generateFileDiffs(repoName, pullNumber) {
+    const prDir = join(this.userDirPath, repoName, String(pullNumber));
+    const beforeDir = join(prDir, 'before');
+    const afterDir = join(prDir, 'after');
 
     if (!existsSync(beforeDir) || !existsSync(afterDir)) {
-      console.warn('Before or after directory not found');
+      console.warn(`Before or after directory not found for ${repoName} PR ${pullNumber}`);
       return [];
     }
 
@@ -135,7 +282,10 @@ class GitHubMockServer {
       const patchCommand = `git diff --no-index --no-color "${beforeDir}" "${afterDir}" || true`;
       const patchOutput = execSync(patchCommand, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
 
-      return this.parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir);
+      // Extract owner from repo (assumes format owner/repo_name or just repo_name)
+      const owner = 'test_user';
+      
+      return this.parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir, owner, repoName);
     } catch (error) {
       console.error('Error generating diffs:', error.message);
       return [];
@@ -144,8 +294,10 @@ class GitHubMockServer {
 
   /**
    * Parse git diff output into GitHub API format
+   * @param {string} owner - Repository owner
+   * @param {string} repoName - Repository name
    */
-  parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir) {
+  parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir, owner, repoName) {
     const files = [];
     const lines = numstatOutput.split('\n').filter(line => line.trim());
 
@@ -155,36 +307,65 @@ class GitHubMockServer {
 
       const additions = parseInt(parts[0]) || 0;
       const deletions = parseInt(parts[1]) || 0;
-      let filename = parts[2];
+      let rawPath = parts[2];
 
-      // Extract filename from git paths
-      if (filename.includes(' => ')) {
-        // Handle renames
-        const match = filename.match(/([^\/]+)\/(.+) => ([^\/]+)\/(.+)/);
-        if (match) {
-          filename = match[4];
+      let filename = '';
+      let status = 'modified';
+
+      // Handle git diff output patterns
+      if (rawPath.includes(' => ')) {
+        // Pattern 1: "{before => after}/filename" - modified file
+        if (rawPath.match(/\{[^}]+\}\/(.+)/)) {
+          const match = rawPath.match(/\{[^}]+\}\/(.+)/);
+          filename = match[1];
+          status = 'modified';
+        }
+        // Pattern 2: "/dev/null => after/filename" - added file
+        else if (rawPath.includes('/dev/null =>')) {
+          const match = rawPath.match(/\/dev\/null => (?:.*\/)?(.+)/);
+          if (match) {
+            filename = match[1];
+            status = 'added';
+          }
+        }
+        // Pattern 3: "before/filename => /dev/null" - deleted file
+        else if (rawPath.includes('=> /dev/null')) {
+          const match = rawPath.match(/(?:.*\/)?(before\/)?(.+) => \/dev\/null/);
+          if (match) {
+            filename = match[2];
+            status = 'removed';
+          }
+        }
+        // Pattern 4: "before/file => after/newfile" - renamed file
+        else {
+          const match = rawPath.match(/=> (?:.*\/)?(.+)/);
+          if (match) {
+            filename = match[1];
+            status = 'renamed';
+          }
         }
       } else {
-        // Normal file - extract relative path from after directory
-        filename = filename.replace(/^[ab]\//, '').replace(beforeDir + '/', '').replace(afterDir + '/', '');
-      }
-
-      // Determine status
-      let status = 'modified';
-      const afterPath = join(afterDir, filename);
-      const beforePath = join(beforeDir, filename);
-      
-      if (!existsSync(beforePath) && existsSync(afterPath)) {
-        status = 'added';
-      } else if (existsSync(beforePath) && !existsSync(afterPath)) {
-        status = 'removed';
+        // Simple path without arrow - shouldn't happen with git diff --no-index but handle it
+        filename = rawPath.split('/').pop();
+        const potentialBeforePath = join(beforeDir, filename);
+        const potentialAfterPath = join(afterDir, filename);
+        
+        if (existsSync(potentialBeforePath) && existsSync(potentialAfterPath)) {
+          status = 'modified';
+        } else if (existsSync(potentialAfterPath)) {
+          status = 'added';
+        } else if (existsSync(potentialBeforePath)) {
+          status = 'removed';
+        }
       }
 
       // Extract patch for this file
       const patch = this.extractFilePatch(patchOutput, filename);
 
       // Calculate SHA (simplified - using file content hash)
-      const sha = this.calculateFileSha(afterPath);
+      const sha = status === 'removed' 
+        ? this.calculateFileSha(join(beforeDir, filename))
+        : this.calculateFileSha(join(afterDir, filename));
 
       const fileObj = {
         sha: sha,
@@ -193,9 +374,9 @@ class GitHubMockServer {
         additions: additions,
         deletions: deletions,
         changes: additions + deletions,
-        blob_url: `https://github.com/testorg/test-repo/blob/abc123/${this.urlEncodePath(filename)}`,
-        raw_url: `https://github.com/testorg/test-repo/raw/abc123/${this.urlEncodePath(filename)}`,
-        contents_url: `https://api.github.com/repos/testorg/test-repo/contents/${this.urlEncodePath(filename)}?ref=abc123`,
+        blob_url: `https://github.com/${owner}/${repoName}/blob/abc123/${this.urlEncodePath(filename)}`,
+        raw_url: `https://github.com/${owner}/${repoName}/raw/abc123/${this.urlEncodePath(filename)}`,
+        contents_url: `https://api.github.com/repos/${owner}/${repoName}/contents/${this.urlEncodePath(filename)}?ref=abc123`,
         patch: patch
       };
 
@@ -275,6 +456,12 @@ class GitHubMockServer {
     // Route matching
     const routes = [
       {
+        // List repos for user: GET /user/repos
+        pattern: /^\/user\/repos$/,
+        method: 'GET',
+        handler: this.listUserRepos.bind(this)
+      },
+      {
         // List PRs: GET /repos/{owner}/{repo}/pulls
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls$/,
         method: 'GET',
@@ -339,11 +526,18 @@ class GitHubMockServer {
     });
   }
 
+  listUserRepos(req, res, match) {
+    if (this.checkConfiguredError('listUserRepos', res)) return;
+    
+    this.sendResponse(res, 200, this.repos);
+  }
+
   listPulls(req, res, match) {
     if (this.checkConfiguredError('listPulls', res)) return;
     
     const [, owner, repo] = match;
-    const pulls = Array.from(this.pulls.values());
+    const repoData = this.loadRepoData(repo);
+    const pulls = Array.from(repoData.pulls.values());
     this.sendResponse(res, 200, pulls);
   }
 
@@ -351,7 +545,8 @@ class GitHubMockServer {
     if (this.checkConfiguredError('getPull', res)) return;
     
     const [, owner, repo, pullNumber] = match;
-    const pull = this.pulls.get(parseInt(pullNumber));
+    const repoData = this.loadRepoData(repo);
+    const pull = repoData.pulls.get(parseInt(pullNumber));
     
     if (!pull) {
       return this.sendResponse(res, 404, {
@@ -367,7 +562,8 @@ class GitHubMockServer {
     if (this.checkConfiguredError('listPullFiles', res)) return;
     
     const [, owner, repo, pullNumber] = match;
-    const pull = this.pulls.get(parseInt(pullNumber));
+    const repoData = this.loadRepoData(repo);
+    const pull = repoData.pulls.get(parseInt(pullNumber));
     
     if (!pull) {
       return this.sendResponse(res, 404, {
@@ -377,7 +573,7 @@ class GitHubMockServer {
     }
     
     // Generate files dynamically from project directory
-    const files = this.generateFileDiffs();
+    const files = this.generateFileDiffs(repo, parseInt(pullNumber));
     
     this.sendResponse(res, 200, files);
   }
@@ -386,17 +582,20 @@ class GitHubMockServer {
     if (this.checkConfiguredError('getContents', res)) return;
     
     const [, owner, repo, pathParam] = match;
+
+    // Get the query parameters to determine which PR to use (default to latest)
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const ref = url.searchParams.get('ref');
     
-    if (!this.projectDir) {
-      return this.sendResponse(res, 404, {
-        message: 'Not Found',
-        documentation_url: 'https://docs.github.com/rest/repos/contents#get-repository-content'
-      });
-    }
+    // For simplicity, we'll look in the "after" directory of PR 1 by default
+    // In a real implementation, you'd parse the ref to determine the correct PR
+    const prNumber = 1; // Default to PR 1
+    const prDir = join(this.userDirPath, repo, String(prNumber));
+    const afterDir = join(prDir, 'after');
 
     // Decode the path parameter (URL encoded)
     const decodedPath = decodeURIComponent(pathParam).replace(/%2F/g, '/');
-    const filePath = join(this.projectDir, 'after', decodedPath);
+    const filePath = join(afterDir, decodedPath);
 
     if (!existsSync(filePath)) {
       return this.sendResponse(res, 404, {
@@ -424,7 +623,7 @@ class GitHubMockServer {
       const sha = this.calculateFileSha(filePath);
       
       // Use a consistent ref SHA for URLs
-      const refSha = 'abc123def456789012345678901234567890abcd';
+      const refSha = ref || 'abc123def456789012345678901234567890abcd';
 
       const response = {
         name: decodedPath.split('/').pop(),
@@ -459,7 +658,8 @@ class GitHubMockServer {
     if (this.checkConfiguredError('listComments', res)) return;
     
     const [, owner, repo, pullNumber] = match;
-    const pull = this.pulls.get(parseInt(pullNumber));
+    const repoData = this.loadRepoData(repo);
+    const pull = repoData.pulls.get(parseInt(pullNumber));
     
     if (!pull) {
       return this.sendResponse(res, 404, {
@@ -469,7 +669,7 @@ class GitHubMockServer {
     }
     
     // Get all comments for this PR
-    const comments = Array.from(this.comments.values())
+    const comments = Array.from(repoData.comments.values())
       .filter(comment => comment.pull_number === parseInt(pullNumber));
     
     this.sendResponse(res, 200, comments);
@@ -481,7 +681,8 @@ class GitHubMockServer {
     const [, owner, repo, pullNumber] = match;
     
     this.readBody(req, (body) => {
-      const pull = this.pulls.get(parseInt(pullNumber));
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
       
       if (!pull) {
         return this.sendResponse(res, 404, {
@@ -491,7 +692,7 @@ class GitHubMockServer {
       }
       
       const newComment = {
-        id: this.nextCommentId++,
+        id: repoData.nextCommentId++,
         pull_number: parseInt(pullNumber),
         diff_hunk: body.diff_hunk || '',
         path: body.path || '',
@@ -507,7 +708,7 @@ class GitHubMockServer {
         body: body.body || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#discussion_r${this.nextCommentId - 1}`,
+        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#discussion_r${repoData.nextCommentId - 1}`,
         pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
         line: body.line || null,
         side: body.side || 'RIGHT',
@@ -516,7 +717,7 @@ class GitHubMockServer {
         in_reply_to_id: body.in_reply_to_id || null
       };
       
-      this.comments.set(newComment.id, newComment);
+      repoData.comments.set(newComment.id, newComment);
       this.sendResponse(res, 201, newComment);
     });
   }
@@ -527,7 +728,24 @@ class GitHubMockServer {
     const [, owner, repo, commentId] = match;
     
     this.readBody(req, (body) => {
-      const comment = this.comments.get(parseInt(commentId));
+      // Find the comment across all repos
+      let comment = null;
+      let foundRepoData = null;
+      
+      for (const [repoName, repoData] of this.repoDataCache.entries()) {
+        comment = repoData.comments.get(parseInt(commentId));
+        if (comment) {
+          foundRepoData = repoData;
+          break;
+        }
+      }
+      
+      // If not in cache, try loading from the specific repo
+      if (!comment) {
+        const repoData = this.loadRepoData(repo);
+        comment = repoData.comments.get(parseInt(commentId));
+        foundRepoData = repoData;
+      }
       
       if (!comment) {
         return this.sendResponse(res, 404, {
@@ -550,16 +768,34 @@ class GitHubMockServer {
     if (this.checkConfiguredError('deleteComment', res)) return;
     
     const [, owner, repo, commentId] = match;
-    const comment = this.comments.get(parseInt(commentId));
     
-    if (!comment) {
+    // Find the comment across all repos
+    let found = false;
+    
+    for (const [repoName, repoData] of this.repoDataCache.entries()) {
+      if (repoData.comments.has(parseInt(commentId))) {
+        repoData.comments.delete(parseInt(commentId));
+        found = true;
+        break;
+      }
+    }
+    
+    // If not in cache, try loading from the specific repo
+    if (!found) {
+      const repoData = this.loadRepoData(repo);
+      if (repoData.comments.has(parseInt(commentId))) {
+        repoData.comments.delete(parseInt(commentId));
+        found = true;
+      }
+    }
+    
+    if (!found) {
       return this.sendResponse(res, 404, {
         message: 'Not Found',
         documentation_url: 'https://docs.github.com/rest/pulls/comments#delete-a-review-comment-for-a-pull-request'
       });
     }
     
-    this.comments.delete(parseInt(commentId));
     this.sendResponse(res, 204, null);
   }
 
@@ -594,15 +830,15 @@ class GitHubMockServer {
 }
 
 // Main execution
-function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 3000, config = {}) {
+function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000, config = {}) {
   console.log(`Starting GitHub Mock Server...`);
-  console.log(`Data file: ${dataFile}`);
+  console.log(`User directory: ${userDirPath}`);
   console.log(`Port: ${port}`);
   if (Object.keys(config).length > 0) {
     console.log(`Error config:`, JSON.stringify(config, null, 2));
   }
   
-  const mockServer = new GitHubMockServer(dataFile, config);
+  const mockServer = new GitHubMockServer(userDirPath, config);
   
   const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
@@ -620,6 +856,7 @@ function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 300
   server.listen(port, () => {
     console.log(`\n✓ GitHub Mock Server running on http://localhost:${port}`);
     console.log(`\nAvailable endpoints:`);
+    console.log(`  GET    /user/repos`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
@@ -640,9 +877,9 @@ function startServer(dataFile = resolve(__dirname, 'test-data.json'), port = 300
 
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
-  const dataFile = args[0] || resolve(__dirname, 'test-data.json');
+  const userDirPath = args[0] || resolve(__dirname, 'test_user');
   const port = parseInt(args[1]) || 3000;
-  const { server } = startServer(dataFile, port);
+  const { server } = startServer(userDirPath, port);
 }
 
 export { GitHubMockServer, startServer };

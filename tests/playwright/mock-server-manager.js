@@ -11,12 +11,12 @@ export class MockServerManager {
     this.port = null;
   }
 
-  async start(dataFile = null, port = 0, config = {}) {
-    const testDataFile = dataFile || resolve(__dirname, '../../tools/test-data.json');
+  async start(userDirPath = null, port = 0, config = {}) {
+    const testUserDir = userDirPath || resolve(__dirname, '../../tools/test_user');
     
     return new Promise((resolvePromise, reject) => {
       try {
-        const { server, close } = startServer(testDataFile, port, config);
+        const { server, close } = startServer(testUserDir, port, config);
         
         server.on('listening', () => {
           const address = server.address();
