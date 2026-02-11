@@ -6,8 +6,14 @@
 
 import { ReposDropdown } from './ReposDropdown';
 import { PullsDropdown } from './PullsDropdown';
+import { FuzzyDropdown } from './FuzzyDropdown';
 
 export function Header({ font, setFont, authenticated, onLogout }) {
+  const fontOptions = [
+    { value: 'FiraCode', label: 'Fira Code', searchableText: 'Fira Code FiraCode' },
+    { value: 'JetBrainsMono', label: 'JetBrains Mono', searchableText: 'JetBrains Mono JetBrainsMono' },
+  ];
+
   return (
     <header className="header">
       <div className="header-left">
@@ -20,14 +26,13 @@ export function Header({ font, setFont, authenticated, onLogout }) {
       <div className="header-right">
         <div className="font-picker">
           <label htmlFor="font-select">Font: </label>
-          <select
-            id="font-select"
+          <FuzzyDropdown
             value={font}
-            onChange={(e) => setFont(e.target.value)}
-          >
-            <option value="FiraCode">Fira Code</option>
-            <option value="JetBrainsMono">JetBrains Mono</option>
-          </select>
+            onChange={setFont}
+            options={fontOptions}
+            placeholder="Select font..."
+            className="font-fuzzy-select"
+          />
         </div>
         {authenticated && (
           <button onClick={onLogout} className="logout-button" title="Logout">

@@ -6,54 +6,36 @@
 
 import { useRepos } from '../stores/reposStore';
 import { selectedRepo, setSelectedRepo } from '../stores/selectedRepoStore';
-import { LoadingSpinner } from './LoadingSpinner';
+import { FuzzyDropdown } from './FuzzyDropdown';
 
 /**
- * Repository dropdown component
- * Shows loading spinner while fetching, error on failure, repos list on success
+ * Repository dropdown component with fuzzy search
+ * Shows loading spinner inside dropdown while fetching, error on failure, repos list on success
  */
 export function ReposDropdown() {
   const { data: repos, isLoading, error } = useRepos();
 
-  if (isLoading) {
-    return (
-      <div className="repos-dropdown">
-        <div className="repos-loading">
-          <LoadingSpinner text="Loading..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="repos-dropdown">
-        <div className="repos-error">
-          {'\uf071'} Error: {error.message}
-        </div>
-      </div>
-    );
-  }
+  // Convert repos to dropdown options format
+  const options = repos ? repos.map((repo) => {
+    const repoName = repo.full_name.split('/')[1] || repo.full_name;
+    return {
+      value: repo.full_name,
+      label: repoName,
+      searchableText: `${repoName} ${repo.full_name}`,
+    };
+  }) : [];
 
   return (
     <div className="repos-dropdown">
-      <select
-        id="repo-select"
+      <FuzzyDropdown
         value={selectedRepo.value}
-        onChange={(e) => setSelectedRepo(e.target.value)}
-        className="repo-select"
-      >
-        <option value="">Repo...</option>
-        {repos && repos.map((repo) => {
-          // Strip username/ from display
-          const repoName = repo.full_name.split('/')[1] || repo.full_name;
-          return (
-            <option key={repo.id} value={repo.full_name}>
-              {repoName}
-            </option>
-          );
-        })}
-      </select>
+        onChange={setSelectedRepo}
+        options={options}
+        placeholder="Repo..."
+        isLoading={isLoading}
+        error={error}
+        className="repo-fuzzy-select"
+      />
     </div>
   );
 }

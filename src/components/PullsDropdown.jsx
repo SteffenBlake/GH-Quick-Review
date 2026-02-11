@@ -7,58 +7,40 @@
 import { usePulls } from '../stores/pullsStore';
 import { selectedPr, setSelectedPr } from '../stores/selectedPrStore';
 import { selectedRepo } from '../stores/selectedRepoStore';
-import { LoadingSpinner } from './LoadingSpinner';
+import { FuzzyDropdown } from './FuzzyDropdown';
 
 /**
- * Pull requests dropdown component
- * Shows loading spinner while fetching, error on failure, PRs list on success
+ * Pull requests dropdown component with fuzzy search
+ * Shows loading spinner inside dropdown while fetching, error on failure, PRs list on success
  */
 export function PullsDropdown() {
   const { data: pulls, isLoading, error } = usePulls();
 
-  if (isLoading) {
-    return (
-      <div className="pulls-dropdown">
-        <div className="pulls-loading">
-          <LoadingSpinner text="Loading..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="pulls-dropdown">
-        <div className="pulls-error">
-          {'\uf071'} Error: {error.message}
-        </div>
-      </div>
-    );
-  }
-
   // Disable dropdown when no repo is selected
   const isDisabled = !selectedRepo.value;
 
+  // Convert pulls to dropdown options format
+  const options = pulls ? pulls.map((pr) => {
+    const displayText = `#${pr.number} - ${pr.title}`;
+    return {
+      value: pr.number,
+      label: displayText,
+      searchableText: `#${pr.number} ${pr.title}`,
+    };
+  }) : [];
+
   return (
     <div className="pulls-dropdown">
-      <select
-        id="pr-select"
+      <FuzzyDropdown
         value={selectedPr.value}
-        onChange={(e) => setSelectedPr(e.target.value)}
-        className="pr-select"
+        onChange={setSelectedPr}
+        options={options}
+        placeholder="Pull Request..."
+        isLoading={isLoading}
+        error={error}
         disabled={isDisabled}
-      >
-        <option value="">Pull Request...</option>
-        {pulls && pulls.map((pr) => {
-          // Format: "#{number} - {title}"
-          const displayText = `#${pr.number} - ${pr.title}`;
-          return (
-            <option key={pr.id} value={pr.number}>
-              {displayText}
-            </option>
-          );
-        })}
-      </select>
+        className="pr-fuzzy-select"
+      />
     </div>
   );
 }
