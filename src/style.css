@@ -646,10 +646,11 @@ body {
   justify-content: center;
   height: 3rem;
   position: absolute;
-  right: -0.0625rem;
+  right: -1px;
   top: 20vh;
-  transform: translateX(100%);
+  transform: translateX(calc(100% - 1px));
   box-shadow: none;
+  z-index: 1;
 }
 
 /* Show expand icon when collapsed */
