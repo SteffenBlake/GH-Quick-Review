@@ -21,11 +21,7 @@ export default defineConfig(({ mode }) => {
       exclude: ['**/node_modules/**', '**/playwright/**'],
     },
     define: {
-      // Make env variables available to the app
-      // Default to localhost:3000 for development with mock server
-      'import.meta.env.VITE_GITHUB_API_URL': JSON.stringify(
-        env.VITE_GITHUB_API_URL || 'http://localhost:3000'
-      ),
+      'import.meta.env.VITE_GITHUB_API_URL': JSON.stringify(env.VITE_GITHUB_API_URL),
     },
   };
 });
