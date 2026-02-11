@@ -4,8 +4,11 @@ A lightweight, stateful mock server for GitHub API endpoints, specifically desig
 
 ## Features
 
+- **Multi-repository support**: Supports multiple repositories with separate data files
+- **Dynamic repository discovery**: Automatically discovers repositories from directory structure
 - **Stateful**: Changes made during runtime (add, edit, delete comments) persist in memory
-- **File-based initialization**: Load test data from JSON files
+- **Directory-based initialization**: Load test data from organized directory structure
+- **Dynamic file diff generation**: Uses git diff to generate file changes for PRs
 - **Error simulation**: Configure specific endpoints to return errors or timeout for negative testing
 - **Simple to use**: Start with a single npm command
 - **RESTful**: Implements authentic GitHub API patterns
@@ -14,23 +17,76 @@ A lightweight, stateful mock server for GitHub API endpoints, specifically desig
 
 The mock server supports the following GitHub API endpoints:
 
-1. **List Pull Requests**  
+1. **List Repositories for User**  
+   `GET /user/repos`
+
+2. **List Pull Requests**  
    `GET /repos/{owner}/{repo}/pulls`
 
-2. **Get Pull Request**  
+3. **Get Pull Request**  
    `GET /repos/{owner}/{repo}/pulls/{pull_number}`
 
-3. **List Review Comments**  
+4. **List Pull Request Files**  
+   `GET /repos/{owner}/{repo}/pulls/{pull_number}/files`
+
+5. **Get File Contents**  
+   `GET /repos/{owner}/{repo}/contents/{path}`
+
+6. **List Review Comments**  
    `GET /repos/{owner}/{repo}/pulls/{pull_number}/comments`
 
-4. **Add Review Comment**  
+7. **Add Review Comment**  
    `POST /repos/{owner}/{repo}/pulls/{pull_number}/comments`
 
-5. **Edit Review Comment**  
+8. **Edit Review Comment**  
    `PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}`
 
-6. **Delete Review Comment**  
+9. **Delete Review Comment**  
    `DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`
+
+## Directory Structure
+
+The mock server uses a hierarchical directory structure to organize test data:
+
+```
+tools/test_user/
+├── test_repo_1/
+│   ├── 1/                    # PR number 1
+│   │   ├── before/           # Files before changes
+│   │   │   ├── example.cs
+│   │   │   └── example.js
+│   │   └── after/            # Files after changes
+│   │       ├── example.cs
+│   │       └── example.js
+│   ├── 2/                    # PR number 2
+│   │   ├── before/
+│   │   │   ├── example.cs
+│   │   │   └── utils.py
+│   │   └── after/
+│   │       ├── example.cs
+│   │       └── index.html    # New file (added)
+│   └── data.json             # PR metadata and comments for this repo
+└── test_repo_2/
+    ├── 1/
+    │   ├── before/
+    │   └── after/
+    ├── 2/
+    │   ├── before/
+    │   │   └── data.xml       # Will be deleted
+    │   └── after/
+    │       └── config.yaml    # New file (added)
+    └── data.json
+```
+
+### How It Works
+
+- **Repositories**: Each directory under `test_user/` represents a repository
+- **Pull Requests**: Each numbered subdirectory (1, 2, etc.) represents a PR
+- **File Changes**: The server compares `before/` and `after/` directories using git diff to generate file changes
+- **File Status Detection**:
+  - Files only in `after/`: Status = `added`
+  - Files only in `before/`: Status = `removed`
+  - Files in both with differences: Status = `modified`
 
 ## Quick Start
 
@@ -40,18 +96,18 @@ The mock server supports the following GitHub API endpoints:
 npm run mock-server
 ```
 
-The server will start on `http://localhost:3000` using the test data from `tools/test-data.json`.
+The server will start on `http://localhost:3000` using the test data from `tools/test_user`.
 
-### Using custom test data
+### Using custom test data directory
 
 ```bash
-node tools/gh-mock-server.js path/to/your-data.json
+node tools/gh-mock-server.js path/to/your-user-dir
 ```
 
 ### Using a custom port
 
 ```bash
-node tools/gh-mock-server.js path/to/your-data.json 8080
+node tools/gh-mock-server.js path/to/your-user-dir 8080
 ```
 
 ## Error Configuration for Testing
@@ -71,7 +127,7 @@ const errorConfig = {
   listComments: 'timeout' // Don't respond (timeout)
 };
 
-const server = startServer('./tools/test-data.json', 3000, errorConfig);
+const server = startServer('./tools/test_user', 3000, errorConfig);
 ```
 
 ### Supported Error Codes
@@ -87,8 +143,11 @@ const server = startServer('./tools/test-data.json', 3000, errorConfig);
 
 ### Endpoint Configuration Names
 
+- `listUserRepos` - GET /user/repos
 - `listPulls` - GET /repos/{owner}/{repo}/pulls
 - `getPull` - GET /repos/{owner}/{repo}/pulls/{pull_number}
+- `listPullFiles` - GET /repos/{owner}/{repo}/pulls/{pull_number}/files
+- `getContents` - GET /repos/{owner}/{repo}/contents/{path}
 - `listComments` - GET /repos/{owner}/{repo}/pulls/{pull_number}/comments
 - `addComment` - POST /repos/{owner}/{repo}/pulls/{pull_number}/comments
 - `editComment` - PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}
@@ -101,7 +160,7 @@ import { GitHubMockServer } from './tools/gh-mock-server.js';
 import http from 'http';
 
 // Create a mock server that returns 404 for get comments
-const mockServer = new GitHubMockServer('./tools/test-data.json', {
+const mockServer = new GitHubMockServer('./tools/test_user', {
   listComments: 404
 });
 
@@ -164,32 +223,52 @@ The test data JSON file should have the following structure:
 
 ## Usage Examples
 
+### List all repositories for authenticated user
+
+```bash
+curl http://localhost:3000/user/repos
+```
+
 ### List all pull requests
 
 ```bash
-curl http://localhost:3000/repos/testorg/test-repo/pulls
+curl http://localhost:3000/repos/test_user/test_repo_1/pulls
 ```
 
 ### Get a specific pull request
 
 ```bash
-curl http://localhost:3000/repos/testorg/test-repo/pulls/1
+curl http://localhost:3000/repos/test_user/test_repo_1/pulls/1
+```
+
+### List files changed in a pull request
+
+```bash
+curl http://localhost:3000/repos/test_user/test_repo_1/pulls/2/files
+```
+
+This will show added, modified, and deleted files with their diff stats.
+
+### Get file contents
+
+```bash
+curl http://localhost:3000/repos/test_user/test_repo_1/contents/example.js
 ```
 
 ### List comments for a pull request
 
 ```bash
-curl http://localhost:3000/repos/testorg/test-repo/pulls/1/comments
+curl http://localhost:3000/repos/test_user/test_repo_1/pulls/1/comments
 ```
 
 ### Add a new comment
 
 ```bash
-curl -X POST http://localhost:3000/repos/testorg/test-repo/pulls/1/comments \
+curl -X POST http://localhost:3000/repos/test_user/test_repo_1/pulls/1/comments \
   -H "Content-Type: application/json" \
   -d '{
     "body": "This looks good!",
-    "path": "src/index.js",
+    "path": "example.js",
     "position": 5,
     "line": 10
   }'
@@ -198,7 +277,7 @@ curl -X POST http://localhost:3000/repos/testorg/test-repo/pulls/1/comments \
 ### Edit a comment
 
 ```bash
-curl -X PATCH http://localhost:3000/repos/testorg/test-repo/pulls/comments/1001 \
+curl -X PATCH http://localhost:3000/repos/test_user/test_repo_1/pulls/comments/1001 \
   -H "Content-Type: application/json" \
   -d '{"body": "Updated comment text"}'
 ```
@@ -206,7 +285,7 @@ curl -X PATCH http://localhost:3000/repos/testorg/test-repo/pulls/comments/1001 
 ### Delete a comment
 
 ```bash
-curl -X DELETE http://localhost:3000/repos/testorg/test-repo/pulls/comments/1001
+curl -X DELETE http://localhost:3000/repos/test_user/test_repo_1/pulls/comments/1001
 ```
 
 ## Statefulness
