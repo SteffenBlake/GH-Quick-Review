@@ -120,6 +120,14 @@
 ### Self-Correction Protocol
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
 
+### Screenshot Protocol
+**NEVER create custom screenshot test files or scripts.** You have built-in MCP tools for taking screenshots:
+- Use `playwright-browser_navigate` to navigate to pages
+- Use `playwright-browser_click`, `playwright-browser_type`, etc. to interact with the page
+- Use `playwright-browser_take_screenshot` to capture screenshots - this returns GitHub URLs
+- IMMEDIATELY display the returned URL in chat using `![Description](url)` markdown
+- DO NOT create test files like `take-screenshots.spec.js` - use the MCP tools directly
+
 ### PR Description Screenshots
 **When completing work and updating PR descriptions, include screenshots of ALL relevant screen states that were requested:**
 - Show all UI states (loading, success, error, empty, etc.)
