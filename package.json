@@ -12,7 +12,7 @@
     "test:playwright": "playwright test",
     "test:all": "npm run test && npm run test:playwright",
     "start": "node src/index.js",
-    "mock-server": "node tools/gh-mock-server.js tools/test-data.json"
+    "mock-server": "node tools/gh-mock-server.js tools/test_user"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,125 @@
+{
+  "pulls": [
+    {
+      "number": 1,
+      "id": 3,
+      "state": "open",
+      "title": "Update configuration file",
+      "body": "Simple configuration update for new deployment settings.",
+      "created_at": "2024-01-17T08:00:00Z",
+      "updated_at": "2024-01-17T09:30:00Z",
+      "closed_at": null,
+      "merged_at": null,
+      "user": {
+        "login": "developer3",
+        "id": 103,
+        "type": "User",
+        "avatar_url": "https://avatars.githubusercontent.com/u/103?v=4"
+      },
+      "head": {
+        "ref": "config/update-settings",
+        "sha": "cfg123abc456",
+        "repo": {
+          "name": "test_repo_2",
+          "owner": {
+            "login": "test_user"
+          }
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "main789def012",
+        "repo": {
+          "name": "test_repo_2",
+          "owner": {
+            "login": "test_user"
+          }
+        }
+      },
+      "draft": false,
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "comments": 1,
+      "review_comments": 0,
+      "commits": 1,
+      "additions": 5,
+      "deletions": 3,
+      "changed_files": 1
+    },
+    {
+      "number": 2,
+      "id": 4,
+      "state": "open",
+      "title": "Migrate from XML to YAML configuration",
+      "body": "Replace old XML config with modern YAML format for better readability.",
+      "created_at": "2024-01-18T10:00:00Z",
+      "updated_at": "2024-01-18T11:15:00Z",
+      "closed_at": null,
+      "merged_at": null,
+      "user": {
+        "login": "developer1",
+        "id": 101,
+        "type": "User",
+        "avatar_url": "https://avatars.githubusercontent.com/u/101?v=4"
+      },
+      "head": {
+        "ref": "refactor/yaml-config",
+        "sha": "yaml456def789",
+        "repo": {
+          "name": "test_repo_2",
+          "owner": {
+            "login": "test_user"
+          }
+        }
+      },
+      "base": {
+        "ref": "main",
+        "sha": "main789def012",
+        "repo": {
+          "name": "test_repo_2",
+          "owner": {
+            "login": "test_user"
+          }
+        }
+      },
+      "draft": false,
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "comments": 2,
+      "review_comments": 1,
+      "commits": 1,
+      "additions": 12,
+      "deletions": 8,
+      "changed_files": 2
+    }
+  ],
+  "comments": [
+    {
+      "id": 3001,
+      "pull_number": 2,
+      "diff_hunk": "@@ -1,8 +1,12 @@\n+# YAML Configuration\n+server:\n+  port: 8080\n+  host: localhost",
+      "path": "config.yaml",
+      "position": 2,
+      "original_position": 2,
+      "commit_id": "yaml456def789",
+      "original_commit_id": "yaml456def789",
+      "user": {
+        "login": "reviewer2",
+        "id": 202,
+        "type": "User"
+      },
+      "body": "LGTM - Much cleaner than the old XML format!",
+      "created_at": "2024-01-18T10:30:00Z",
+      "updated_at": "2024-01-18T10:30:00Z",
+      "html_url": "https://github.com/test_user/test_repo_2/pull/2#discussion_r3001",
+      "pull_request_url": "https://api.github.com/repos/test_user/test_repo_2/pulls/2",
+      "line": 4,
+      "side": "RIGHT",
+      "start_line": 1,
+      "start_side": "RIGHT",
+      "in_reply_to_id": null
+    }
+  ]
+}
