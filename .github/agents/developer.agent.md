@@ -168,7 +168,13 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 - Use `playwright-browser_take_screenshot` to capture screenshots - this returns GitHub URLs
 - IMMEDIATELY display the returned URL in chat using `![Description](url)` markdown
 - DO NOT create test files like `take-screenshots.spec.js` - use the MCP tools directly
-- **CRITICAL**: After taking each screenshot, run `sleep 5` bash command to give the user time to respond and verify the screenshot
+- **CRITICAL**: After taking each screenshot, run `sleep 10` bash command to give the user time to respond and verify the screenshot
+
+### Wait/Pause Protocol
+**When the user tells you to wait or pause:**
+- Execute a `sleep 10` bash command
+- This gives the user time to review, think, or prepare their next instruction
+- Do not proceed with further actions until the wait completes
 
 ### PR Description Screenshots
 **When completing work and updating PR descriptions, include screenshots of ALL relevant screen states that were requested:**

@@ -682,11 +682,13 @@ body {
 /* Header title */
 .directory-browser-header {
   margin: 0;
-  padding: 1rem;
+  padding: 0.5rem;
   font-size: 1rem;
   font-weight: bold;
   color: var(--text-primary);
   background-color: var(--bg-secondary);
+  display: flex;
+  align-items: center;
 }
 
 /* Inner scrollable container */
@@ -769,7 +771,7 @@ body {
 /* Chevron */
 .chevron {
   display: inline-block;
-  width: 0.75rem;
+  min-width: 0.75rem;
   text-align: center;
 }
 
