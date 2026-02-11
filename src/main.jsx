@@ -8,7 +8,4 @@ import { render } from 'preact';
 import { App } from './App';
 import './style.css';
 
-// Import default highlight.js theme
-import 'highlight.js/styles/github-dark.min.css';
-
 render(<App />, document.getElementById('app'));

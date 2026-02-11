@@ -114,7 +114,7 @@ export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
       
       {/* Code content */}
       <pre className="diff-line-code">
-        <code ref={codeRef} className="language-javascript">{codeContent}</code>
+        <code ref={codeRef} className="language-javascript hljs">{codeContent}</code>
       </pre>
     </div>
   );

@@ -977,16 +977,10 @@ body {
   font-family: inherit;
 }
 
-.diff-line-code code {
-  font-family: inherit;
-  display: block;
-  padding: 0.25rem 0.5rem;
-}
-
-/* Ensure hljs background is visible */
+/* Let hljs theme control background and colors */
 .diff-line-code code.hljs {
-  background: var(--hljs-bg, inherit);
-  padding: 0.25rem 0.5rem;
+  font-family: inherit !important;
+  padding: 0.25rem 0.5rem !important;
 }
 
 

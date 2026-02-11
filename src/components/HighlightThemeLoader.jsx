@@ -9,28 +9,32 @@ import { highlightTheme } from '../stores/highlightThemeStore.js';
 
 /**
  * Component that loads and manages highlight.js theme CSS
- * Should be rendered once in the app to handle theme switching
+ * Uses Vite's dynamic import to load theme CSS from node_modules at build time
  */
 export function HighlightThemeLoader() {
   useEffect(() => {
     const theme = highlightTheme.value;
-    const linkId = 'hljs-theme';
     
-    // Remove existing theme link
-    const existingLink = document.getElementById(linkId);
-    if (existingLink) {
-      existingLink.remove();
-    }
-    
-    // Dynamically import the theme CSS from node_modules
-    // Using import() to load the CSS file
-    import(`highlight.js/styles/${theme}.min.css?inline`).catch((err) => {
-      console.warn(`Failed to load highlight.js theme: ${theme}`, err);
-      // Fallback to a basic theme if the requested one doesn't exist
-      if (theme !== 'github-dark') {
-        import('highlight.js/styles/github-dark.min.css?inline').catch(console.error);
+    // Dynamically import the theme CSS
+    // Vite will handle this at build time and code-split appropriately
+    const loadTheme = async () => {
+      try {
+        // Dynamic import of CSS file - Vite will bundle this
+        await import(`highlight.js/styles/${theme}.min.css`);
+      } catch (err) {
+        console.warn(`Failed to load theme: ${theme}`, err);
+        // Fallback to default theme
+        if (theme !== 'github-dark') {
+          try {
+            await import('highlight.js/styles/github-dark.min.css');
+          } catch (fallbackErr) {
+            console.error('Failed to load fallback theme', fallbackErr);
+          }
+        }
       }
-    });
+    };
+    
+    loadTheme();
   }, [highlightTheme.value]);
   
   return null; // This component doesn't render anything
