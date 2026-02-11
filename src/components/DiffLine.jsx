@@ -41,11 +41,12 @@ function getCodeContent(line) {
  * Component for rendering a single line in a diff
  * @param {Object} props
  * @param {string} props.line - The line content
+ * @param {number|null} props.lineNumber - The actual line number in the file (null for removed lines and hunk headers)
  * @param {number} props.index - Line index in the hunk
  * @param {boolean} props.isSelected - Whether this line is selected/picked
  * @param {Function} props.onClick - Click handler
  */
-export function DiffLine({ line, index, isSelected, onClick }) {
+export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
   const lineInfo = getLineType(line);
   const codeContent = getCodeContent(line);
   const isHunkHeader = lineInfo.type === 'hunk';
@@ -85,11 +86,16 @@ export function DiffLine({ line, index, isSelected, onClick }) {
         </span>
       )}
       
-      {/* Line number - only show for non-hunk-header lines */}
-      {!isHunkHeader && (
+      {/* Line number - only show for non-hunk-header lines that have a line number */}
+      {!isHunkHeader && lineNumber !== null && (
         <span className="diff-line-number">
-          {index}
+          {lineNumber}
         </span>
+      )}
+      
+      {/* Empty space for removed lines to keep alignment */}
+      {!isHunkHeader && lineNumber === null && (
+        <span className="diff-line-number"></span>
       )}
       
       {/* Code content */}
