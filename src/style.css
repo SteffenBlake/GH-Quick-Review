@@ -28,7 +28,6 @@ body {
   align-items: center;
   border-bottom: 2px solid var(--border);
   max-width: 100%;
-  overflow: hidden;
 }
 
 .header-left {
@@ -555,7 +554,7 @@ body {
   border-radius: 0 0 4px 4px;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 10000;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
