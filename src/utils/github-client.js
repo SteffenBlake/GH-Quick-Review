@@ -59,6 +59,18 @@ class GitHubClient {
   async listUserRepos() {
     return this.get('/user/repos');
   }
+
+  /**
+   * List pull requests for a repository
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @returns {Promise<Array>} - Array of pull request objects
+   */
+  async listPulls(repo) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    return this.get(`/repos/${repo}/pulls`);
+  }
 }
 
 // Export singleton instance

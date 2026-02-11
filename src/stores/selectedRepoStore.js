@@ -5,6 +5,7 @@
  */
 
 import { signal } from '@preact/signals';
+import { clearSelectedPr } from './selectedPrStore';
 
 /**
  * Selected repo store using Preact signals
@@ -20,6 +21,7 @@ export const selectedRepo = signal(initialRepo || '');
 
 export function setSelectedRepo(repo) {
   selectedRepo.value = repo;
+  clearSelectedPr(); // Clear selected PR when repo changes
   if (typeof window !== 'undefined') {
     if (repo) {
       localStorage.setItem('selected_repo', repo);

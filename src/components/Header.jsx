@@ -5,6 +5,7 @@
  */
 
 import { ReposDropdown } from './ReposDropdown';
+import { PullsDropdown } from './PullsDropdown';
 
 export function Header({ font, setFont, authenticated, onLogout }) {
   return (
@@ -14,6 +15,7 @@ export function Header({ font, setFont, authenticated, onLogout }) {
           {'\ue709'} GH Quick Review
         </h1>
         {authenticated && <ReposDropdown />}
+        {authenticated && <PullsDropdown />}
       </div>
       <div className="header-right">
         <div className="font-picker">
