@@ -45,7 +45,7 @@ export function Header({ font, setFont, authenticated, onLogout }) {
       </div>
       <div className="header-right">
         <div className="font-picker">
-          <label htmlFor="font-select">Font: </label>
+          <label>Font: </label>
           <FuzzyDropdown
             value={font}
             onChange={setFont}
@@ -55,7 +55,7 @@ export function Header({ font, setFont, authenticated, onLogout }) {
           />
         </div>
         <div className="theme-picker">
-          <label htmlFor="theme-select">Theme: </label>
+          <label>Theme: </label>
           <FuzzyDropdown
             value={highlightTheme.value}
             onChange={setHighlightTheme}

@@ -56,7 +56,7 @@ function parsePatchIntoDiffs(patch) {
       currentDiff = {
         hunkHeader: line,
         startLine: hunkInfo.newStart,
-        endLine: hunkInfo.newStart, // Will be updated as we process lines
+        endLine: hunkInfo.newStart, // Starts at newStart, updated as lines are processed
         lines: [line],
         ...hunkInfo
       };
