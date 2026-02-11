@@ -235,7 +235,10 @@ export function FuzzyDropdown({
                   setSearchText(e.target.value);
                   setHighlightedIndex(0);
                 }}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => {
+                  e.stopPropagation(); // Prevent double-firing from parent control
+                  handleKeyDown(e);
+                }}
                 onClick={(e) => e.stopPropagation()} // Prevent control's onClick from closing dropdown
                 placeholder="Type to search..."
                 autoFocus

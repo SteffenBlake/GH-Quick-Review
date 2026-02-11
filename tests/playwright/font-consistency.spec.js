@@ -18,7 +18,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const headerTitle = page.getByRole('heading', { name: /GH Quick Review/i });
@@ -48,10 +48,10 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
-      const repoDropdown = page.locator('#repo-select');
+      const repoDropdown = page.locator('.repo-fuzzy-select');
       let computedFont = await repoDropdown.evaluate((el) => window.getComputedStyle(el).fontFamily);
       expect(computedFont).toContain('FiraCode');
       
@@ -78,10 +78,10 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
-      const prDropdown = page.locator('#pr-select');
+      const prDropdown = page.locator('.pr-fuzzy-select');
       let computedFont = await prDropdown.evaluate((el) => window.getComputedStyle(el).fontFamily);
       expect(computedFont).toContain('FiraCode');
       
@@ -108,7 +108,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const fontDropdown = page.getByLabel('Font:');
@@ -138,7 +138,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const logoutButton = page.getByRole('button', { name: /Logout/i });
@@ -168,7 +168,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const mainContent = page.getByText('Please select a Repo and a Pull Request to review!');
@@ -198,7 +198,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const mainHeading = page.getByRole('heading', { name: 'I dunno lol' });
@@ -228,7 +228,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const footerText = page.locator('.footer-copyright');
@@ -258,7 +258,7 @@ test.describe('Font Consistency', () => {
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      await expect(page.locator('#repo-select')).toBeVisible();
+      await expect(page.locator('.repo-fuzzy-select')).toBeVisible();
       
       // Check initial font (FiraCode)
       const sourceCodeLink = page.getByRole('link', { name: /Source Code/i });

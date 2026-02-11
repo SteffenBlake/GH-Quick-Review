@@ -464,6 +464,7 @@ body {
 .fuzzy-dropdown {
   position: relative;
   flex: 1;
+  min-width: 0; /* Prevent flex item from growing beyond container */
   font-family: inherit;
 }
 
@@ -480,6 +481,7 @@ body {
   cursor: pointer;
   transition: border-color 0.2s;
   gap: 0.5rem;
+  min-width: 0; /* Prevent growth beyond flex container */
 }
 
 .fuzzy-dropdown-control:hover:not(.disabled) {
