@@ -36,38 +36,42 @@ export function Header({ font, setFont, authenticated, onLogout }) {
 
   return (
     <header className="header">
-      <div className="header-left">
-        <h1>
-          {'\ue709'}
-        </h1>
-        {authenticated && <ReposDropdown />}
-        {authenticated && <PullsDropdown />}
-      </div>
-      <div className="header-right">
-        <div className="font-picker">
-          <FuzzyDropdown
-            value={font}
-            onChange={setFont}
-            options={fontOptions}
-            placeholder="Select font..."
-            className="font-fuzzy-select"
-          />
+      <h1 className="header-icon">
+        {'\ue709'}
+      </h1>
+      {authenticated && (
+        <div className="header-repo-picker">
+          <ReposDropdown />
         </div>
-        <div className="theme-picker">
-          <FuzzyDropdown
-            value={highlightTheme.value}
-            onChange={setHighlightTheme}
-            options={themeOptions}
-            placeholder="Select theme..."
-            className="theme-fuzzy-select"
-          />
+      )}
+      {authenticated && (
+        <div className="header-pr-picker">
+          <PullsDropdown />
         </div>
-        {authenticated && (
-          <button onClick={onLogout} className="logout-button" title="Logout">
-            Logout {'\udb81\uddfd'}
-          </button>
-        )}
+      )}
+      <div className="header-font-picker">
+        <FuzzyDropdown
+          value={font}
+          onChange={setFont}
+          options={fontOptions}
+          placeholder="Select font..."
+          className="font-fuzzy-select"
+        />
       </div>
+      <div className="header-theme-picker">
+        <FuzzyDropdown
+          value={highlightTheme.value}
+          onChange={setHighlightTheme}
+          options={themeOptions}
+          placeholder="Select theme..."
+          className="theme-fuzzy-select"
+        />
+      </div>
+      {authenticated && (
+        <button onClick={onLogout} className="header-logout-button" title="Logout">
+          Logout {'\udb81\uddfd'}
+        </button>
+      )}
     </header>
   );
 }
