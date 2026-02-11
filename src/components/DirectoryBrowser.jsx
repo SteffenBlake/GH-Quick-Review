@@ -23,6 +23,16 @@ export function DirectoryBrowser() {
     }
   }, [selectedPr.value]);
 
+  // Also focus on mount if PR is already selected
+  useEffect(() => {
+    if (containerRef.current && selectedPr.value) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        containerRef.current?.focus();
+      }, 100);
+    }
+  }, []);
+
   const handleExpandClick = () => {
     containerRef.current?.focus();
   };

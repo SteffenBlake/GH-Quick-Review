@@ -50,12 +50,12 @@ test.describe('Directory Browser', () => {
       await page.reload();
       
       // Wait for repos to load and select one
-      await page.waitForSelector('.repo-select');
-      await page.selectOption('.repo-select', 'test_repo_1');
+      await page.waitForSelector('#repo-select');
+      await page.selectOption('#repo-select', 'test_repo_1');
       
       // Wait for pulls to load and select one
-      await page.waitForSelector('.pr-select');
-      await page.selectOption('.pr-select', '1');
+      await page.waitForSelector('#pr-select');
+      await page.selectOption('#pr-select', '1');
       
       // Directory browser should now be visible and expanded (transformed to 0)
       await expect(page.locator('.directory-browser')).toBeVisible();
@@ -65,7 +65,7 @@ test.describe('Directory Browser', () => {
       );
       
       // When expanded, should be translateX(0) which is "none" in computed style
-      expect(transform).toBe('none');
+      expect(transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)').toBe(true);
     } finally {
       await mockServer.stop();
     }
@@ -127,7 +127,7 @@ test.describe('Directory Browser', () => {
       let transform = await page.locator('.directory-browser').evaluate(el => 
         window.getComputedStyle(el).transform
       );
-      expect(transform).toBe('none');
+      expect(transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)').toBe(true);
       
       // Click outside
       await page.click('.content');
@@ -174,7 +174,7 @@ test.describe('Directory Browser', () => {
       const transform = await page.locator('.directory-browser').evaluate(el => 
         window.getComputedStyle(el).transform
       );
-      expect(transform).toBe('none');
+      expect(transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)').toBe(true);
     } finally {
       await mockServer.stop();
     }
@@ -208,7 +208,7 @@ test.describe('Directory Browser', () => {
       expect(transform).toContain('matrix');
       
       // Change PR selection
-      await page.selectOption('.pr-select', '2');
+      await page.selectOption('#pr-select', '2');
       
       // Wait a moment for the focus effect
       await page.waitForTimeout(100);
@@ -217,7 +217,7 @@ test.describe('Directory Browser', () => {
       transform = await page.locator('.directory-browser').evaluate(el => 
         window.getComputedStyle(el).transform
       );
-      expect(transform).toBe('none');
+      expect(transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)').toBe(true);
     } finally {
       await mockServer.stop();
     }
