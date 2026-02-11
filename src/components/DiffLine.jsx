@@ -4,6 +4,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
+// Icon constants
+const ICON_MESSAGE_ALERT = '\udb80\udf62';
+const ICON_MESSAGE_PLUS = '\udb81\ude53';
+
 /**
  * Get line type and git icon from the line content
  * @param {string} line - The line content
@@ -70,11 +74,11 @@ export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
       <span className="diff-line-message-gutter">
         {hasMessage ? (
           <button className="diff-line-message-btn has-message">
-            {'\udb80\udf62'}
+            {ICON_MESSAGE_ALERT}
           </button>
         ) : (
           <button className="diff-line-message-btn add-message">
-            {'\udb81\ude53'}
+            {ICON_MESSAGE_PLUS}
           </button>
         )}
       </span>

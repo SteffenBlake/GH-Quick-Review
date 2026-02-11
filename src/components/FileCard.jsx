@@ -33,7 +33,7 @@ export function FileCard({ file }) {
   const getFilenameColor = () => {
     if (status === 'added') return '#4ade80'; // green
     if (status === 'removed') return '#f87171'; // red
-    if (status === 'modified') return '#4ade80'; // green
+    if (status === 'modified') return '#fbbf24'; // amber/yellow
     return 'inherit';
   };
   

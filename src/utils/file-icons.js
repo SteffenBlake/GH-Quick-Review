@@ -72,7 +72,7 @@ export function getGitStatusIcon(status) {
   }
   
   if (statusLower === 'modified' || statusLower === 'changed') {
-    return { icon: '~', color: '#4ade80' }; // green
+    return { icon: '~', color: '#fbbf24' }; // amber/yellow
   }
   
   return null;
