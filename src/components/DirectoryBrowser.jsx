@@ -7,10 +7,14 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { token } from '../stores/authStore';
 import { selectedPr } from '../stores/selectedPrStore';
+import { useDirectoryTree } from '../stores/directoryTreeStore';
+import { DirectoryEntry } from './DirectoryEntry';
+import { LoadingSpinner } from './LoadingSpinner';
 
 export function DirectoryBrowser() {
   const containerRef = useRef(null);
   const previousPrRef = useRef(selectedPr.value);
+  const { tree, isLoading, error } = useDirectoryTree();
   
   // Hide if not logged in or no PR selected
   if (!token.value || !selectedPr.value) {
@@ -55,9 +59,36 @@ export function DirectoryBrowser() {
       </button>
       
       <div className="directory-browser-content">
-        {/* Content will be added in next session */}
-        <div className="directory-browser-placeholder">
-          Directory Browser Content (Coming Soon)
+        <h2 className="directory-browser-header">Directory</h2>
+        
+        <div className="directory-browser-inner">
+          {isLoading ? (
+            <div className="directory-browser-loading">
+              <LoadingSpinner />
+            </div>
+          ) : error ? (
+            <div className="directory-browser-error">
+              Error loading files
+            </div>
+          ) : Object.keys(tree).length === 0 ? (
+            <div className="directory-browser-empty">
+              No files changed
+            </div>
+          ) : (
+            <ul className="directory-tree">
+              {Object.values(tree)
+                .sort((a, b) => {
+                  // Directories first, then files
+                  if (!a.isFile && b.isFile) return -1;
+                  if (a.isFile && !b.isFile) return 1;
+                  // Then alphabetically
+                  return a.name.localeCompare(b.name);
+                })
+                .map((node) => (
+                  <DirectoryEntry key={node.path} node={node} depth={0} />
+                ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

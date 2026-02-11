@@ -674,13 +674,123 @@ body {
   border-right: 1px solid var(--border);
   width: 100%;
   height: 100%;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
 }
 
-.directory-browser-placeholder {
+/* Header title */
+.directory-browser-header {
+  margin: 0;
   padding: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+/* Inner scrollable container */
+.directory-browser-inner {
+  flex: 1;
+  background-color: var(--bg-primary);
+  margin: 0.25rem;
+  padding: 0.25rem;
+  overflow: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading/Error/Empty states */
+.directory-browser-loading,
+.directory-browser-error,
+.directory-browser-empty {
+  padding: 2rem;
+  text-align: center;
   color: var(--text-secondary);
+}
+
+.directory-browser-error {
+  color: #f87171;
+}
+
+/* Directory tree */
+.directory-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Directory children */
+.directory-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Directory entry */
+.directory-entry {
+  margin: 0;
+  padding: 0;
+}
+
+/* Directory entry content */
+.directory-entry-content {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: outline 0.2s;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+
+.directory-entry-content:hover:not(.selected) {
+  outline-color: var(--accent);
+}
+
+.directory-entry-content:focus:not(.selected) {
+  outline-color: var(--accent);
+}
+
+/* Selected file */
+.directory-entry-content.selected {
+  background-color: #2d2d2d;
+}
+
+/* Git status indicator */
+.git-status {
+  font-weight: bold;
+  min-width: 0.75rem;
+  text-align: center;
+}
+
+/* Chevron */
+.chevron {
+  display: inline-block;
+  width: 0.75rem;
+  text-align: center;
+}
+
+/* File icon */
+.file-icon {
+  min-width: 1rem;
+  text-align: center;
+}
+
+/* Entry name */
+.entry-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Comment indicator */
+.comment-indicator {
+  color: var(--accent);
+  min-width: 1rem;
   text-align: center;
 }
 
