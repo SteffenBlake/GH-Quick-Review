@@ -13,8 +13,10 @@ description: Implements features by making tests pass, follows and sticks to ind
 
 Every single time the user sends you a new message, you must first state the usual "I acknowledge the new requirements"
 
-THEN you MUST, ALWAYS, then state "I will now reload my agent file" and use the "view file" action to view developer.agent.md IN FULL, which will reload it fully back into your recent context
+THEN you MUST, ALWAYS, then state EXACTLY: "I will now reload my agent file IN FULL" and use the "view file" action to view developer.agent.md IN FULL (without any view_range parameter), which will reload it fully back into your recent context
 THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAILING!!!
+
+**IMPORTANT: You MUST say "IN FULL" - not just "I will now reload my agent file" - the exact phrase is: "I will now reload my agent file IN FULL"**
 
 # Agent Instructions for GH-Quick-Review
 
@@ -77,6 +79,24 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 - Split long parameter lists across multiple lines
 - Keep string concatenation readable
 
+#### CSS-First Solutions
+**CRITICAL: Always try to solve problems using CSS first before using JavaScript/React logic.**
+- Modern CSS has powerful selectors and pseudo-classes that handle many UI behaviors
+- CSS solutions are more performant and have less complexity than JavaScript
+- Common CSS solutions: `:hover`, `:focus`, `:focus-within`, `:has()`, `:not()`, media queries, flexbox, grid
+- Only use JavaScript when CSS cannot handle the requirement
+- Don't re-invent problems already solved by CSS with brute-force JavaScript
+
+**Examples:**
+```css
+/* WRONG - Using JavaScript to handle hover/focus states */
+/* Component with onMouseEnter/onMouseLeave/onFocus/onBlur handlers */
+
+/* CORRECT - Using CSS pseudo-classes */
+.element:hover { background-color: var(--accent); }
+.element:focus-within { border-color: var(--accent); }
+```
+
 ## Modern JavaScript Best Practices
 
 ### ES Modules
@@ -131,6 +151,15 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 
 ### Self-Correction Protocol
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
+
+### Problem-Solving Protocol
+**CRITICAL: When something isn't working, FIX IT. Don't give up and work around it.**
+- If a server won't start, debug and fix it - don't skip to alternatives
+- If a test fails, fix the test or the code - don't disable or skip it
+- If a build fails, fix the build - don't try workarounds
+- Working around problems instead of fixing them is unacceptable behavior
+- Your job is to solve problems, not avoid them
+- Only seek help if you've genuinely tried to fix it and can't figure it out
 
 ### Screenshot Protocol
 **NEVER create custom screenshot test files or scripts.** You have built-in MCP tools for taking screenshots:
@@ -512,3 +541,112 @@ This endpoint returns the contents of a file in a repository. Below is the **act
 7. **Required Fields**: All responses include `name`, `path`, `sha`, `size`, `url`, `html_url`, `git_url`, `download_url`, `type`, `content`, `encoding`, and `_links`
 
 This documentation serves as the definitive reference for understanding how GitHub represents file contents in API responses.
+
+## Development Server Setup Guide
+
+**CRITICAL: Follow these steps EXACTLY to start the development environment correctly.**
+
+### Step-by-Step Server Setup
+
+**1. Install Dependencies (FIRST - if not already installed)**
+```bash
+cd /home/runner/work/GH-Quick-Review/GH-Quick-Review
+npm install
+```
+- Use `mode: "sync"` with `initial_wait: 30`
+- Only needed once or after package.json changes
+
+**2. Start the Mock Server**
+```bash
+cd /home/runner/work/GH-Quick-Review/GH-Quick-Review && node tools/gh-mock-server.js tools/test_user
+```
+- **CRITICAL**: Use `bash` tool with `detach: true` and `mode: "async"`
+- This starts a detached background process that persists
+- Mock server runs on `http://localhost:3000`
+- Provides test data from `tools/test_user/` directory
+- Returns a shellId - save this to read logs if needed
+
+**3. Verify Mock Server is Running**
+```bash
+sleep 2 && curl -s http://localhost:3000/user/repos | head -20
+```
+- Use `mode: "sync"`
+- Should return JSON with test repositories
+- If no response, check detached log file
+
+**4. Start Dev Server**
+```bash
+cd /home/runner/work/GH-Quick-Review/GH-Quick-Review && npm run dev
+```
+- **CRITICAL**: Use `bash` tool with `detach: true` and `mode: "async"`
+- This starts a detached background Vite server
+- Dev server runs on `http://localhost:5173/GH-Quick-Review/`
+- By default, connects to mock server at `http://localhost:3000`
+- Vite config has default: `VITE_GITHUB_API_URL || 'http://localhost:3000'`
+
+**5. Verify Dev Server is Running**
+```bash
+sleep 2 && curl -s http://localhost:5173 > /dev/null && echo "✓ Dev server ready"
+```
+- Use `mode: "sync"`
+- Should print "✓ Dev server ready"
+- If not ready, wait longer and check again
+
+**6. Take Screenshots with Playwright MCP Tools**
+```javascript
+// Navigate to app
+await playwright-browser_navigate({ url: 'http://localhost:5173/GH-Quick-Review/' })
+
+// Set up test state via localStorage
+await playwright-browser_evaluate({
+  function: `() => {
+    localStorage.setItem('github_pat', 'test_token_12345');
+    localStorage.setItem('selected_repo', 'test_repo_1');
+    localStorage.setItem('selected_pr', '1');
+  }`
+})
+
+// Reload to apply state
+await playwright-browser_navigate({ url: 'http://localhost:5173/GH-Quick-Review/' })
+
+// Wait for transition if needed
+sleep 1
+
+// Take screenshot
+await playwright-browser_take_screenshot({ 
+  filename: 'my-screenshot.png',
+  fullPage: true 
+})
+// This returns a GitHub URL - IMMEDIATELY display it in chat with markdown
+```
+
+**7. Stop Servers When Done**
+```bash
+# Find PIDs
+ps aux | grep "node tools/gh-mock-server" | grep -v grep | awk '{print $2}'
+ps aux | grep "vite" | grep -v grep | awk '{print $2}'
+
+# Kill specific PIDs (replace with actual PIDs)
+kill <mock_server_pid> <vite_pid>
+```
+
+### Common Issues
+
+**Issue: 404 API Errors in Screenshots**
+- Cause: Dev server not connected to mock server
+- Fix: Verify vite.config.js has default `VITE_GITHUB_API_URL || 'http://localhost:3000'`
+- Fix: Ensure mock server is running on port 3000
+
+**Issue: "vite: not found" or "vite: command not found"**
+- Cause: Dependencies not installed or vite not in PATH
+- Fix: Run `npm install` first
+- Fix: Use `npm run dev` (uses package.json script) instead of `vite` directly
+
+**Issue: Can't kill processes**
+- Don't use: `pkill` or `killall` (not allowed)
+- Do use: `kill <PID>` with specific process ID from `ps aux`
+
+**Issue: Screenshots show outdated code**
+- Cause: Browser cache or HMR not updating
+- Fix: Hard reload page with `playwright-browser_navigate` (always reloads)
+- Fix: Make sure dev server restarted after code changes
