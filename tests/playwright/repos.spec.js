@@ -55,8 +55,8 @@ test.describe('Repos Dropdown', () => {
       // Wait for repos dropdown to appear
       await expect(page.locator('#repo-select')).toBeVisible();
       
-      // Should have "Select a repository..." option
-      await expect(page.locator('#repo-select option').first()).toHaveText('Select a repository...');
+      // Should have "Repo..." option
+      await expect(page.locator('#repo-select option').first()).toHaveText('Repo...');
       
       // Should have repos from mock server
       const options = await page.locator('#repo-select option').allTextContents();

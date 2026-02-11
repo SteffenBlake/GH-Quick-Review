@@ -44,7 +44,7 @@ export function ReposDropdown() {
         onChange={(e) => setSelectedRepo(e.target.value)}
         className="repo-select"
       >
-        <option value="">Select a repository...</option>
+        <option value="">Repo...</option>
         {repos && repos.map((repo) => {
           // Strip username/ from display
           const repoName = repo.full_name.split('/')[1] || repo.full_name;
