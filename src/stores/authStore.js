@@ -6,6 +6,7 @@
 
 import { signal } from '@preact/signals';
 import { clearSelectedRepo } from './selectedRepoStore';
+import { clearSelectedPr } from './selectedPrStore';
 
 /**
  * Auth store using Preact signals
@@ -33,6 +34,7 @@ export function setToken(newToken) {
 export function clearToken() {
   setToken(null);
   clearSelectedRepo(); // Clear selected repo on logout
+  clearSelectedPr(); // Clear selected PR on logout
 }
 
 export function getToken() {
