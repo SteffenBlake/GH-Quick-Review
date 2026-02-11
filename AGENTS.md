@@ -93,12 +93,27 @@
 - Use mock server error configs to test and screenshot error states
 - Include before/after screenshots when modifying existing UI
 
+**CRITICAL: Always display screenshots in the agent chat immediately after taking them:**
+- After taking each screenshot with `playwright-browser_take_screenshot`, the system returns a GitHub URL
+- IMMEDIATELY display that screenshot in the chat using markdown: `![Description](url)`
+- This allows the user to verify the screenshot is correct before finalizing the PR
+- Do NOT just save screenshots without showing them to the user
+- The user needs to see the actual images in the chat, not just file paths
+
+**Example workflow:**
+```
+1. Take screenshot: playwright-browser_take_screenshot -> Returns URL
+2. Show in chat: ![Login Page](https://github.com/user-attachments/assets/...)
+3. User can verify it looks correct
+4. Include same URL in PR description
+```
+
 **Example:**
 If implementing a repos dropdown:
-- Screenshot 1: Loading state (spinner visible)
-- Screenshot 2: Success state (dropdown with repos)
-- Screenshot 3: Error state (error message displayed)
-- Screenshot 4: Selected state (if applicable)
+- Screenshot 1: Loading state (spinner visible) - Show in chat immediately
+- Screenshot 2: Success state (dropdown with repos) - Show in chat immediately
+- Screenshot 3: Error state (error message displayed) - Show in chat immediately
+- Screenshot 4: Selected state (if applicable) - Show in chat immediately
 
 ## Project-Specific Guidelines
 

@@ -19,7 +19,6 @@ export function ReposDropdown() {
   if (isLoading) {
     return (
       <div className="repos-dropdown">
-        <label htmlFor="repo-select">Repository:</label>
         <div className="repos-loading">
           <LoadingSpinner text="Loading..." />
         </div>
@@ -30,7 +29,6 @@ export function ReposDropdown() {
   if (error) {
     return (
       <div className="repos-dropdown">
-        <label htmlFor="repo-select">Repository:</label>
         <div className="repos-error">
           {'\uf071'} Error: {error.message}
         </div>
@@ -40,7 +38,6 @@ export function ReposDropdown() {
 
   return (
     <div className="repos-dropdown">
-      <label htmlFor="repo-select">Repository:</label>
       <select
         id="repo-select"
         value={selectedRepo}
@@ -48,11 +45,15 @@ export function ReposDropdown() {
         className="repo-select"
       >
         <option value="">Select a repository...</option>
-        {repos && repos.map((repo) => (
-          <option key={repo.id} value={repo.full_name}>
-            {repo.full_name}
-          </option>
-        ))}
+        {repos && repos.map((repo) => {
+          // Strip username/ from display
+          const repoName = repo.full_name.split('/')[1] || repo.full_name;
+          return (
+            <option key={repo.id} value={repo.full_name}>
+              {repoName}
+            </option>
+          );
+        })}
       </select>
     </div>
   );
