@@ -768,7 +768,8 @@ body {
 
 /* Chevron */
 .chevron {
-  min-width: 0.75rem;
+  display: inline-block;
+  width: 0.75rem;
   text-align: center;
 }
 
