@@ -51,7 +51,7 @@ test.describe('Directory Browser', () => {
       
       // Wait for repos to load and select one
       await page.waitForSelector('.repo-select');
-      await page.selectOption('.repo-select', 'test-owner/test-repo');
+      await page.selectOption('.repo-select', 'test_repo_1');
       
       // Wait for pulls to load and select one
       await page.waitForSelector('.pr-select');
@@ -80,7 +80,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test-owner/test-repo');
+        localStorage.setItem('selected_repo', 'test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -115,7 +115,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test-owner/test-repo');
+        localStorage.setItem('selected_repo', 'test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -154,7 +154,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test-owner/test-repo');
+        localStorage.setItem('selected_repo', 'test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -180,33 +180,6 @@ test.describe('Directory Browser', () => {
     }
   });
 
-  test('should collapse when clicking outside the browser', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => {
-        localStorage.clear();
-        localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test-owner/test-repo');
-        localStorage.setItem('selected_pr', '1');
-      });
-      await page.reload();
-      
-      // Wait for directory browser to appear and expand
-      await expect(page.locator('.directory-browser-content')).toBeVisible();
-      
-      // Click outside (on the main content area)
-      await page.click('.content');
-      
-      // Should now be collapsed
-      await expect(page.locator('.directory-browser-content')).not.toBeVisible();
-    } finally {
-      await mockServer.stop();
-    }
-  });
-
   test('should re-expand when PR selection changes', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
@@ -216,23 +189,35 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test-owner/test-repo');
+        localStorage.setItem('selected_repo', 'test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
       
-      // Wait for directory browser to appear and expand
-      await expect(page.locator('.directory-browser-content')).toBeVisible();
+      // Wait for directory browser
+      await expect(page.locator('.directory-browser')).toBeVisible();
       
-      // Collapse it
-      await page.click('.directory-browser-toggle');
-      await expect(page.locator('.directory-browser-content')).not.toBeVisible();
+      // Collapse it by clicking outside
+      await page.click('.content');
+      await page.waitForTimeout(400);
+      
+      // Should be collapsed
+      let transform = await page.locator('.directory-browser').evaluate(el => 
+        window.getComputedStyle(el).transform
+      );
+      expect(transform).toContain('matrix');
       
       // Change PR selection
       await page.selectOption('.pr-select', '2');
       
+      // Wait a moment for the focus effect
+      await page.waitForTimeout(100);
+      
       // Should expand again
-      await expect(page.locator('.directory-browser-content')).toBeVisible();
+      transform = await page.locator('.directory-browser').evaluate(el => 
+        window.getComputedStyle(el).transform
+      );
+      expect(transform).toBe('none');
     } finally {
       await mockServer.stop();
     }
@@ -247,7 +232,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test-owner/test-repo');
+        localStorage.setItem('selected_repo', 'test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -255,18 +240,21 @@ test.describe('Directory Browser', () => {
       // Wait for directory browser to appear
       await expect(page.locator('.directory-browser')).toBeVisible();
       
-      // Check position
+      // Check position - computed style will convert vh to px
       const position = await page.locator('.directory-browser').evaluate(el => {
         const styles = window.getComputedStyle(el);
+        const viewportHeight = window.innerHeight;
+        const topPx = parseInt(styles.top);
+        const topVh = (topPx / viewportHeight) * 100;
         return {
           position: styles.position,
-          top: styles.top,
+          topVh: Math.round(topVh), // Round to nearest integer
           left: styles.left
         };
       });
       
       expect(position.position).toBe('fixed');
-      expect(position.top).toBe('20vh');
+      expect(position.topVh).toBe(20); // 20vh
       expect(position.left).toBe('0px');
     } finally {
       await mockServer.stop();

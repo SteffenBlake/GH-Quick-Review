@@ -150,6 +150,15 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 ### Self-Correction Protocol
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
 
+### Problem-Solving Protocol
+**CRITICAL: When something isn't working, FIX IT. Don't give up and work around it.**
+- If a server won't start, debug and fix it - don't skip to alternatives
+- If a test fails, fix the test or the code - don't disable or skip it
+- If a build fails, fix the build - don't try workarounds
+- Working around problems instead of fixing them is unacceptable behavior
+- Your job is to solve problems, not avoid them
+- Only seek help if you've genuinely tried to fix it and can't figure it out
+
 ### Screenshot Protocol
 **NEVER create custom screenshot test files or scripts.** You have built-in MCP tools for taking screenshots:
 - Use `playwright-browser_navigate` to navigate to pages
