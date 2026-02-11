@@ -20,8 +20,8 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - Spinner6: \uee0b
 - Double Chevron Right: \udb80\udd3e
 - Double Chevron Left: \udb80\udd3d
-- Chevron Right: \udb82\udddb
-- Chevron Down: \udb82\uddd7
+- Chevron Right: \uf054
+- Chevron Down: \uf078
 - Folder: \uea83
 - File Generic: \uea7b
 - Message Alert: \udb80\udf62
