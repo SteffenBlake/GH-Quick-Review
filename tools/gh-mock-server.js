@@ -457,12 +457,6 @@ class GitHubMockServer {
     // Route matching
     const routes = [
       {
-        // Get authenticated user: GET /user
-        pattern: /^\/user$/,
-        method: 'GET',
-        handler: this.getUser.bind(this)
-      },
-      {
         // List repos for user: GET /user/repos
         pattern: /^\/user\/repos$/,
         method: 'GET',
@@ -530,32 +524,6 @@ class GitHubMockServer {
     this.sendResponse(res, 404, {
       message: 'Not Found',
       documentation_url: 'https://docs.github.com/rest'
-    });
-  }
-
-  getUser(req, res, match) {
-    if (this.checkConfiguredError('getUser', res)) return;
-    
-    // Check for authorization header
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return this.sendResponse(res, 401, {
-        message: 'Requires authentication',
-        documentation_url: 'https://docs.github.com/rest/reference/users#get-the-authenticated-user'
-      });
-    }
-    
-    // Accept any token value - just return mock user
-    this.sendResponse(res, 200, {
-      login: 'mockuser',
-      id: 12345,
-      name: 'Mock User',
-      email: 'mockuser@example.com',
-      avatar_url: 'https://avatars.githubusercontent.com/u/12345?v=4',
-      type: 'User',
-      site_admin: false,
-      created_at: '2020-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
     });
   }
 

@@ -29,7 +29,7 @@ class GitHubClient {
 
   /**
    * Make a GET request to the GitHub API
-   * @param {string} endpoint - API endpoint (e.g., '/user')
+   * @param {string} endpoint - API endpoint (e.g., '/user/repos')
    * @param {string} token - Optional token override (uses stored token if not provided)
    * @returns {Promise<any>} - Response data
    * @throws {Error} - If request fails
@@ -59,24 +59,6 @@ class GitHubClient {
     }
 
     return response.json();
-  }
-
-  /**
-   * Verify a GitHub token by fetching the authenticated user
-   * @param {string} token - Token to verify
-   * @returns {Promise<object>} - User object if token is valid
-   * @throws {Error} - If token is invalid
-   */
-  async verifyToken(token) {
-    return this.get('/user', token);
-  }
-
-  /**
-   * Get the authenticated user
-   * @returns {Promise<object>} - User object
-   */
-  async getUser() {
-    return this.get('/user');
   }
 
   /**

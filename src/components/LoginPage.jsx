@@ -5,43 +5,16 @@
  */
 
 import { useState } from 'preact/hooks';
-import { setToken } from '../utils/auth';
-import { githubClient } from '../utils/github-client';
-import { LoadingSpinner } from './LoadingSpinner';
+import { setToken } from '../stores/authStore';
 
-export function LoginPage({ onLogin }) {
+export function LoginPage() {
   const [token, setTokenInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!token.trim()) {
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      // Save token first
+    if (token.trim()) {
+      // Just set the token - the store will notify listeners and trigger repo loading
       setToken(token.trim());
-      
-      // Validate token by fetching user repos
-      await githubClient.listUserRepos();
-      
-      // Token is valid, trigger login
-      onLogin();
-    } catch (err) {
-      // Token validation failed, clear it
-      setToken('');
-      setError(
-        err.status === 401
-          ? 'Invalid token. Please check your GitHub Personal Access Token.'
-          : 'Failed to connect to GitHub. Please try again.'
-      );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -60,19 +33,9 @@ export function LoginPage({ onLogin }) {
             onInput={(e) => setTokenInput(e.target.value)}
             className="pat-input"
             autoFocus
-            disabled={loading}
           />
-          {error && (
-            <div className="error-message">
-              {'\uf071'} {error}
-            </div>
-          )}
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? (
-              <LoadingSpinner text="Verifying token..." />
-            ) : (
-              <>{'\udb80\udf42'} Login</>
-            )}
+          <button type="submit" className="login-button">
+            {'\udb80\udf42'} Login
           </button>
         </form>
         <div className="login-links">

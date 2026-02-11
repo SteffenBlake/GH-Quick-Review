@@ -4,20 +4,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-const PAT_KEY = 'github_pat';
+// Re-export from authStore for backward compatibility
+export { getToken, setToken, clearToken, isAuthenticated } from '../stores/authStore.js';
 
-export const getToken = () => {
-  return localStorage.getItem(PAT_KEY);
-};
-
-export const setToken = (token) => {
-  localStorage.setItem(PAT_KEY, token);
-};
-
-export const clearToken = () => {
-  localStorage.removeItem(PAT_KEY);
-};
-
-export const isAuthenticated = () => {
-  return !!getToken();
-};

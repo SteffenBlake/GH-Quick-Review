@@ -86,6 +86,118 @@
 
 ## Project-Specific Guidelines
 
+### Architecture: MVVM with Reactive Stores
+
+This project follows **MVVM (Model-View-ViewModel) pattern** with reactive state management using **@preact/signals** and **@tanstack/react-query**.
+
+#### State Management
+
+**Two types of state:**
+
+1. **Synchronous State**: Use `@preact/signals`
+   - UI state (selected font, modals open/closed)
+   - Auth state (token presence)
+   - Any state that changes immediately
+
+2. **Asynchronous State**: Use `@tanstack/react-query`
+   - API data (repos, pull requests, comments)
+   - Any data fetched from network
+   - Automatically handles loading/error/success states
+   - Built-in caching, refetching, and invalidation
+
+**Never manually manage async state with `{status, data, error}` objects.** Use TanStack Query.
+
+**Example - Auth Store (Synchronous):**
+```javascript
+import { signal } from '@preact/signals';
+
+export const token = signal(localStorage.getItem('github_pat'));
+
+export function setToken(newToken) {
+  token.value = newToken;
+  localStorage.setItem('github_pat', newToken);
+}
+```
+
+**Example - Repos Query (Asynchronous):**
+```javascript
+import { useQuery } from '@tanstack/react-query';
+import { token } from './authStore.js';
+import { githubClient } from '../utils/github-client.js';
+
+export function useRepos() {
+  return useQuery({
+    queryKey: ['repos'],
+    queryFn: () => githubClient.listUserRepos(),
+    enabled: !!token.value, // Only fetch when token exists
+  });
+}
+```
+
+**Component Usage:**
+```javascript
+import { useRepos } from '../stores/reposStore';
+
+function ReposDropdown() {
+  const { data, isLoading, error } = useRepos();
+  
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <div>Error: {error.message}</div>;
+  return <select>{data.map(repo => <option>{repo.name}</option>)}</select>;
+}
+```
+
+#### View Responsibilities
+
+**Views (Components) must NEVER:**
+- Make API calls directly
+- Contain business logic
+- Manage application state beyond local UI state
+
+**Views should ONLY:**
+- Render UI based on store state
+- Handle user input and dispatch to stores
+- Manage local UI state (form inputs, toggles, etc.)
+
+**Example - LoginPage should NOT validate tokens:**
+```javascript
+// WRONG - View making API calls
+const handleLogin = async () => {
+  const result = await api.validateToken(token);
+  if (result.ok) { ... }
+}
+
+// CORRECT - View just sets state, store handles logic
+const handleLogin = () => {
+  setToken(token.trim());  // Store observes and handles validation
+}
+```
+
+#### API Calls
+
+**API calls belong ONLY in TanStack Query hooks:**
+
+```javascript
+// In stores/reposStore.js
+export function useRepos() {
+  return useQuery({
+    queryKey: ['repos'],
+    queryFn: () => githubClient.listUserRepos(),
+    enabled: !!token.value,
+  });
+}
+```
+
+**Views call hooks and render based on query state:**
+```javascript
+function MyComponent() {
+  const { data: repos, isLoading, error } = useRepos();
+  // TanStack Query automatically provides isLoading, error, data
+}
+```
+
+**Never call API methods directly in components.** Always use query hooks.
+
 ### Testing Requirements
 
 This project uses **Playwright integration tests ONLY**. 
