@@ -51,7 +51,7 @@
       "number": 2,
       "id": 2,
       "state": "open",
-      "title": "Fix critical bug in payment processing",
+      "title": "Fix critical bug in payment processing system that was causing duplicate charges and race conditions when multiple concurrent requests were submitted by the same user within a short time window",
       "body": "Fixes #42\n\nThis PR resolves the race condition in the payment processor that was causing duplicate charges.",
       "created_at": "2024-01-16T09:00:00Z",
       "updated_at": "2024-01-16T15:45:00Z",
