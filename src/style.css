@@ -646,9 +646,9 @@ body {
   justify-content: center;
   height: 3rem;
   position: absolute;
-  right: -1px;
+  right: -4px;
   top: 20vh;
-  transform: translateX(calc(100% - 1px));
+  transform: translateX(calc(100% - 4px));
   box-shadow: none;
   z-index: 1;
 }
