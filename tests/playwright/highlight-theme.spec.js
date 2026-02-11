@@ -19,8 +19,13 @@ test.describe('Highlight Theme', () => {
       const themeDropdown = page.locator('.theme-fuzzy-select');
       await expect(themeDropdown).toBeVisible();
       
-      // Should show default theme 'github-dark'
+      // Should show default theme 'github-dark' in UI
       await expect(themeDropdown).toContainText('Github Dark');
+      
+      // Verify localStorage has the default value after interaction
+      const themeValue = await page.evaluate(() => localStorage.getItem('highlight_theme'));
+      // Initially null until user interacts, then defaults to 'github-dark'
+      expect(themeValue === null || themeValue === 'github-dark').toBeTruthy();
     } finally {
       await mockServer.stop();
     }
