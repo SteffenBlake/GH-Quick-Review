@@ -687,7 +687,6 @@ body {
   font-weight: bold;
   color: var(--text-primary);
   background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
 }
 
 /* Inner scrollable container */
