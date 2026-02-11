@@ -64,12 +64,22 @@ class GitHubClient {
   async getUser() {
     return this.get('/user');
   }
+
+  /**
+   * List repositories for the authenticated user
+   * @returns {Promise<Array>} - Array of repository objects
+   */
+  async listUserRepos() {
+    return this.get('/user/repos');
+  }
 }
 
 // Export singleton instance
 export const githubClient = new GitHubClient(
-  // Use environment variable for base URL, useful for testing with mock server
-  typeof import.meta.env !== 'undefined' ? import.meta.env.VITE_GITHUB_API_URL : undefined
+  // Use window.VITE_GITHUB_API_URL if set (for Playwright tests), otherwise use environment variable
+  typeof window !== 'undefined' && window.VITE_GITHUB_API_URL 
+    ? window.VITE_GITHUB_API_URL 
+    : (typeof import.meta.env !== 'undefined' ? import.meta.env.VITE_GITHUB_API_URL : undefined)
 );
 
 export default GitHubClient;

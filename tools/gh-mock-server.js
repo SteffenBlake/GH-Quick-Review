@@ -19,6 +19,7 @@ class GitHubMockServer {
   constructor(userDirPath, config = {}) {
     this.userDirPath = userDirPath;
     this.config = config;
+    this.latency = config.latency || 0; // Artificial delay in ms
     this.loadUserData();
   }
 
@@ -444,7 +445,7 @@ class GitHubMockServer {
     return path.split('/').map(part => encodeURIComponent(part)).join('%2F');
   }
 
-  handleRequest(req, res) {
+  async handleRequest(req, res) {
     const { method, url } = req;
     
     // Parse URL and extract path
@@ -455,6 +456,12 @@ class GitHubMockServer {
     
     // Route matching
     const routes = [
+      {
+        // Get authenticated user: GET /user
+        pattern: /^\/user$/,
+        method: 'GET',
+        handler: this.getUser.bind(this)
+      },
       {
         // List repos for user: GET /user/repos
         pattern: /^\/user\/repos$/,
@@ -526,8 +533,43 @@ class GitHubMockServer {
     });
   }
 
+  getUser(req, res, match) {
+    if (this.checkConfiguredError('getUser', res)) return;
+    
+    // Check for authorization header
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return this.sendResponse(res, 401, {
+        message: 'Requires authentication',
+        documentation_url: 'https://docs.github.com/rest/reference/users#get-the-authenticated-user'
+      });
+    }
+    
+    // Accept any token value - just return mock user
+    this.sendResponse(res, 200, {
+      login: 'mockuser',
+      id: 12345,
+      name: 'Mock User',
+      email: 'mockuser@example.com',
+      avatar_url: 'https://avatars.githubusercontent.com/u/12345?v=4',
+      type: 'User',
+      site_admin: false,
+      created_at: '2020-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    });
+  }
+
   listUserRepos(req, res, match) {
     if (this.checkConfiguredError('listUserRepos', res)) return;
+    
+    // Check for authorization header
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return this.sendResponse(res, 401, {
+        message: 'Requires authentication',
+        documentation_url: 'https://docs.github.com/rest/reference/repos#list-repositories-for-the-authenticated-user'
+      });
+    }
     
     this.sendResponse(res, 200, this.repos);
   }
@@ -814,7 +856,12 @@ class GitHubMockServer {
     });
   }
 
-  sendResponse(res, statusCode, data) {
+  async sendResponse(res, statusCode, data) {
+    // Apply artificial latency if configured
+    if (this.latency > 0) {
+      await new Promise(resolve => setTimeout(resolve, this.latency));
+    }
+    
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');

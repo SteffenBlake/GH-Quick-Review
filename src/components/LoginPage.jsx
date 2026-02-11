@@ -24,18 +24,21 @@ export function LoginPage({ onLogin }) {
     setError('');
 
     try {
-      // Verify the token with GitHub API
-      await githubClient.verifyToken(token.trim());
-      
-      // Token is valid, save it and trigger login
+      // Save token first
       setToken(token.trim());
+      
+      // Validate token by fetching user repos
+      await githubClient.listUserRepos();
+      
+      // Token is valid, trigger login
       onLogin();
     } catch (err) {
-      // Token validation failed
+      // Token validation failed, clear it
+      setToken('');
       setError(
         err.status === 401
           ? 'Invalid token. Please check your GitHub Personal Access Token.'
-          : 'Failed to verify token. Please try again.'
+          : 'Failed to connect to GitHub. Please try again.'
       );
     } finally {
       setLoading(false);

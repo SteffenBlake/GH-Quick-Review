@@ -88,35 +88,42 @@
 
 ### Testing Requirements
 
-This project uses **two types of tests** that must BOTH be run:
+This project uses **Playwright integration tests ONLY**. 
 
-1. **Unit Tests** (Vitest): Run with `npm test`
-   - Component tests
-   - Utility function tests
-   - Uses jsdom environment
+**DO NOT write unit tests that mock services!** Tests that mock everything and just assert mocked results are pointless and should be deleted immediately.
 
-2. **Integration Tests** (Playwright): Run with `npm run test:playwright`
+**Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
    - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
-     - **IMPORTANT**: Each test should opt-in to using the mock server and configure it as needed
+     - **CRITICAL**: Each test MUST start its own instance of the mock server
+     - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)
+     - **CRITICAL**: Each test MUST stand up the server, run the test, then stop/release it
      - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
-     - Tests that need the mock server should start/stop it themselves with their specific configuration
+     - **DO NOT** pollute the mock server state between tests
+     - **ONLY** the mock server should be mocked - everything else must be real end-to-end
      - Example:
        ```javascript
        test('my test', async ({ page }) => {
          const mockServer = new MockServerManager();
-         await mockServer.start(null, 0, { /* custom config */ });
-         // ... test code ...
-         await mockServer.stop();
+         const port = await mockServer.start(null, 0, { /* custom config */ });
+         try {
+           // Set the GitHub API URL for the app to use mock server
+           await page.addInitScript((mockPort) => {
+             window.VITE_GITHUB_API_URL = `http://localhost:${mockPort}`;
+           }, port);
+           
+           // Navigate and interact with the real app
+           await page.goto('/GH-Quick-Review/');
+           // ... test interactions ...
+         } finally {
+           await mockServer.stop();
+         }
        });
        ```
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
-   - **DO NOT SKIP** integration tests when asked to run tests
 
-**Complete Test Suite**: Run `npm run test:all` to execute both unit and integration tests.
-
-**When asked to run tests, ALWAYS run both unit tests AND integration tests.** Integration tests are NOT optional.
+**When asked to run tests, run integration tests with `npm run test:playwright`.** Unit tests are NOT used in this project.
 
 ### Nerd Font Icons
 
