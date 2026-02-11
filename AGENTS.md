@@ -279,6 +279,30 @@ This project uses **Playwright integration tests ONLY**.
 
 **DO NOT write unit tests that mock services!** Tests that mock everything and just assert mocked results are pointless and should be deleted immediately.
 
+**Test-Driven Development (TDD) Workflow**:
+**CRITICAL: When fixing bugs, ALWAYS follow this workflow:**
+
+1. **Write a failing test FIRST** that reproduces the bug
+2. **Run the test** and confirm it FAILS (proving you've replicated the bug)
+3. **Apply the fix** to the code
+4. **Run the test again** and confirm it PASSES
+
+**Why this matters**: If you fix the bug first, then write a test that passes immediately, you have NO proof that your test actually covers the bug case. The test might be passing for the wrong reasons or not testing what you think it's testing.
+
+**Example workflow**:
+```bash
+# 1. Write test that reproduces bug
+# 2. Run test - should FAIL
+npm run test:playwright -- my-bug.spec.js
+# See test fail with error showing the bug
+
+# 3. Apply fix to code
+
+# 4. Run test again - should PASS
+npm run test:playwright -- my-bug.spec.js
+# See test pass, confirming fix works
+```
+
 **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
    - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`

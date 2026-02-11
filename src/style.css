@@ -464,6 +464,7 @@ body {
 .fuzzy-dropdown {
   position: relative;
   flex: 1;
+  min-width: 0; /* Prevent flex item from growing beyond container */
   font-family: inherit;
 }
 
