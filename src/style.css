@@ -41,28 +41,27 @@ body {
 }
 
 .header-repo-picker {
-  flex-grow: 2;
+  flex: 2 1 0;
   min-width: 0;
 }
 
 .header-pr-picker {
-  flex-grow: 3;
+  flex: 3 1 0;
   min-width: 0;
 }
 
 .header-font-picker {
-  flex-grow: 1;
+  flex: 1 1 0;
   min-width: 0;
 }
 
 .header-theme-picker {
-  flex-grow: 2;
+  flex: 2 1 0;
   min-width: 0;
 }
 
 .header-logout-button {
-  flex-grow: 1;
-  min-width: 0;
+  flex: 0 0 auto;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   border: 1px solid var(--border);
