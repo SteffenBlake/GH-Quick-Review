@@ -6,6 +6,7 @@
 
 import { useState } from 'preact/hooks';
 import { selectedFile, setSelectedFile } from '../stores/selectedFileStore.js';
+import { setIsUserScrolling } from '../stores/scrollSyncStore.js';
 import { getFileIcon, getGitStatusIcon } from '../utils/file-icons.js';
 
 /**
@@ -25,8 +26,22 @@ export function DirectoryEntry({ node, depth = 0 }) {
     e.stopPropagation();
     
     if (isFile) {
+      // Set flag to indicate we're programmatically scrolling (not user scrolling)
+      setIsUserScrolling(false);
+      
       // Select file
       setSelectedFile(node.path);
+      
+      // Scroll to the file card
+      const fileCard = document.querySelector(`[data-filename="${node.path}"]`);
+      if (fileCard) {
+        fileCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      
+      // Reset flag after scroll animation completes
+      setTimeout(() => {
+        setIsUserScrolling(true);
+      }, 1000);
     } else {
       // Toggle directory
       setIsExpanded(!isExpanded);

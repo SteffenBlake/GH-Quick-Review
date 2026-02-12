@@ -828,6 +828,9 @@ body {
 }
 
 .file-card-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -869,6 +872,7 @@ body {
 
 .file-card-body {
   padding: 0;
+  overflow-x: auto;
 }
 
 /* Diff Hunk */
@@ -972,7 +976,6 @@ body {
   flex: 1;
   margin: 0;
   padding: 0;
-  overflow-x: auto;
   white-space: pre;
   font-family: inherit;
 }

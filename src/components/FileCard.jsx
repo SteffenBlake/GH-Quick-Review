@@ -4,6 +4,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
+import { useEffect, useRef } from 'preact/hooks';
+import { setSelectedFile } from '../stores/selectedFileStore.js';
+import { getIsUserScrolling } from '../stores/scrollSyncStore.js';
 import { getFileIcon, getGitStatusIcon } from '../utils/file-icons.js';
 import { DiffHunk } from './DiffHunk.jsx';
 
@@ -24,6 +27,36 @@ function getFilename(path) {
  */
 export function FileCard({ file }) {
   const { filename, status, additions, deletions, diffs } = file;
+  const cardRef = useRef(null);
+  
+  // Set up Intersection Observer to detect when file is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Only update selection if user is scrolling (not programmatic)
+          if (entry.isIntersecting && getIsUserScrolling()) {
+            setSelectedFile(filename);
+          }
+        });
+      },
+      {
+        // Trigger when the header is near the top of the viewport
+        threshold: 0,
+        rootMargin: '-20% 0px -70% 0px' // Consider "in view" when in top 30% of viewport
+      }
+    );
+    
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+    
+    return () => {
+      if (cardRef.current) {
+        observer.unobserve(cardRef.current);
+      }
+    };
+  }, [filename]);
   
   // Get icons
   const gitStatusData = getGitStatusIcon(status);
@@ -38,7 +71,7 @@ export function FileCard({ file }) {
   };
   
   return (
-    <div className="file-card">
+    <div ref={cardRef} className="file-card" data-filename={filename}>
       <div className="file-card-header">
         {/* Git status icon */}
         {gitStatusData && (
