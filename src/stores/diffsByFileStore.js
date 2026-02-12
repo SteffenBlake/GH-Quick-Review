@@ -229,8 +229,6 @@ function processDiffsByFile(prData, tree) {
     const file = fileMap.get(filePath);
     if (!file) return null;
 
-    console.log('Processing file:', filePath, 'from file object:', file.filename);
-
     // Handle deleted files specially
     if (file.status === 'removed') {
       const fileChains = chainsByFile.get(filePath) || [];
