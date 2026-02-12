@@ -802,7 +802,6 @@ body {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  overflow-y: auto;
 }
 
 .diff-viewer-loading,
@@ -824,7 +823,6 @@ body {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 4px;
-  overflow: hidden;
 }
 
 .file-card-header {
