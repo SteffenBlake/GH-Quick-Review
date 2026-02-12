@@ -323,7 +323,8 @@ class GitHubMockServer {
         }
         // Pattern 2: "/dev/null => after/filename" - added file
         else if (rawPath.includes('/dev/null =>')) {
-          const match = rawPath.match(/\/dev\/null => (?:.*\/)?(.+)/);
+          // Extract path after 'after/' directory
+          const match = rawPath.match(/\/dev\/null => .*?\/after\/(.+)/);
           if (match) {
             filename = match[1];
             status = 'added';
@@ -331,15 +332,17 @@ class GitHubMockServer {
         }
         // Pattern 3: "before/filename => /dev/null" - deleted file
         else if (rawPath.includes('=> /dev/null')) {
-          const match = rawPath.match(/(?:.*\/)?(before\/)?(.+) => \/dev\/null/);
+          // Extract path after 'before/' directory
+          const match = rawPath.match(/.*?\/before\/(.+) => \/dev\/null/);
           if (match) {
-            filename = match[2];
+            filename = match[1];
             status = 'removed';
           }
         }
         // Pattern 4: "before/file => after/newfile" - renamed file
         else {
-          const match = rawPath.match(/=> (?:.*\/)?(.+)/);
+          // Extract path after 'after/' directory
+          const match = rawPath.match(/=> .*?\/after\/(.+)/);
           if (match) {
             filename = match[1];
             status = 'renamed';
