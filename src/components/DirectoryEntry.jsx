@@ -17,6 +17,9 @@ import { startCollapsed, autoExpandOnScroll } from '../stores/directorySettingsS
  * @param {number} props.depth - Current nesting depth
  */
 export function DirectoryEntry({ node, depth = 0 }) {
+  const isFile = node.isFile;
+  const hasChildren = !isFile && node.children && Object.keys(node.children).length > 0;
+  
   const [isExpanded, setIsExpanded] = useState(!startCollapsed.value);
   
   // Auto-expand when selected file is in this directory's subtree
@@ -30,9 +33,6 @@ export function DirectoryEntry({ node, depth = 0 }) {
       setIsExpanded(true);
     }
   }, [selectedFile.value, autoExpandOnScroll.value, isFile, node.path, isExpanded]);
-  
-  const isFile = node.isFile;
-  const hasChildren = !isFile && node.children && Object.keys(node.children).length > 0;
   
   const handleClick = (e) => {
     e.preventDefault();
