@@ -106,17 +106,18 @@ function getCodeContent(line) {
  * @param {number|null} props.lineNumber - The actual line number in the file (null for removed lines and hunk headers)
  * @param {number} props.index - Line index in the hunk
  * @param {boolean} props.isSelected - Whether this line is selected/picked
+ * @param {boolean} props.hasComments - Whether this line has comments
  * @param {Function} props.onClick - Click handler
  */
-export function DiffLine({ line, lineNumber, index, filename, isSelected, onClick }) {
+export function DiffLine({ line, lineNumber, index, filename, isSelected, hasComments, onClick }) {
   const lineInfo = getLineType(line);
   const codeContent = getCodeContent(line);
   const isHunkHeader = lineInfo.type === 'hunk';
   const codeRef = useRef(null);
   const languageClass = getLanguageClass(filename);
   
-  // For now, no messages exist (we'll implement this when comments are integrated)
-  const hasMessage = false;
+  // hasMessage is true if this line has comments
+  const hasMessage = hasComments || false;
   
   // Apply syntax highlighting when code content changes
   useEffect(() => {

@@ -4,7 +4,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { selectedFile, setSelectedFile } from '../stores/selectedFileStore.js';
 import { setIsUserScrolling } from '../stores/scrollSyncStore.js';
 import { getFileIcon, getGitStatusIcon } from '../utils/file-icons.js';
@@ -21,6 +21,7 @@ export function DirectoryEntry({ node, depth = 0 }) {
   const hasChildren = !isFile && node.children && Object.keys(node.children).length > 0;
   
   const [isExpanded, setIsExpanded] = useState(!startCollapsed.value);
+  const entryRef = useRef(null);
   
   // Auto-expand when selected file is in this directory's subtree
   useEffect(() => {
@@ -33,6 +34,36 @@ export function DirectoryEntry({ node, depth = 0 }) {
       setIsExpanded(true);
     }
   }, [selectedFile.value, autoExpandOnScroll.value, isFile, node.path, isExpanded]);
+  
+  // Scroll directory entry into view when this file is selected
+  useEffect(() => {
+    if (!isFile || selectedFile.value !== node.path) return;
+    
+    // Wait for auto-expand to complete before scrolling
+    // This gives parent directories time to expand
+    const timer = setTimeout(() => {
+      if (entryRef.current) {
+        const directoryBrowserInner = entryRef.current.closest('.directory-browser-inner');
+        if (directoryBrowserInner) {
+          // Calculate if element is in view
+          const entryRect = entryRef.current.getBoundingClientRect();
+          const containerRect = directoryBrowserInner.getBoundingClientRect();
+          
+          const isInView = (
+            entryRect.top >= containerRect.top &&
+            entryRect.bottom <= containerRect.bottom
+          );
+          
+          // Only scroll if not already in view
+          if (!isInView) {
+            entryRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+      }
+    }, 300); // Wait 300ms for parent directory expand animations
+    
+    return () => clearTimeout(timer);
+  }, [selectedFile.value, isFile, node.path]);
   
   const handleClick = (e) => {
     e.preventDefault();
@@ -74,7 +105,7 @@ export function DirectoryEntry({ node, depth = 0 }) {
   const chevronIcon = !isFile ? (isExpanded ? '\uf078' : '\uf054') : null;
   
   return (
-    <li className="directory-entry">
+    <li className="directory-entry" ref={entryRef}>
       <div
         className={`directory-entry-content ${isSelected ? 'selected' : ''}`}
         style={{ paddingLeft: `${depth * 0.75}rem` }}
