@@ -9,10 +9,13 @@ import { queryClient } from './queryClient';
 import { useState } from 'preact/hooks';
 import { token, clearToken } from './stores/authStore';
 import { errorMessage, clearError } from './stores/errorStore';
+import { selectedPr } from './stores/selectedPrStore';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { DirectoryBrowser } from './components/DirectoryBrowser';
+import { DiffViewer } from './components/DiffViewer';
+import { HighlightThemeLoader } from './components/HighlightThemeLoader';
 
 function MainContent() {
   // Check for any errors in the unified error store
@@ -24,6 +27,15 @@ function MainContent() {
           <p className="error-message">{errorMessage.value}</p>
           <p>Please logout and log back in to try again.</p>
         </div>
+      </main>
+    );
+  }
+
+  // Show diff viewer if a PR is selected
+  if (selectedPr.value) {
+    return (
+      <main className="content">
+        <DiffViewer />
       </main>
     );
   }
@@ -55,6 +67,7 @@ export function App() {
           authenticated={!!token.value}
           onLogout={handleLogout}
         />
+        <HighlightThemeLoader />
         <DirectoryBrowser />
         {!token.value ? (
           <LoginPage />

@@ -25,6 +25,7 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - Folder: \uea83
 - File Generic: \uea7b
 - Message Alert: \udb80\udf62
+- MessagePlus: \udb81\ude53
 
 ## Usage
 
