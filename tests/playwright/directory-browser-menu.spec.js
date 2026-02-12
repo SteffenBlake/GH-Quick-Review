@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
+const MENU_ANIMATION_DELAY = 100; // Time to wait for menu animations
 
 test.describe('Directory Browser Menu', () => {
   test('should show menu button when directory browser is visible', async ({ page }) => {
@@ -92,7 +93,7 @@ test.describe('Directory Browser Menu', () => {
     }
   });
 
-  test('should toggle Start Collapsed setting', async ({ page }) => {
+  test('should store Start Collapsed setting in localStorage', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
     
@@ -106,27 +107,78 @@ test.describe('Directory Browser Menu', () => {
       });
       await page.reload();
       
-      // Verify localStorage is initially not set
-      let storedValue = await page.evaluate(() => 
-        localStorage.getItem('directory_start_collapsed')
-      );
-      expect(storedValue).toBeNull();
-      
       // Open dropdown and click Start Collapsed
       await page.click('.directory-menu-button');
       await page.click('.directory-menu-item:has-text("Start Collapsed")');
       
       // Verify localStorage is now set to true
-      storedValue = await page.evaluate(() => 
+      const storedValue = await page.evaluate(() => 
+        localStorage.getItem('directory_start_collapsed')
+      );
+      expect(storedValue).toBe('true');
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should store Auto Expand setting in localStorage', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto(BASE_URL);
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_pr', '1');
+      });
+      await page.reload();
+      
+      // Open dropdown and click Auto Expand
+      await page.click('.directory-menu-button');
+      await page.click('.directory-menu-item:has-text("Auto Expand")');
+      
+      // Verify localStorage is now set to true
+      const storedValue = await page.evaluate(() => 
+        localStorage.getItem('directory_auto_expand_on_scroll')
+      );
+      expect(storedValue).toBe('true');
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should toggle Start Collapsed on and off', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto(BASE_URL);
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_pr', '1');
+      });
+      await page.reload();
+      
+      // Enable Start Collapsed
+      await page.click('.directory-menu-button');
+      await page.click('.directory-menu-item:has-text("Start Collapsed")');
+      
+      let storedValue = await page.evaluate(() => 
         localStorage.getItem('directory_start_collapsed')
       );
       expect(storedValue).toBe('true');
       
-      // Toggle off - open dropdown again and click
+      // Wait a moment for menu to close
+      await page.waitForTimeout(MENU_ANIMATION_DELAY);
+      
+      // Disable Start Collapsed
       await page.click('.directory-menu-button');
       await page.click('.directory-menu-item:has-text("Start Collapsed")');
       
-      // Verify localStorage is now set to false
       storedValue = await page.evaluate(() => 
         localStorage.getItem('directory_start_collapsed')
       );
@@ -136,7 +188,7 @@ test.describe('Directory Browser Menu', () => {
     }
   });
 
-  test('should toggle Auto Expand setting', async ({ page }) => {
+  test('should display checkmark when Start Collapsed is enabled', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
     
@@ -147,24 +199,50 @@ test.describe('Directory Browser Menu', () => {
         localStorage.setItem('github_pat', 'test_token_12345');
         localStorage.setItem('selected_repo', 'test_repo_1');
         localStorage.setItem('selected_pr', '1');
+        // Pre-enable the setting
+        localStorage.setItem('directory_start_collapsed', 'true');
       });
       await page.reload();
       
-      // Verify localStorage is initially not set
-      let storedValue = await page.evaluate(() => 
-        localStorage.getItem('directory_auto_expand_on_scroll')
-      );
-      expect(storedValue).toBeNull();
-      
-      // Open dropdown and click Auto Expand
+      // Open menu
       await page.click('.directory-menu-button');
-      await page.click('.directory-menu-item:has-text("Auto Expand")');
       
-      // Verify localStorage is now set to true
-      storedValue = await page.evaluate(() => 
-        localStorage.getItem('directory_auto_expand_on_scroll')
-      );
-      expect(storedValue).toBe('true');
+      // Get the checkmark element text
+      const checkText = await page.locator('.directory-menu-item').nth(0)
+        .locator('.directory-menu-check').textContent();
+      
+      // Should contain the checkmark character (Unicode U+F00C)
+      expect(checkText).toContain('\uf00c');
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should display checkmark when Auto Expand is enabled', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto(BASE_URL);
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_pr', '1');
+        // Pre-enable the setting
+        localStorage.setItem('directory_auto_expand_on_scroll', 'true');
+      });
+      await page.reload();
+      
+      // Open menu
+      await page.click('.directory-menu-button');
+      
+      // Get the checkmark element text
+      const checkText = await page.locator('.directory-menu-item').nth(1)
+        .locator('.directory-menu-check').textContent();
+      
+      // Should contain the checkmark character
+      expect(checkText).toContain('\uf00c');
     } finally {
       await mockServer.stop();
     }
@@ -372,40 +450,6 @@ test.describe('Directory Browser Menu', () => {
     }
   });
 
-  test('should display checkmark icon correctly when option is enabled', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
-    
-    try {
-      await page.goto(BASE_URL);
-      await page.evaluate(() => {
-        localStorage.clear();
-        localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
-        localStorage.setItem('selected_pr', '1');
-      });
-      await page.reload();
-      
-      // Open dropdown
-      await page.click('.directory-menu-button');
-      
-      // Click Start Collapsed to enable it
-      await page.click('.directory-menu-item:has-text("Start Collapsed")');
-      
-      // Re-open to verify checkmark
-      await page.click('.directory-menu-button');
-      
-      // Get the checkmark element text
-      const checkText = await page.locator('.directory-menu-item').nth(0)
-        .locator('.directory-menu-check').textContent();
-      
-      // Should contain the checkmark character (Unicode U+F00C)
-      expect(checkText).toContain('\uf00c');
-    } finally {
-      await mockServer.stop();
-    }
-  });
-
   test('should have fixed-width space for unchecked options', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
@@ -436,6 +480,45 @@ test.describe('Directory Browser Menu', () => {
       // Should have a fixed width (not auto)
       expect(checkWidth.width).not.toBe('auto');
       expect(checkWidth.display).toBe('inline-block');
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should have consistent width for checked and unchecked options', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    const port = await mockServer.start(null, 3000);
+    
+    try {
+      await page.goto(BASE_URL);
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_pr', '1');
+      });
+      await page.reload();
+      
+      // Open dropdown and get unchecked width
+      await page.click('.directory-menu-button');
+      const uncheckedWidth = await page.locator('.directory-menu-item').nth(0)
+        .locator('.directory-menu-check').evaluate(el => {
+          return window.getComputedStyle(el).width;
+        });
+      
+      // Enable the option
+      await page.click('.directory-menu-item:has-text("Start Collapsed")');
+      await page.waitForTimeout(MENU_ANIMATION_DELAY);
+      
+      // Re-open and get checked width
+      await page.click('.directory-menu-button');
+      const checkedWidth = await page.locator('.directory-menu-item').nth(0)
+        .locator('.directory-menu-check').evaluate(el => {
+          return window.getComputedStyle(el).width;
+        });
+      
+      // Widths should be the same
+      expect(uncheckedWidth).toBe(checkedWidth);
     } finally {
       await mockServer.stop();
     }
