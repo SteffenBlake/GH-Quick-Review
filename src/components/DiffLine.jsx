@@ -92,7 +92,9 @@ function getCodeContent(line) {
     return line; // Hunk headers stay as-is
   }
   if (line.startsWith('+') || line.startsWith('-') || line.startsWith(' ')) {
-    return line.substring(1); // Remove first character
+    const content = line.substring(1); // Remove first character
+    // Return a space for empty lines to prevent visual glitches in <code> elements
+    return content === '' ? ' ' : content;
   }
   return line;
 }
