@@ -26,6 +26,8 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - File Generic: \uea7b
 - Message Alert: \udb80\udf62
 - MessagePlus: \udb81\ude53
+- MenuDots: \udb80\uddd9
+- Checkmark: \uf00c
 
 ## Usage
 

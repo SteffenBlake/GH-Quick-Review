@@ -4,16 +4,24 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { token } from '../stores/authStore';
 import { selectedPr } from '../stores/selectedPrStore';
 import { useDirectoryTree } from '../stores/directoryTreeStore';
 import { DirectoryEntry } from './DirectoryEntry';
 import { LoadingSpinner } from './LoadingSpinner';
+import {
+  startCollapsed,
+  autoExpandOnScroll,
+  setStartCollapsed,
+  setAutoExpandOnScroll
+} from '../stores/directorySettingsStore';
 
 export function DirectoryBrowser() {
   const containerRef = useRef(null);
   const previousPrRef = useRef(selectedPr.value);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
   const { tree, isLoading, error } = useDirectoryTree();
   
   // Hide if not logged in or no PR selected
@@ -30,6 +38,20 @@ export function DirectoryBrowser() {
     // Update the previous PR value
     previousPrRef.current = selectedPr.value;
   }, [selectedPr.value]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenu]);
 
   const handleToggleClick = (e) => {
     e.preventDefault(); // Prevent default mouse behavior
@@ -59,7 +81,43 @@ export function DirectoryBrowser() {
       </button>
       
       <div className="directory-browser-content">
-        <h2 className="directory-browser-header">Directory</h2>
+        <h2 className="directory-browser-header">
+          <span>Directory</span>
+          <div className="directory-menu-container" ref={menuRef}>
+            <button
+              className="directory-menu-button"
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="Directory settings"
+              title="Directory settings"
+            >
+              {'\udb80\uddd9'}
+            </button>
+            {showMenu && (
+              <div className="directory-menu-dropdown">
+                <div
+                  className="directory-menu-item"
+                  onClick={() => setStartCollapsed(!startCollapsed.value)}
+                  title="Start with all directories collapsed"
+                >
+                  <span className="directory-menu-check">
+                    {startCollapsed.value ? '\uf00c' : ' '}
+                  </span>
+                  <span>Start Collapsed</span>
+                </div>
+                <div
+                  className="directory-menu-item"
+                  onClick={() => setAutoExpandOnScroll(!autoExpandOnScroll.value)}
+                  title="Auto-expand directories when scrolling to files"
+                >
+                  <span className="directory-menu-check">
+                    {autoExpandOnScroll.value ? '\uf00c' : ' '}
+                  </span>
+                  <span>Auto Expand</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </h2>
         
         <div className="directory-browser-inner">
           {isLoading ? (
