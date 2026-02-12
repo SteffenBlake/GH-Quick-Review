@@ -16,12 +16,20 @@ import { DiffLine } from './DiffLine.jsx';
 export function DiffHunk({ diff, filename }) {
   const [selectedLine, setSelectedLine] = useState(null);
   
-  const { lines, newStart } = diff;
+  const { lines, newStart, unresolvedChains = [] } = diff;
   
   const handleLineClick = (lineIndex) => {
     // Toggle selection - clicking same line deselects it
     setSelectedLine(selectedLine === lineIndex ? null : lineIndex);
   };
+  
+  // Build a Set of line numbers that have comments
+  const linesWithComments = new Set();
+  unresolvedChains.forEach(({ lineNumber }) => {
+    if (lineNumber) {
+      linesWithComments.add(lineNumber);
+    }
+  });
   
   // Calculate line numbers for each line in the hunk
   let currentLineNumber = newStart;
@@ -38,10 +46,14 @@ export function DiffHunk({ diff, filename }) {
       }
     }
     
+    // Check if this line has comments
+    const hasComments = lineNumber !== null && linesWithComments.has(lineNumber);
+    
     return {
       line,
       lineNumber,
-      index
+      index,
+      hasComments
     };
   });
   
@@ -55,6 +67,7 @@ export function DiffHunk({ diff, filename }) {
           index={lineData.index}
           filename={filename}
           isSelected={selectedLine === lineData.index}
+          hasComments={lineData.hasComments}
           onClick={() => handleLineClick(lineData.index)}
         />
       ))}
