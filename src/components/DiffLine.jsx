@@ -12,6 +12,59 @@ const ICON_MESSAGE_ALERT = '\udb80\udf62';
 const ICON_MESSAGE_PLUS = '\udb81\ude53';
 
 /**
+ * Map file extension to highlight.js language class
+ * @param {string} filename - The filename 
+ * @returns {string} - The language class (e.g., 'language-javascript')
+ */
+function getLanguageClass(filename) {
+  if (!filename) return 'language-plaintext';
+  
+  const ext = filename.split('.').pop().toLowerCase();
+  
+  // Map common extensions to hljs languages
+  const extMap = {
+    'js': 'javascript',
+    'jsx': 'javascript',
+    'ts': 'typescript',
+    'tsx': 'typescript',
+    'py': 'python',
+    'rb': 'ruby',
+    'java': 'java',
+    'c': 'c',
+    'cpp': 'cpp',
+    'cc': 'cpp',
+    'cxx': 'cpp',
+    'cs': 'csharp',
+    'php': 'php',
+    'go': 'go',
+    'rs': 'rust',
+    'swift': 'swift',
+    'kt': 'kotlin',
+    'scala': 'scala',
+    'sh': 'bash',
+    'bash': 'bash',
+    'zsh': 'bash',
+    'yaml': 'yaml',
+    'yml': 'yaml',
+    'json': 'json',
+    'xml': 'xml',
+    'html': 'html',
+    'css': 'css',
+    'scss': 'scss',
+    'sass': 'sass',
+    'less': 'less',
+    'md': 'markdown',
+    'sql': 'sql',
+    'vim': 'vim',
+    'diff': 'diff',
+    'patch': 'diff',
+  };
+  
+  const language = extMap[ext] || 'plaintext';
+  return `language-${language}`;
+}
+
+/**
  * Get line type and git icon from the line content
  * @param {string} line - The line content
  * @returns {Object} - { type: 'added'|'removed'|'context'|'hunk', icon, color }
@@ -53,11 +106,12 @@ function getCodeContent(line) {
  * @param {boolean} props.isSelected - Whether this line is selected/picked
  * @param {Function} props.onClick - Click handler
  */
-export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
+export function DiffLine({ line, lineNumber, index, filename, isSelected, onClick }) {
   const lineInfo = getLineType(line);
   const codeContent = getCodeContent(line);
   const isHunkHeader = lineInfo.type === 'hunk';
   const codeRef = useRef(null);
+  const languageClass = getLanguageClass(filename);
   
   // For now, no messages exist (we'll implement this when comments are integrated)
   const hasMessage = false;
@@ -114,7 +168,7 @@ export function DiffLine({ line, lineNumber, index, isSelected, onClick }) {
       
       {/* Code content */}
       <pre className="diff-line-code">
-        <code ref={codeRef} className="language-javascript hljs">{codeContent}</code>
+        <code ref={codeRef} className={`${languageClass} hljs`}>{codeContent}</code>
       </pre>
     </div>
   );

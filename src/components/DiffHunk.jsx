@@ -53,6 +53,7 @@ export function DiffHunk({ diff, filename }) {
           line={lineData.line}
           lineNumber={lineData.lineNumber}
           index={lineData.index}
+          filename={filename}
           isSelected={selectedLine === lineData.index}
           onClick={() => handleLineClick(lineData.index)}
         />
