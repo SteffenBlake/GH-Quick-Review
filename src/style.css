@@ -951,7 +951,7 @@ body {
 
 /* Git icon */
 .diff-line-git-icon {
-  min-width: 1rem;
+  width: 1rem;
   text-align: center;
   font-weight: bold;
   padding: 0 0.5rem;
