@@ -4,10 +4,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { selectedFile, setSelectedFile } from '../stores/selectedFileStore.js';
 import { setIsUserScrolling } from '../stores/scrollSyncStore.js';
 import { getFileIcon, getGitStatusIcon } from '../utils/file-icons.js';
+import { startCollapsed, autoExpandOnScroll } from '../stores/directorySettingsStore.js';
 
 /**
  * A single directory or file entry in the tree
@@ -16,10 +17,22 @@ import { getFileIcon, getGitStatusIcon } from '../utils/file-icons.js';
  * @param {number} props.depth - Current nesting depth
  */
 export function DirectoryEntry({ node, depth = 0 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
-  
   const isFile = node.isFile;
   const hasChildren = !isFile && node.children && Object.keys(node.children).length > 0;
+  
+  const [isExpanded, setIsExpanded] = useState(!startCollapsed.value);
+  
+  // Auto-expand when selected file is in this directory's subtree
+  useEffect(() => {
+    if (!autoExpandOnScroll.value || isFile) return;
+    
+    // Check if the selected file is in this directory's subtree
+    const isFileInSubtree = selectedFile.value?.startsWith(node.path + '/');
+    
+    if (isFileInSubtree && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [selectedFile.value, autoExpandOnScroll.value, isFile, node.path, isExpanded]);
   
   const handleClick = (e) => {
     e.preventDefault();
