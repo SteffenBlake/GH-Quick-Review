@@ -171,7 +171,13 @@ function getFilesInDirectoryOrder(tree) {
   const files = [];
 
   function traverse(node, path = '') {
-    const entries = Object.entries(node).sort(([a], [b]) => a.localeCompare(b));
+    const entries = Object.entries(node).sort(([aName, aData], [bName, bData]) => {
+      // Directories first, then files
+      if (!aData.isFile && bData.isFile) return -1;
+      if (aData.isFile && !bData.isFile) return 1;
+      // Then alphabetically
+      return aName.localeCompare(bName);
+    });
 
     for (const [name, data] of entries) {
       const fullPath = path ? `${path}/${name}` : name;

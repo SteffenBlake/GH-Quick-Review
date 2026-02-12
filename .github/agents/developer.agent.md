@@ -324,6 +324,11 @@ This project uses **Playwright integration tests ONLY**.
 
 **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
+   - **Test Suite Execution Time**: The full test suite should NOT take more than 120 seconds to run
+     - If the test suite takes longer than 120 seconds, STOP the run
+     - Instead, run tests one at a time to identify which test(s) are problematic
+     - Example: `npm run test:playwright -- test-name.spec.js`
+     - Debug and fix slow tests - they indicate a problem (hung server, infinite loop, etc.)
    - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
      - **CRITICAL**: Each test MUST start its own instance of the mock server
      - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)
