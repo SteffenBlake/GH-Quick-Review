@@ -550,6 +550,12 @@ This project uses **Playwright integration tests ONLY**.
         - It's INCREDIBLY RARE you need to add timeouts
         - The website runs locally with millisecond response times
         - If something times out, it's ACTUALLY BROKEN or the test is wrong
+        - **CRITICAL TIMEOUT RULE: NEVER use timeouts longer than 1000ms (1 second)**
+          - Local mock server responds in <100ms typically
+          - Any action taking >1s is BROKEN and needs fixing
+          - Using long timeouts (5s+) masks real problems and wastes time
+          - Example: 120 tests × 5s timeout = 10 minutes vs 120 tests × 1s = 2 minutes
+          - If a test needs >1s, the CODE is broken, not the test
         - Common issues:
           - Elements not rendering due to broken code
           - Selectors changed and test needs updating

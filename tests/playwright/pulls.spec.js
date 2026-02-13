@@ -66,7 +66,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
       // Wait for repos dropdown to finish loading (latency is 2000ms)
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
-      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
+      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
       
       // Select a repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
@@ -77,7 +77,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
       await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
       
       // Wait for PRs to load - dropdown control should no longer be disabled
-      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
     } finally {
       await mockServer.stop();
     }

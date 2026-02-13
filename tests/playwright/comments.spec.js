@@ -104,7 +104,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       
       // Wait for edit button to appear (requires user data to load first)
       const editButton = page.locator('.comment-edit-btn').first();
-      await expect(editButton).toBeVisible({ timeout: 5000 });
+      await expect(editButton).toBeVisible({ timeout: 1000 });
       await editButton.click();
       
       // Edit textarea should appear

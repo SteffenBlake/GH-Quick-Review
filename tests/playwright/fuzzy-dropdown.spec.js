@@ -27,7 +27,7 @@ test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
       await expect(dropdownControl).toHaveClass(/disabled/);
       
       // Wait for repos to load
-      await expect(reposDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
+      await expect(reposDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
     } finally {
       await mockServer.stop();
     }

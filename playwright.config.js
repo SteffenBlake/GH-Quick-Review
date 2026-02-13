@@ -43,16 +43,16 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: undefined, // Set per-project
-  maxFailures: undefined, // Run all tests, don't stop on first failure
+  maxFailures: 1, // CRITICAL: Stop after first failure for fast feedback - NEVER CHANGE THIS
   reporter: [
     ['./tests/playwright/custom-reporter.js'],
     ['list'], // Keep list reporter for CI
   ],
-  timeout: 10000, // 10 second test timeout
+  timeout: 3000, // 3s overall test timeout - local tests should be FAST
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    actionTimeout: 5000, // 5 second timeout for individual actions (was too short at 1s)
+    actionTimeout: 1000, // 1s timeout - local mock server is FAST, anything longer indicates a bug
   },
   projects: [
     {
