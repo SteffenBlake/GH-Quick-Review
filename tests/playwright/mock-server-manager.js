@@ -8,50 +8,7 @@ const __dirname = dirname(__filename);
 export class MockServerManager {
   constructor() {
     this.server = null;
-    this.port = 3000; // Default to shared mock server port
-    this.useSharedServer = true; // Default to using shared server for most tests
-  }
-
-  /**
-   * Start mock server
-   * For parallel tests, set useShared=true to skip starting and use the globally started server
-   */
-  async start(userDirPath = null, port = 0, config = {}, useShared = false) {
-    if (useShared) {
-      // For parallel tests: use the shared mock server started by webServer config
-      this.useSharedServer = true;
-      this.port = port || 3000; // Default to 3000 for shared server
-      
-      // Wait for shared server to be ready
-      await this.checkHeartbeat();
-      return this.port;
-    }
-    
-    // For serial tests: start dedicated mock server
-    const testUserDir = userDirPath || resolve(__dirname, '../../tools/test_user');
-    
-    // Always run in silent mode during tests to reduce output spam
-    const testConfig = { ...config, silent: true };
-    
-    return new Promise((resolvePromise, reject) => {
-      try {
-        const { server, close } = startServer(testUserDir, port, testConfig);
-        
-        server.on('listening', () => {
-          const address = server.address();
-          this.port = address.port;
-          this.server = server;
-          this.close = close;
-          resolvePromise(this.port);
-        });
-
-        server.on('error', (err) => {
-          reject(err);
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+    this.port = 3000; // Shared mock server port
   }
 
   async checkHeartbeat() {
@@ -60,9 +17,7 @@ export class MockServerManager {
     }
     
     const url = `http://localhost:${this.port}/heartbeat`;
-    
-    // For shared server, wait longer and retry
-    const maxAttempts = this.useSharedServer ? 20 : 1;
+    const maxAttempts = 20; // Retry for shared server
     const delayMs = 500;
     
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -98,22 +53,9 @@ export class MockServerManager {
   }
 
   async stop() {
-    // Don't stop shared server
-    if (this.useSharedServer) {
-      this.port = null;
-      return;
-    }
-    
-    if (this.server && this.close) {
-      return new Promise((resolve) => {
-        this.close(() => {
-          this.server = null;
-          this.port = null;
-          this.close = null;
-          resolve();
-        });
-      });
-    }
+    // Never stop shared server - it's managed by Playwright's webServer config
+    // This is a no-op for compatibility with existing tests
+    return;
   }
 
   /**
