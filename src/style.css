@@ -954,6 +954,7 @@ body {
 .diff-hunk {
   display: flex;
   flex-direction: column;
+  width: fit-content;
 }
 
 /* Diff Line */
