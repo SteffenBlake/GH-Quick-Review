@@ -5,7 +5,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { selectedRepo } from './reposStore';
+import { selectedRepo } from './selectedRepoStore';
 import { selectedPr } from './selectedPrStore';
 import { githubClient } from '../utils/github-client';
 
