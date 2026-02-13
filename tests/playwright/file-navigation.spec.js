@@ -175,7 +175,7 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
       
       // Click on example.js
       await page.getByRole('list').getByText('example.js').click();
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(500);
       
       // Get initial scroll position
       const initialScrollTop = await page.evaluate(() => {
@@ -185,7 +185,7 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
       
       // The scroll position should be relatively stable after the initial scroll animation
       // Wait a bit more to ensure no additional scrolling happens
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(500);
       
       const finalScrollTop = await page.evaluate(() => {
         const main = document.querySelector('main');
