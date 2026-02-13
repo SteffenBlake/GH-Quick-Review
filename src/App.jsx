@@ -10,6 +10,7 @@ import { useState } from 'preact/hooks';
 import { token, clearToken } from './stores/authStore';
 import { errorMessage, clearError } from './stores/errorStore';
 import { selectedPr } from './stores/selectedPrStore';
+import { clearSettings } from './stores/settingsStore';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -17,6 +18,7 @@ import { DirectoryBrowser } from './components/DirectoryBrowser';
 import { DiffViewer } from './components/DiffViewer';
 import { HighlightThemeLoader } from './components/HighlightThemeLoader';
 import { CommentModal } from './components/CommentModal';
+import { SettingsModal } from './components/SettingsModal';
 
 function MainContent() {
   // Check for any errors in the unified error store
@@ -57,6 +59,7 @@ export function App() {
     clearToken();
     queryClient.clear(); // Clear all cached queries on logout
     clearError(); // Clear error state on logout
+    clearSettings(); // Clear settings on logout
   };
 
   return (
@@ -71,6 +74,7 @@ export function App() {
         <HighlightThemeLoader />
         <DirectoryBrowser />
         <CommentModal />
+        <SettingsModal />
         {!token.value ? (
           <LoginPage />
         ) : (
