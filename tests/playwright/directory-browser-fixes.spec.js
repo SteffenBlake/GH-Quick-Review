@@ -17,7 +17,7 @@ test.describe('Directory Browser Fixes', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       
@@ -59,7 +59,7 @@ test.describe('Directory Browser Fixes', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -102,7 +102,7 @@ test.describe('Directory Browser Fixes', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
