@@ -354,6 +354,13 @@ npm run test:playwright -- my-bug.spec.js
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
    - **CRITICAL**: There is NO such thing as "pre-existing test failures" - if tests fail, YOU broke them or didn't install Playwright browsers correctly. Always install browsers first and ensure ALL tests pass.
+   - **Test Selectors**:
+     - **ALWAYS** use explicit selectors: `data-testid`, `getByRole()`, `getByLabel()`, or unique identifiers
+     - **NEVER** use brittle selectors like `nth()`, `first()`, `last()` - these break when UI order changes
+     - **When writing tests**: If no explicit selector exists, ADD a `data-testid` attribute to the component
+     - **Example - WRONG**: `page.getByRole('textbox').nth(1)` - breaks if element order changes
+     - **Example - CORRECT**: `page.getByTestId('review-comment-textarea')` - explicit and stable
+     - Adding test IDs is acceptable and encouraged for testability
 
 **When asked to run tests, run integration tests with `npm run test:playwright`.** Unit tests are NOT used in this project.
 
