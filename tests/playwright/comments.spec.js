@@ -17,10 +17,15 @@ test.describe('Comment Management', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Select repo and PR
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
-      await expect(page.locator('#pr-select')).toBeVisible();
-      await page.locator('#pr-select').selectOption('1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
       
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
@@ -64,10 +69,15 @@ test.describe('Comment Management', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Select repo and PR
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
-      await expect(page.locator('#pr-select')).toBeVisible();
-      await page.locator('#pr-select').selectOption('1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
       
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
@@ -118,10 +128,15 @@ test.describe('Comment Management', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Select repo and PR
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
-      await expect(page.locator('#pr-select')).toBeVisible();
-      await page.locator('#pr-select').selectOption('1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
       
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
