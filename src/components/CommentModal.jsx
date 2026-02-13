@@ -110,6 +110,7 @@ export function CommentModal() {
         // Add comment to existing review
         const commentData = {
           reviewId: activeReview.id,
+          reviewNodeId: activeReview.node_id,
           body: commentText,
           commitId: commitSha,
           path: isNewComment 
@@ -133,6 +134,7 @@ export function CommentModal() {
         // Now add comment to the newly created review
         const commentData = {
           reviewId: newReview.id,
+          reviewNodeId: newReview.node_id,
           body: commentText,
           commitId: commitSha,
           path: isNewComment 

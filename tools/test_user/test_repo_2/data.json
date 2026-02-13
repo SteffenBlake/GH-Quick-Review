@@ -3,6 +3,7 @@
     {
       "number": 1,
       "id": 3,
+      "node_id": "PR_kwDOTest3",
       "state": "open",
       "title": "Update configuration file",
       "body": "Simple configuration update for new deployment settings.",
@@ -50,6 +51,7 @@
     {
       "number": 2,
       "id": 4,
+      "node_id": "PR_kwDOTest4",
       "state": "open",
       "title": "Migrate from XML to YAML configuration",
       "body": "Replace old XML config with modern YAML format for better readability.",
