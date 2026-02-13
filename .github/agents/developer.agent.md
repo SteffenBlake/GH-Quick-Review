@@ -152,6 +152,38 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 ### Self-Correction Protocol
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
 
+### Session Management Protocol
+**CRITICAL: NEVER END THE SESSION BY ASKING A QUESTION WITHOUT WAITING FOR A RESPONSE!**
+
+**When you have a question or need clarification:**
+1. Ask your question in text
+2. IMMEDIATELY execute `sleep 30` bash command to wait for the user's response
+3. DO NOT end your response without the sleep command
+4. The user's response may be delayed - ALWAYS WAIT
+
+**Why this is critical:**
+- Ending the session loses ALL context and progress
+- All your work, understanding, and state is lost
+- You have to start over from scratch
+- This wastes time and is extremely frustrating
+
+**Example - CORRECT way to ask a question:**
+```
+I need clarification on how the cancel button should work. Should it:
+1. Call hideCommentModal() to clear signals
+2. Just blur the modal
+3. Something else?
+
+Wait, was that stupid?
+```
+
+Then IMMEDIATELY run: `bash sleep 30` to wait for response.
+
+**NEVER do this:**
+- Ask a question and end your response without sleep
+- Wait for user input without explicitly sleeping
+- Assume the session will stay alive on its own
+
 ### Problem-Solving Protocol
 **CRITICAL: When something isn't working, FIX IT. Don't give up and work around it.**
 - If a server won't start, debug and fix it - don't skip to alternatives
