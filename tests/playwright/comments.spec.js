@@ -195,4 +195,64 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await mockServer.stop();
     }
   });
+
+  test('should re-open modal after clicking off it (blur)', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Select repo and PR
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
+      
+      // Wait for diff viewer to load
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
+      
+      // Click on diff viewer to unfocus directory browser
+      await page.locator('.diff-viewer').click();
+      
+      // Hover over a line to reveal the message button
+      const diffLine = page.locator('.diff-line').first();
+      await diffLine.hover();
+      
+      // Step 1: Click "Add comment" button → modal should open
+      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      await messageButton.click();
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+      
+      // Step 2: Click off the modal (on the diff viewer) → modal should close via blur
+      await page.locator('.diff-viewer').click();
+      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+      
+      // Step 3: Hover again to make the message button visible, then click it → modal SHOULD re-open
+      await diffLine.hover();
+      await messageButton.click();
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+      
+      // Verify we can interact with the modal
+      const textarea = page.locator('.comment-modal-textarea');
+      await textarea.fill('Test comment after re-opening');
+      await expect(textarea).toHaveValue('Test comment after re-opening');
+      
+      // Success! The modal re-opened correctly
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
 });
