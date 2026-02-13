@@ -145,6 +145,41 @@ export class MockServerManager {
     }
   }
 
+  /**
+   * Configure mock server error responses and latency
+   * @param {Object} config - Configuration object with errors and/or latency
+   * @param {Object} config.errors - Object mapping endpoint names to error codes (e.g., { listPulls: 500 })
+   * @param {number} config.latency - Artificial latency in milliseconds
+   */
+  async setConfig(config) {
+    if (!this.port) {
+      throw new Error('Mock server not available - no port');
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:${this.port}/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Config failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.status !== 'ok') {
+        throw new Error(`Config returned unexpected status: ${data.status}`);
+      }
+      
+      return true;
+    } catch (error) {
+      throw new Error(`Mock server config failed: ${error.message}`);
+    }
+  }
+
   getPort() {
     return this.port;
   }
