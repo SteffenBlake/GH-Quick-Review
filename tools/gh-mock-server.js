@@ -601,12 +601,6 @@ class GitHubMockServer {
         handler: this.createReview.bind(this)
       },
       {
-        // Add comment to review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/comments$/,
-        method: 'POST',
-        handler: this.addReviewComment.bind(this)
-      },
-      {
         // Submit review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events$/,
         method: 'POST',
@@ -1038,61 +1032,6 @@ class GitHubMockServer {
     });
   }
 
-  addReviewComment(req, res, match) {
-    if (this.checkConfiguredError('addReviewComment', res)) return;
-    
-    const [, owner, repo, pullNumber, reviewId] = match;
-    
-    this.readBody(req, (body) => {
-      const repoData = this.loadRepoData(repo);
-      const pull = repoData.pulls.get(parseInt(pullNumber));
-      const review = repoData.reviews.get(parseInt(reviewId));
-      
-      if (!pull) {
-        return this.sendResponse(res, 404, {
-          message: 'Not Found',
-          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-comment-for-a-pull-request-review'
-        });
-      }
-      
-      if (!review) {
-        return this.sendResponse(res, 404, {
-          message: 'Review not found',
-          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-comment-for-a-pull-request-review'
-        });
-      }
-      
-      const newComment = {
-        id: repoData.nextCommentId++,
-        pull_number: parseInt(pullNumber),
-        diff_hunk: body.diff_hunk || '',
-        path: body.path || '',
-        position: body.position || null,
-        original_position: body.original_position || null,
-        commit_id: body.commit_id || pull.head.sha,
-        original_commit_id: body.original_commit_id || pull.head.sha,
-        user: {
-          login: 'test_user',
-          id: 1000,
-          type: 'User'
-        },
-        body: body.body || '',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#discussion_r${repoData.nextCommentId - 1}`,
-        pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
-        pull_request_review_id: parseInt(reviewId),
-        line: body.line || null,
-        side: body.side || 'RIGHT',
-        start_line: body.start_line || null,
-        start_side: body.start_side || null,
-        in_reply_to_id: body.in_reply_to_id || null
-      };
-      
-      repoData.comments.set(newComment.id, newComment);
-      this.sendResponse(res, 201, newComment);
-    });
-  }
 
   submitReview(req, res, match) {
     if (this.checkConfiguredError('submitReview', res)) return;
@@ -1189,6 +1128,122 @@ class GitHubMockServer {
               thread: {
                 id: threadId,
                 isResolved: false
+              }
+            }
+          }
+        });
+      } else if (query.includes('addPullRequestReviewThread')) {
+        // Handle addPullRequestReviewThread mutation
+        const { variables } = body;
+        if (!variables || !variables.input) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Variables with input are required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const { pullRequestId, pullRequestReviewId, body: commentBody, path, line, side } = variables.input;
+        
+        // Find PR by node_id across all repos
+        let repo = null;
+        let pullNumber = null;
+        let foundPr = null;
+        
+        for (const repoName of this.repos) {
+          const repoData = this.loadRepoData(repoName);
+          for (const [num, pr] of repoData.pulls.entries()) {
+            if (pr.node_id === pullRequestId) {
+              repo = repoName;
+              pullNumber = num;
+              foundPr = pr;
+              break;
+            }
+          }
+          if (foundPr) break;
+        }
+        
+        if (!foundPr) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Invalid pullRequestId',
+              extensions: { code: 'NOT_FOUND' }
+            }]
+          });
+        }
+        
+        // Find the review by node_id
+        const repoData = this.loadRepoData(repo);
+        let foundReview = null;
+        let reviewId = null;
+        for (const [id, review] of repoData.reviews.entries()) {
+          if (review.node_id === pullRequestReviewId) {
+            foundReview = review;
+            reviewId = id;
+            break;
+          }
+        }
+        
+        if (!foundReview) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Invalid pullRequestReviewId',
+              extensions: { code: 'NOT_FOUND' }
+            }]
+          });
+        }
+        
+        // Create the new comment
+        const newComment = {
+          id: repoData.nextCommentId++,
+          pull_number: pullNumber,
+          diff_hunk: '',
+          path: path || '',
+          position: null,
+          original_position: null,
+          commit_id: foundPr.head.sha,
+          original_commit_id: foundPr.head.sha,
+          user: {
+            login: 'reviewer1',
+            id: 201,
+            type: 'User'
+          },
+          body: commentBody || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          html_url: `https://github.com/test_user/${repo}/pull/${pullNumber}#discussion_r${repoData.nextCommentId - 1}`,
+          pull_request_url: `https://api.github.com/repos/test_user/${repo}/pulls/${pullNumber}`,
+          pull_request_review_id: reviewId,
+          line: line || null,
+          side: side || 'RIGHT',
+          start_line: null,
+          start_side: null,
+          in_reply_to_id: null
+        };
+        
+        repoData.comments.set(newComment.id, newComment);
+        
+        // Return GraphQL response
+        this.sendResponse(res, 200, {
+          data: {
+            addPullRequestReviewThread: {
+              thread: {
+                id: `PRRT_${repoData.nextCommentId - 1}`,
+                isResolved: false,
+                isOutdated: false,
+                comments: {
+                  nodes: [{
+                    id: `PRRC_${newComment.id}`,
+                    body: newComment.body,
+                    path: newComment.path,
+                    line: newComment.line,
+                    createdAt: newComment.created_at,
+                    author: {
+                      login: newComment.user.login
+                    }
+                  }]
+                }
               }
             }
           }

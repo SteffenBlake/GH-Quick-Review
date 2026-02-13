@@ -9,6 +9,7 @@ import { selectedRepo } from './selectedRepoStore';
 import { selectedPr } from './selectedPrStore';
 import { githubClient } from '../utils/github-client';
 import { useCurrentUser } from './userStore';
+import { usePrData } from './prDataStore';
 
 /**
  * Hook to fetch the active (pending) review for the current user on the selected PR
@@ -67,23 +68,35 @@ export function useCreateReview() {
 }
 
 /**
- * Hook to add a comment to an existing review
+ * Hook to add a comment to an existing review using GraphQL
  */
 export function useAddReviewComment() {
   const queryClient = useQueryClient();
+  const { data: prData } = usePrData();
   
   return useMutation({
-    mutationFn: async ({ reviewId, body, commitId, path, line, side }) => {
+    mutationFn: async ({ reviewNodeId, body, path, line, side }) => {
       if (!selectedRepo.value || !selectedPr.value) {
         throw new Error('No PR selected');
       }
       
-      return await githubClient.createReviewComment(
-        selectedRepo.value,
-        selectedPr.value,
-        reviewId,
-        { body, commit_id: commitId, path, line, side }
-      );
+      // Get the PR node_id from prData
+      if (!prData?.pull?.node_id) {
+        throw new Error('Pull request node_id not available');
+      }
+      
+      if (!reviewNodeId) {
+        throw new Error('Review node_id is required for GraphQL mutation');
+      }
+      
+      return await githubClient.addPullRequestReviewThread({
+        pullRequestId: prData.pull.node_id,
+        pullRequestReviewId: reviewNodeId,
+        body,
+        path,
+        line,
+        side: side || 'RIGHT'
+      });
     },
     onSuccess: () => {
       // Invalidate comments query to refetch

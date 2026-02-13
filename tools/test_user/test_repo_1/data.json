@@ -3,6 +3,7 @@
     {
       "number": 1,
       "id": 1,
+      "node_id": "PR_kwDOTest1",
       "state": "open",
       "title": "Add new feature for user authentication",
       "body": "This PR implements JWT-based authentication for the API.\n\n## Changes\n- Added JWT middleware\n- Updated user model\n- Added authentication tests",
@@ -50,6 +51,7 @@
     {
       "number": 2,
       "id": 2,
+      "node_id": "PR_kwDOTest2",
       "state": "open",
       "title": "Fix critical bug in payment processing system that was causing duplicate charges and race conditions when multiple concurrent requests were submitted by the same user within a short time window",
       "body": "Fixes #42\n\nThis PR resolves the race condition in the payment processor that was causing duplicate charges.",

@@ -346,24 +346,69 @@ class GitHubClient {
   }
 
   /**
-   * Add a comment to an existing review
-   * @param {string} repo - Full repository name (e.g., 'owner/repo')
-   * @param {number} pullNumber - Pull request number
-   * @param {number} reviewId - Review ID
-   * @param {Object} comment - Comment object with body, commit_id, path, and position/line
-   * @returns {Promise<Object>} - Created comment object
+   * Add a comment to an existing review using GraphQL API
+   * @param {Object} params - Parameters for the comment
+   * @param {string} params.pullRequestId - Pull request node ID (required for GraphQL)
+   * @param {string} params.pullRequestReviewId - Review node ID (required for GraphQL)
+   * @param {string} params.body - Comment body text
+   * @param {string} params.path - File path
+   * @param {number} params.line - Line number in the file
+   * @param {string} params.side - Side of diff ('LEFT' or 'RIGHT')
+   * @returns {Promise<Object>} - GraphQL response with created comment
    */
-  async createReviewComment(repo, pullNumber, reviewId, comment) {
-    if (!repo) {
-      throw new Error('Repository name is required');
+  async addPullRequestReviewThread({ pullRequestId, pullRequestReviewId, body, path, line, side = 'RIGHT' }) {
+    if (!pullRequestId) {
+      throw new Error('Pull request node ID is required');
     }
-    if (!pullNumber) {
-      throw new Error('Pull request number is required');
+    if (!pullRequestReviewId) {
+      throw new Error('Pull request review node ID is required');
     }
-    if (!reviewId) {
-      throw new Error('Review ID is required');
+    if (!body) {
+      throw new Error('Comment body is required');
     }
-    return this.post(`/repos/${repo}/pulls/${pullNumber}/reviews/${reviewId}/comments`, comment);
+    if (!path) {
+      throw new Error('File path is required');
+    }
+    if (!line) {
+      throw new Error('Line number is required');
+    }
+
+    const mutation = `
+      mutation($input: AddPullRequestReviewThreadInput!) {
+        addPullRequestReviewThread(input: $input) {
+          thread {
+            id
+            isResolved
+            isOutdated
+            comments(first: 1) {
+              nodes {
+                id
+                body
+                path
+                line
+                createdAt
+                author {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        pullRequestId,
+        pullRequestReviewId,
+        body,
+        path,
+        line,
+        side
+      }
+    };
+
+    return this.graphql(mutation, variables);
   }
 
   /**
