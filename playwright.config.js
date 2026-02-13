@@ -39,12 +39,15 @@ checkBrowserInstalled();
 
 export default defineConfig({
   testDir: './tests/playwright',
-  fullyParallel: false,
+  fullyParallel: false, // Managed per-project
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
+  workers: undefined, // Set per-project
   maxFailures: 1, // Stop immediately on first failure for faster feedback
-  reporter: 'list', // Use built-in list reporter until custom reporter is fixed
+  reporter: [
+    ['./tests/playwright/custom-reporter.js'],
+    ['list'], // Keep list reporter for CI
+  ],
   timeout: 10000, // 10 second test timeout
   use: {
     baseURL: 'http://localhost:5173',
@@ -53,15 +56,40 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'parallel-tests',
+      testMatch: /.*\.spec\.js/,
+      grep: /@parallel/,
       use: { ...devices['Desktop Chrome'] },
+      fullyParallel: true,
+      workers: 4, // Run 4 parallel workers for read-only tests
+    },
+    {
+      name: 'serial-tests',
+      testMatch: /.*\.spec\.js/,
+      grep: /@serial/,
+      use: { ...devices['Desktop Chrome'] },
+      fullyParallel: false,
+      workers: 1, // Run serial tests one at a time
     },
   ],
-  webServer: {
-    command: 'npm run dev -- --mode test',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      // Start the mock server ONCE for all tests
+      command: 'node tools/gh-mock-server.js tools/test_user 3000',
+      port: 3000,
+      timeout: 10000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    {
+      // Start the Vite dev server
+      command: 'npm run dev -- --mode test',
+      url: 'http://localhost:5173',
+      timeout: 30000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+  ],
 });

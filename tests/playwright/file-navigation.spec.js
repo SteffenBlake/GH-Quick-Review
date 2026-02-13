@@ -7,7 +7,7 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('File Navigation and Sticky Headers', () => {
+test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => {
   test('clicking a file in directory browser scrolls to that file', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);

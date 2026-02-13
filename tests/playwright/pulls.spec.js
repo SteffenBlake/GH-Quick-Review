@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Pulls Dropdown', () => {
+test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should not show pulls dropdown when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);

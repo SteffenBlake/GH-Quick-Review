@@ -5,7 +5,7 @@ const BASE_URL = '/GH-Quick-Review/';
 const TRANSITION_DELAY = 400; // Time to wait for CSS transitions
 const FOCUS_DELAY = 100; // Time to wait for focus effects
 
-test.describe('Directory Browser', () => {
+test.describe('Directory Browser', { tag: '@parallel' }, () => {
   test('should not be visible when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);

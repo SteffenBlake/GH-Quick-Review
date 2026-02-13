@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Fuzzy Dropdown Component', () => {
+test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
   test('repos dropdown should show loading spinner inside disabled dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000, { latency: 2000 }); // Add latency to see loading

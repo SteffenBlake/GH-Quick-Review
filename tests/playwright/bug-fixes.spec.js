@@ -3,7 +3,7 @@ import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
 
-test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
+test.describe('Bug Fixes - Directory Scrolling and Comment Icons', { tag: '@parallel' }, () => {
   test('should show MessageAlert icon on lines with comments', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);

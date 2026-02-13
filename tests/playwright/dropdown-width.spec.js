@@ -5,7 +5,7 @@ import { MockServerManager } from './mock-server-manager.js';
  * Dropdown Width Constraint Tests
  * Ensures dropdown controls don't overflow their containers with long text
  */
-test.describe('Dropdown Width Constraints', () => {
+test.describe('Dropdown Width Constraints', { tag: '@parallel' }, () => {
   test('PR dropdown should not exceed container width with long PR name', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);

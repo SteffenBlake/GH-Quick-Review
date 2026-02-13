@@ -3,7 +3,7 @@ import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
 
-test.describe('Directory Browser - File Tree Features', () => {
+test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, () => {
   test('should display nested directory structure with icons', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Authentication Flow', () => {
+test.describe('Authentication Flow', { tag: '@parallel' }, () => {
   test('should display login page when not authenticated', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);

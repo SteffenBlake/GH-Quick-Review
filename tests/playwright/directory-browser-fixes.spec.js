@@ -5,7 +5,7 @@ const BASE_URL = '/GH-Quick-Review/';
 const TRANSITION_DELAY = 400; // Time to wait for CSS transitions
 const FOCUS_DELAY = 100; // Time to wait for focus effects
 
-test.describe('Directory Browser Fixes', () => {
+test.describe('Directory Browser Fixes', { tag: '@parallel' }, () => {
   test('should NOT auto-focus on page reload when PR already selected', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);

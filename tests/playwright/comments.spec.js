@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Comment Management', () => {
+test.describe('Comment Management', { tag: '@serial' }, () => {
   test('should successfully create a new comment on a line', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);

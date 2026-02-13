@@ -5,7 +5,7 @@ import { MockServerManager } from './mock-server-manager.js';
  * Font Consistency Tests
  * Ensures ALL UI elements respect the selected font from the font dropdown
  */
-test.describe('Font Consistency', () => {
+test.describe('Font Consistency', { tag: '@parallel' }, () => {
   test('header title should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);

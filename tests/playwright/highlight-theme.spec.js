@@ -5,7 +5,7 @@ import { MockServerManager } from './mock-server-manager.js';
  * Highlight Theme Tests
  * Ensures the highlight theme dropdown works correctly and persists selection
  */
-test.describe('Highlight Theme', () => {
+test.describe('Highlight Theme', { tag: '@parallel' }, () => {
   test('should display theme dropdown with default value', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);

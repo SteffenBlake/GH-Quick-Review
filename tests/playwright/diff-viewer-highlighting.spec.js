@@ -5,7 +5,7 @@ import { MockServerManager } from './mock-server-manager.js';
  * Diff Viewer Highlighting Tests
  * Tests that syntax highlighting is properly applied to code in diff viewer
  */
-test.describe('Diff Viewer Syntax Highlighting', () => {
+test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
   test('should apply highlight.js classes to code content', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
