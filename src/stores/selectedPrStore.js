@@ -11,18 +11,24 @@ import { signal } from '@preact/signals';
  * Automatically persists to localStorage
  */
 
-// Initialize from localStorage
+// Initialize from localStorage - parse as number
 const initialPr = typeof window !== 'undefined' 
   ? localStorage.getItem('selected_pr') 
   : '';
 
-export const selectedPr = signal(initialPr || '');
+// Convert to number if it exists, otherwise empty string
+const parsedPr = initialPr ? parseInt(initialPr, 10) : '';
+
+export const selectedPr = signal(parsedPr);
 
 export function setSelectedPr(pr) {
-  selectedPr.value = pr;
+  // Always store as number (or empty string)
+  const numericPr = pr ? (typeof pr === 'number' ? pr : parseInt(pr, 10)) : '';
+  selectedPr.value = numericPr;
+  
   if (typeof window !== 'undefined') {
-    if (pr) {
-      localStorage.setItem('selected_pr', pr);
+    if (numericPr) {
+      localStorage.setItem('selected_pr', numericPr.toString());
     } else {
       localStorage.removeItem('selected_pr');
     }
