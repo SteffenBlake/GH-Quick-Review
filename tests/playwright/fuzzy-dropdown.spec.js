@@ -85,14 +85,14 @@ test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
       await expect(reposDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       await reposDropdown.locator('.fuzzy-dropdown-control').click();
       
-      // Type to filter
+      // Type to filter - use "repo_1" to specifically match test_repo_1
       const searchInput = reposDropdown.getByPlaceholder('Type to search...');
-      await searchInput.fill('test_repo_1');
+      await searchInput.fill('repo_1');
       
-      // Should show results (fuzzy search may match multiple repos)
+      // Should show only matching results
       const items = reposDropdown.getByRole('listitem');
-      // Just verify test_repo_1 is in the results
-      await expect(items.first()).toContainText('test_repo');
+      await expect(items).toHaveCount(1);
+      await expect(items.first()).toContainText('test_repo_1');
     } finally {
       await mockServer.stop();
     }
