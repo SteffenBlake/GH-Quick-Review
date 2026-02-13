@@ -75,7 +75,7 @@ export function useAddReviewComment() {
   const { data: prData } = usePrData();
   
   return useMutation({
-    mutationFn: async ({ reviewId, reviewNodeId, body, commitId, path, line, side }) => {
+    mutationFn: async ({ reviewNodeId, body, path, line, side }) => {
       if (!selectedRepo.value || !selectedPr.value) {
         throw new Error('No PR selected');
       }

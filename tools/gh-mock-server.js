@@ -1146,21 +1146,25 @@ class GitHubMockServer {
         
         const { pullRequestId, pullRequestReviewId, body: commentBody, path, line, side } = variables.input;
         
-        // Extract repo name from pullRequestId (format: PR_kwDOTestX)
-        // In real GitHub, we'd look up the PR by node_id, but for mock we'll use a simple mapping
+        // Find PR by node_id across all repos
         let repo = null;
         let pullNumber = null;
-        let reviewId = null;
+        let foundPr = null;
         
-        // Map node IDs to actual data
-        const prNodeIdMap = {
-          'PR_kwDOTest1': { repo: 'test_repo_1', pullNumber: 1 },
-          'PR_kwDOTest2': { repo: 'test_repo_1', pullNumber: 2 },
-          'PR_kwDOTest3': { repo: 'test_repo_2', pullNumber: 1 },
-          'PR_kwDOTest4': { repo: 'test_repo_2', pullNumber: 2 }
-        };
+        for (const repoName of this.repos) {
+          const repoData = this.loadRepoData(repoName);
+          for (const [num, pr] of repoData.pulls.entries()) {
+            if (pr.node_id === pullRequestId) {
+              repo = repoName;
+              pullNumber = num;
+              foundPr = pr;
+              break;
+            }
+          }
+          if (foundPr) break;
+        }
         
-        if (!prNodeIdMap[pullRequestId]) {
+        if (!foundPr) {
           return this.sendResponse(res, 400, {
             errors: [{
               message: 'Invalid pullRequestId',
@@ -1169,13 +1173,10 @@ class GitHubMockServer {
           });
         }
         
-        const prData = prNodeIdMap[pullRequestId];
-        repo = prData.repo;
-        pullNumber = prData.pullNumber;
-        
-        // Find the review by node_id across all repos
+        // Find the review by node_id
         const repoData = this.loadRepoData(repo);
         let foundReview = null;
+        let reviewId = null;
         for (const [id, review] of repoData.reviews.entries()) {
           if (review.node_id === pullRequestReviewId) {
             foundReview = review;
@@ -1193,17 +1194,6 @@ class GitHubMockServer {
           });
         }
         
-        const pull = repoData.pulls.get(pullNumber);
-        
-        if (!pull) {
-          return this.sendResponse(res, 400, {
-            errors: [{
-              message: 'Pull request not found',
-              extensions: { code: 'NOT_FOUND' }
-            }]
-          });
-        }
-        
         // Create the new comment
         const newComment = {
           id: repoData.nextCommentId++,
@@ -1212,8 +1202,8 @@ class GitHubMockServer {
           path: path || '',
           position: null,
           original_position: null,
-          commit_id: pull.head.sha,
-          original_commit_id: pull.head.sha,
+          commit_id: foundPr.head.sha,
+          original_commit_id: foundPr.head.sha,
           user: {
             login: 'reviewer1',
             id: 201,
