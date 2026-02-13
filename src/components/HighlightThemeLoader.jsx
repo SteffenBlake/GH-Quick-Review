@@ -5,38 +5,51 @@
  */
 
 import { useEffect, useRef } from 'preact/hooks';
-import { highlightTheme } from '../stores/highlightThemeStore.js';
+import { highlightTheme, HIGHLIGHT_THEMES } from '../stores/highlightThemeStore.js';
 
-// Use Vite's glob import to get all highlight.js theme CSS files
-const themeModules = import.meta.glob('highlight.js/styles/*.min.css', { 
-  query: '?url',
-  eager: true 
+// Create a mapping of theme names to their CSS content
+// This forces Vite to bundle all themes at build time
+const themeStylesheets = {};
+
+HIGHLIGHT_THEMES.forEach(theme => {
+  // This creates individual chunks for each theme
+  themeStylesheets[theme] = () => import(`highlight.js/styles/${theme}.min.css`);
 });
 
 export function HighlightThemeLoader() {
   const linksCreated = useRef(false);
+  const styleElements = useRef({});
 
   useEffect(() => {
-    // Step 1: Create <link> elements for ALL themes (only once)
+    // Step 1: Load ALL theme CSS (only once)
     if (!linksCreated.current) {
-      Object.entries(themeModules).forEach(([path, module]) => {
-        // Extract theme name from path: 'highlight.js/styles/github-dark.min.css' -> 'github-dark'
-        const themeName = path.match(/styles\/(.+)\.min\.css$/)[1];
-        
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = module.default; // The actual URL after Vite processing
-        link.dataset.hljsTheme = themeName;
-        link.disabled = true; // ALL disabled initially
-        document.head.appendChild(link);
+      HIGHLIGHT_THEMES.forEach(async (themeName) => {
+        try {
+          // Import the CSS - this injects a <style> tag
+          await import(`highlight.js/styles/${themeName}.min.css`);
+          
+          // Find the style tag that was just added (last one)
+          const styleTags = Array.from(document.head.querySelectorAll('style'));
+          const styleTag = styleTags[styleTags.length - 1];
+          
+          if (styleTag) {
+            styleTag.dataset.hljsTheme = themeName;
+            styleTag.disabled = true; // Disable all by default
+            styleElements.current[themeName] = styleTag;
+          }
+        } catch (err) {
+          console.warn(`Failed to load theme ${themeName}:`, err);
+        }
       });
       linksCreated.current = true;
     }
 
-    // Step 2: Enable ONLY the selected theme, disable all others
+    // Step 2: Enable ONLY the selected theme
     const currentTheme = highlightTheme.value;
-    document.querySelectorAll('link[data-hljs-theme]').forEach(link => {
-      link.disabled = (link.dataset.hljsTheme !== currentTheme);
+    Object.entries(styleElements.current).forEach(([themeName, styleTag]) => {
+      if (styleTag) {
+        styleTag.disabled = (themeName !== currentTheme);
+      }
     });
     
   }, [highlightTheme.value]);
