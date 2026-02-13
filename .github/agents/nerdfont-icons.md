@@ -28,6 +28,8 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - MessagePlus: \udb81\ude53
 - MenuDots: \udb80\uddd9
 - Checkmark: \uf00c
+- Pencil: \udb81\ude4f
+- X: \uf467
 
 ## Usage
 

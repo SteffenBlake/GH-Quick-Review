@@ -329,6 +329,13 @@ This project uses **Playwright integration tests ONLY**.
      - Instead, run tests one at a time to identify which test(s) are problematic
      - Example: `npm run test:playwright -- test-name.spec.js`
      - Debug and fix slow tests - they indicate a problem (hung server, infinite loop, etc.)
+   - **Debugging Test Timeouts**: If tests timeout (30+ seconds waiting for page elements):
+     - **FIRST**: Run `npm run build` to check for build errors
+     - Build errors prevent the app from loading, causing page.goto() to hang indefinitely
+     - Common causes: incorrect imports, missing exports, syntax errors
+     - Example: Importing from wrong store file (e.g., `selectedRepo` from `reposStore` instead of `selectedRepoStore`)
+     - The Vite dev server will fail silently in test mode if there are build errors
+     - ALWAYS verify the app builds successfully before debugging test logic
    - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
      - **CRITICAL**: Each test MUST start its own instance of the mock server
      - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)

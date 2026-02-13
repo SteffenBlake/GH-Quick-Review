@@ -6,6 +6,7 @@
 
 import { useEffect, useRef } from 'preact/hooks';
 import hljs from 'highlight.js';
+import { showNewCommentModal, showCommentModal } from '../stores/commentModalStore';
 
 // Icon constants
 const ICON_MESSAGE_ALERT = '\udb80\udf62';
@@ -119,6 +120,17 @@ export function DiffLine({ line, lineNumber, index, filename, isSelected, hasCom
   // hasMessage is true if this line has comments
   const hasMessage = hasComments || false;
   
+  // Handle message button clicks
+  const handleMessageClick = (e) => {
+    e.stopPropagation(); // Prevent line selection
+    if (hasMessage) {
+      // TODO: Pass actual comment chain data
+      showCommentModal({ filename, lineNumber, comments: [] });
+    } else {
+      showNewCommentModal(filename, lineNumber);
+    }
+  };
+  
   // Apply syntax highlighting when code content changes
   useEffect(() => {
     if (codeRef.current && !isHunkHeader) {
@@ -142,11 +154,17 @@ export function DiffLine({ line, lineNumber, index, filename, isSelected, hasCom
       {/* Message button gutter */}
       <span className="diff-line-message-gutter">
         {hasMessage ? (
-          <button className="diff-line-message-btn has-message">
+          <button 
+            className="diff-line-message-btn has-message"
+            onClick={handleMessageClick}
+          >
             {ICON_MESSAGE_ALERT}
           </button>
         ) : (
-          <button className="diff-line-message-btn add-message">
+          <button 
+            className="diff-line-message-btn add-message"
+            onClick={handleMessageClick}
+          >
             {ICON_MESSAGE_PLUS}
           </button>
         )}
