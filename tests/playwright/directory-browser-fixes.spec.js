@@ -5,10 +5,10 @@ const BASE_URL = '/GH-Quick-Review/';
 const TRANSITION_DELAY = 400; // Time to wait for CSS transitions
 const FOCUS_DELAY = 100; // Time to wait for focus effects
 
-test.describe('Directory Browser Fixes', () => {
+test.describe('Directory Browser Fixes', { tag: '@parallel' }, () => {
   test('should NOT auto-focus on page reload when PR already selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -17,7 +17,7 @@ test.describe('Directory Browser Fixes', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       
@@ -51,7 +51,7 @@ test.describe('Directory Browser Fixes', () => {
 
   test('should collapse when clicking the collapse button', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -59,7 +59,7 @@ test.describe('Directory Browser Fixes', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -94,7 +94,7 @@ test.describe('Directory Browser Fixes', () => {
 
   test('toggle button should have blue highlight on hover, not turn black', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -102,7 +102,7 @@ test.describe('Directory Browser Fixes', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();

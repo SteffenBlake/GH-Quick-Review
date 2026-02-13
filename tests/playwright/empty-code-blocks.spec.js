@@ -5,10 +5,10 @@ import { MockServerManager } from './mock-server-manager.js';
  * Empty Code Blocks Test
  * Tests that empty code blocks in diff hunks render correctly with at least a space
  */
-test.describe('Empty Code Blocks in Diff Hunks', () => {
+test.describe('Empty Code Blocks in Diff Hunks', { tag: '@parallel' }, () => {
   test('should render empty code blocks with a space instead of being totally empty', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

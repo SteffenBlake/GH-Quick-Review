@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Pulls Dropdown', () => {
+test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should not show pulls dropdown when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -21,7 +21,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should show greyed out dropdown when no repo is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -66,7 +66,7 @@ test.describe('Pulls Dropdown', () => {
       // Wait for repos dropdown to finish loading (latency is 2000ms)
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
-      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
+      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
       
       // Select a repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
@@ -77,7 +77,7 @@ test.describe('Pulls Dropdown', () => {
       await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
       
       // Wait for PRs to load - dropdown control should no longer be disabled
-      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
     } finally {
       await mockServer.stop();
     }
@@ -85,7 +85,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should display PRs dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -179,7 +179,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should allow selecting a PR from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -220,7 +220,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should persist selected PR across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -266,7 +266,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should clear selected PR when repo changes', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -293,6 +293,11 @@ test.describe('Pulls Dropdown', () => {
       // Verify PR selection
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
       
+      // Click on main content to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('main').click();
+      // Wait for directory browser to slide out (transition is 0.3s)
+      await page.waitForTimeout(400);
+      
       // Change repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_2').click();
@@ -313,7 +318,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should clear selected PR on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -367,7 +372,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should truncate long PR titles with CSS', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -413,7 +418,7 @@ test.describe('Pulls Dropdown', () => {
 
   test('should re-enable PR dropdown when repo is selected after being disabled', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

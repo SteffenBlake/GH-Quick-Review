@@ -4,10 +4,10 @@ import { MockServerManager } from './mock-server-manager.js';
 const BASE_URL = '/GH-Quick-Review/';
 const DEFAULT_COMMENT = '@copilot Read your agent file IN FULL before proceeding. Please address all PR comments below.';
 
-test.describe('Settings Modal', () => {
+test.describe('Settings Modal', { tag: '@parallel' }, () => {
   test('should show settings button only when logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -34,7 +34,7 @@ test.describe('Settings Modal', () => {
 
   test('should open and close settings modal', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -72,7 +72,7 @@ test.describe('Settings Modal', () => {
 
   test('should display default review comment', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -96,7 +96,7 @@ test.describe('Settings Modal', () => {
 
   test('should save custom settings', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -131,7 +131,7 @@ test.describe('Settings Modal', () => {
 
   test('should cancel changes without saving', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -162,7 +162,7 @@ test.describe('Settings Modal', () => {
 
   test('should reset to defaults', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -209,7 +209,7 @@ test.describe('Settings Modal', () => {
 
   test('should clear settings on logout', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -246,7 +246,7 @@ test.describe('Settings Modal', () => {
 
   test('should persist settings across page reload', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

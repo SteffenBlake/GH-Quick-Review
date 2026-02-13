@@ -3,10 +3,10 @@ import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
 
-test.describe('Directory Browser - File Tree Features', () => {
+test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, () => {
   test('should display nested directory structure with icons', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -40,7 +40,7 @@ test.describe('Directory Browser - File Tree Features', () => {
 
   test('should show git status indicators for files', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -69,7 +69,7 @@ test.describe('Directory Browser - File Tree Features', () => {
 
   test('should collapse and expand directories when clicked', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -112,7 +112,7 @@ test.describe('Directory Browser - File Tree Features', () => {
 
   test('should select a file when clicked and highlight it', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -155,7 +155,7 @@ test.describe('Directory Browser - File Tree Features', () => {
 
   test('should show comment indicators for files with comments', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -181,7 +181,7 @@ test.describe('Directory Browser - File Tree Features', () => {
 
   test('should sort directories before files', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -213,7 +213,7 @@ test.describe('Directory Browser - File Tree Features', () => {
 
   test('should display appropriate file icons for different file types', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

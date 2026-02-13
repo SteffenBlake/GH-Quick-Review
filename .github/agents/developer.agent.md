@@ -463,68 +463,57 @@ This project uses **Playwright integration tests ONLY**.
 **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
    
-   - **🚨 CRITICAL: PLAYWRIGHT TESTS TAKE A LONG ASS TIME TO RUN! 🚨**
-     - **NEVER EVER run the full test suite until you are 100% DONE with EVERYTHING ELSE**
-     - The full suite takes AGES to complete - it's the VERY LAST STEP
-     - **ALWAYS run individual tests FIRST to verify your changes**
-     - Use `npm run test:playwright -- test-name.spec.js` to run a single test file
-     - Only run the full suite as the absolute final verification step when ALL work is complete
-     
-     - **💡 GENIUS STRATEGY: Run tests in the BACKGROUND while doing other work!**
-       - Use `bash` tool with `mode="async"` to run tests in background
-       - While tests run, you can take screenshots, update docs, commit progress, etc.
-       - Check test results later with `read_bash` using the shellId
-       - **🚨 CRITICAL: You CANNOT END THE SESSION until background tests FINISH and PASS! 🚨**
-         - If you start tests in background, you MUST wait for them to complete
-         - Use `read_bash` to check results every 30-60 seconds
-         - If tests fail, FIX the failures before ending session
-         - NEVER end a session with tests still running or with failing tests
-       - Example workflow:
-         ```
-         1. Start tests: bash with mode="async": npm run test:playwright
-         2. Do other work: take screenshots, update PR description
-         3. Check results: read_bash with the shellId after 60-90 seconds
-         4. Wait for completion: Keep checking until tests finish
-         5. If tests fail, fix and repeat
-         6. Only end session when ALL tests PASS
-         ```
+   - **⚡ TEST PARALLELIZATION: Tests now run in ~20 seconds (was 120s)**
+     - **Parallel tests** (@parallel tag): 115 tests, 8 workers, read-only operations
+     - **Serial tests** (@serial tag): 3 tests, 1 worker, write operations (comments.spec.js)
+     - Mock server started ONCE by webServer config, shared by all tests
+     - Serial tests call `mockServer.reset()` after each test to restore data
+     - Tests just set `mockServer.port = 3000` instead of starting their own server
    
-   - **Test Suite Execution Time**: The full test suite should NOT take more than 120 seconds to run
-     - If the test suite takes longer than 120 seconds, STOP the run
-     - Instead, run tests one at a time to identify which test(s) are problematic
-     - Example: `npm run test:playwright -- test-name.spec.js`
-     - Debug and fix slow tests - they indicate a problem (hung server, infinite loop, etc.)
-   - **Debugging Test Timeouts**: If tests timeout (30+ seconds waiting for page elements):
-     - **FIRST**: Run `npm run build` to check for build errors
-     - Build errors prevent the app from loading, causing page.goto() to hang indefinitely
-     - Common causes: incorrect imports, missing exports, syntax errors
-     - Example: Importing from wrong store file (e.g., `selectedRepo` from `reposStore` instead of `selectedRepoStore`)
-     - The Vite dev server will fail silently in test mode if there are build errors
-     - ALWAYS verify the app builds successfully before debugging test logic
-   - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
-     - **CRITICAL**: Each test MUST start its own instance of the mock server
-     - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)
-     - **CRITICAL**: Each test MUST stand up the server, run the test, then stop/release it
-     - **CRITICAL**: All tests use the SAME fixed port (3000) since they run serially
-     - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
-     - **DO NOT** pollute the mock server state between tests
-     - **ONLY** the mock server should be mocked - everything else must be real end-to-end
+   - **Test Suite Execution Time**: Full suite runs in ~20 seconds with parallelization
+     - Individual test files still run quickly: `npm run test:playwright -- test-name.spec.js`
+     - Full suite is fast enough to run frequently now
+   
+   - **Mock Server**: Globally started by Playwright's webServer config
+     - **NEW**: Mock server starts ONCE for entire test suite on port 3000
+     - **NEW**: Tests use shared server instead of starting their own
+     - **NEW**: Parallel tests share server (read-only, no conflicts)
+     - **NEW**: Serial tests use same server but call `/reset` endpoint after each test
      - **Environment**: Tests use `.env.test` which sets `VITE_GITHUB_API_URL=http://localhost:3000`
-     - Example:
+     - Example for parallel tests:
        ```javascript
-       test('my test', async ({ page }) => {
-         const mockServer = new MockServerManager();
-         const port = await mockServer.start(null, 3000); // Fixed port 3000
-         try {
-           // Navigate and interact with the real app
-           // The app will use http://localhost:3000 from .env.test
-           await page.goto('/GH-Quick-Review/');
-           // ... test interactions ...
-         } finally {
-           await mockServer.stop();
-         }
+       test.describe('My Feature', { tag: '@parallel' }, () => {
+         test('my test', async ({ page }) => {
+           const mockServer = new MockServerManager();
+           mockServer.port = 3000; // Use globally started server
+           await mockServer.checkHeartbeat();
+           try {
+             await page.goto('/GH-Quick-Review/');
+             // ... test interactions ...
+           } finally {
+             await mockServer.stop(); // No-op for shared server
+           }
+         });
        });
        ```
+     - Example for serial tests (write operations):
+       ```javascript
+       test.describe('My Write Feature', { tag: '@serial' }, () => {
+         test('my test', async ({ page }) => {
+           const mockServer = new MockServerManager();
+           mockServer.port = 3000; // Use globally started server
+           await mockServer.checkHeartbeat();
+           try {
+             await page.goto('/GH-Quick-Review/');
+             // ... test that modifies data ...
+           } finally {
+             await mockServer.reset(); // Reset for next test
+             await mockServer.stop();
+           }
+         });
+       });
+       ```
+   
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
    - **CRITICAL**: There is NO such thing as "pre-existing test failures" - if tests fail, YOU broke them or didn't install Playwright browsers correctly. Always install browsers first and ensure ALL tests pass.
@@ -561,6 +550,12 @@ This project uses **Playwright integration tests ONLY**.
         - It's INCREDIBLY RARE you need to add timeouts
         - The website runs locally with millisecond response times
         - If something times out, it's ACTUALLY BROKEN or the test is wrong
+        - **CRITICAL TIMEOUT RULE: NEVER use timeouts longer than 1000ms (1 second)**
+          - Local mock server responds in <100ms typically
+          - Any action taking >1s is BROKEN and needs fixing
+          - Using long timeouts (5s+) masks real problems and wastes time
+          - Example: 120 tests × 5s timeout = 10 minutes vs 120 tests × 1s = 2 minutes
+          - If a test needs >1s, the CODE is broken, not the test
         - Common issues:
           - Elements not rendering due to broken code
           - Selectors changed and test needs updating

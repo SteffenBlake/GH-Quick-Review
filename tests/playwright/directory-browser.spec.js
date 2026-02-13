@@ -5,10 +5,10 @@ const BASE_URL = '/GH-Quick-Review/';
 const TRANSITION_DELAY = 400; // Time to wait for CSS transitions
 const FOCUS_DELAY = 100; // Time to wait for focus effects
 
-test.describe('Directory Browser', () => {
+test.describe('Directory Browser', { tag: '@parallel' }, () => {
   test('should not be visible when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -25,7 +25,7 @@ test.describe('Directory Browser', () => {
 
   test('should not be visible when logged in but no PR selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -45,7 +45,7 @@ test.describe('Directory Browser', () => {
 
   test('should expand when PR is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -53,7 +53,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -70,7 +70,7 @@ test.describe('Directory Browser', () => {
 
   test('should show expand button when collapsed', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -78,7 +78,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -106,7 +106,7 @@ test.describe('Directory Browser', () => {
 
   test('should collapse when clicking outside', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -114,7 +114,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -144,7 +144,7 @@ test.describe('Directory Browser', () => {
 
   test('should expand when expand button is clicked', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -152,7 +152,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -180,7 +180,7 @@ test.describe('Directory Browser', () => {
 
   test('should re-expand when PR selection changes', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -188,7 +188,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -215,7 +215,7 @@ test.describe('Directory Browser', () => {
 
   test('should be positioned at 20% down from viewport top', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -223,7 +223,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -231,8 +231,8 @@ test.describe('Directory Browser', () => {
       // Wait for directory browser to appear
       await expect(page.locator('.directory-browser')).toBeVisible();
       
-      // Check position - computed style will convert vh to px
-      const position = await page.locator('.directory-browser').evaluate(el => {
+      // Check toggle button position - it should be at 20vh
+      const position = await page.locator('.directory-browser-toggle').evaluate(el => {
         const styles = window.getComputedStyle(el);
         const viewportHeight = window.innerHeight;
         const topPx = parseInt(styles.top);
@@ -240,13 +240,13 @@ test.describe('Directory Browser', () => {
         return {
           position: styles.position,
           topVh: Math.round(topVh),
-          left: styles.left
+          right: styles.right
         };
       });
       
-      expect(position.position).toBe('fixed');
+      expect(position.position).toBe('absolute');
       expect(position.topVh).toBe(20);
-      expect(position.left).toBe('0px');
+      expect(position.right).toBe('2px');
     } finally {
       await mockServer.stop();
     }
@@ -254,7 +254,7 @@ test.describe('Directory Browser', () => {
 
   test('should show directory menu button with proper styling', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -262,7 +262,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -287,7 +287,7 @@ test.describe('Directory Browser', () => {
 
   test('should open dropdown menu and show settings options', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -295,10 +295,20 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
+      
+      // Wait for directory browser to be visible
+      const directoryBrowser = page.locator('.directory-browser');
+      await expect(directoryBrowser).toBeVisible();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      
+      // Wait a moment for the slide-in animation
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       await expect(page.locator('.directory-menu-dropdown')).toBeVisible();
@@ -311,7 +321,7 @@ test.describe('Directory Browser', () => {
 
   test('should persist Start Collapsed setting in localStorage', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -319,10 +329,14 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       await page.click('.directory-menu-item:has-text("Start Collapsed")');
@@ -336,7 +350,7 @@ test.describe('Directory Browser', () => {
 
   test('should persist Auto Expand setting in localStorage', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -344,10 +358,14 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       await page.click('.directory-menu-item:has-text("Auto Expand")');
@@ -361,7 +379,7 @@ test.describe('Directory Browser', () => {
 
   test('should clear directory settings on logout', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -369,7 +387,7 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
         localStorage.setItem('directory_start_collapsed', 'true');
         localStorage.setItem('directory_auto_expand_on_scroll', 'true');
@@ -390,7 +408,7 @@ test.describe('Directory Browser', () => {
 
   test('should display checkmark icon when setting is enabled', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -398,11 +416,15 @@ test.describe('Directory Browser', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
         localStorage.setItem('directory_start_collapsed', 'true');
       });
       await page.reload();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       

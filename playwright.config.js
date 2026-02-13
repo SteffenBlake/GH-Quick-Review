@@ -39,29 +39,49 @@ checkBrowserInstalled();
 
 export default defineConfig({
   testDir: './tests/playwright',
-  fullyParallel: false,
+  fullyParallel: false, // Managed per-project
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  maxFailures: 1, // Stop immediately on first failure for faster feedback
-  reporter: 'list', // Use built-in list reporter until custom reporter is fixed
-  timeout: 10000, // 10 second test timeout
+  workers: undefined, // Set per-project
+  maxFailures: 1, // CRITICAL: Stop after first failure for fast feedback - NEVER CHANGE THIS
+  reporter: [
+    ['./tests/playwright/custom-reporter.js'],
+    ['list'], // Keep list reporter for CI
+  ],
+  timeout: 3000, // 3s overall test timeout - local tests should be FAST
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    actionTimeout: 5000, // 5 second timeout for individual actions (was too short at 1s)
+    actionTimeout: 1000, // 1s timeout - local mock server is FAST, anything longer indicates a bug
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'parallel-tests',
+      testMatch: /.*\.spec\.js/,
+      grep: /@parallel/,
       use: { ...devices['Desktop Chrome'] },
+      fullyParallel: true,
+      workers: 8, // Start with 8 workers, will test different counts
+    },
+    {
+      name: 'serial-tests',
+      testMatch: /.*\.spec\.js/,
+      grep: /@serial/,
+      use: { ...devices['Desktop Chrome'] },
+      fullyParallel: false,
+      workers: 1, // Run serial tests one at a time
     },
   ],
-  webServer: {
-    command: 'npm run dev -- --mode test',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      command: 'node tools/gh-mock-server.js tools/test_user 3000',
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'npm run dev -- --mode test',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

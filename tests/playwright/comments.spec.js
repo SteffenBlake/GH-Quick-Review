@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Comment Management', () => {
+test.describe('Comment Management', { tag: '@serial' }, () => {
   test('should successfully create a new comment on a line', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
-      await mockServer.checkHeartbeat();
+    mockServer.port = 3000; // Use globally started mock server
+    await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -30,9 +30,16 @@ test.describe('Comment Management', () => {
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
-      // Click on a line number to open comment modal
-      const lineNumber = page.locator('.line-number').first();
-      await lineNumber.click();
+      // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('.diff-viewer').click();
+      
+      // Hover over a line to reveal the message button
+      const diffLine = page.locator('.diff-line').first();
+      await diffLine.hover();
+      
+      // Click on a message button to open comment modal
+      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      await messageButton.click();
       
       // Modal should appear and be focused
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
@@ -50,13 +57,15 @@ test.describe('Comment Management', () => {
       // Success! No error should be shown
       // If we got this far without an alert dialog, the comment was created successfully
     } finally {
+      await mockServer.reset(); // Reset data for next test
       await mockServer.stop();
     }
   });
 
   test('should successfully edit an existing comment', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
+    await mockServer.checkHeartbeat();
       await mockServer.checkHeartbeat();
     
     try {
@@ -82,16 +91,20 @@ test.describe('Comment Management', () => {
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
-      // Click on a comment icon to open existing thread
-      const commentIcon = page.locator('.comment-icon').first();
-      await commentIcon.click();
+      // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('.diff-viewer').click();
+      
+      // Click on a message button with existing comments to open thread
+      const messageButton = page.locator('.diff-line-message-btn.has-message').first();
+      await messageButton.click();
       
       // Modal should appear with existing comments
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       await expect(page.locator('.comment-item')).toBeVisible();
       
-      // Click edit button on the first comment (assuming user owns it based on test data)
+      // Wait for edit button to appear (requires user data to load first)
       const editButton = page.locator('.comment-edit-btn').first();
+      await expect(editButton).toBeVisible({ timeout: 1000 });
       await editButton.click();
       
       // Edit textarea should appear
@@ -101,21 +114,23 @@ test.describe('Comment Management', () => {
       // Modify the comment
       await editTextarea.fill('This is an updated comment');
       
-      // Click Save
-      await page.getByRole('button', { name: 'Save' }).click();
+      // Click Save (use .first() since there might be other Save buttons on the page)
+      await page.getByRole('button', { name: 'Save' }).first().click();
       
       // Edit form should close
       await expect(editTextarea).not.toBeVisible({ timeout: 1000 });
       
       // Success! No error should be shown
     } finally {
+      await mockServer.reset(); // Reset data for next test
       await mockServer.stop();
     }
   });
 
   test('should successfully reply to an existing comment thread', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
+    await mockServer.checkHeartbeat();
       await mockServer.checkHeartbeat();
     
     try {
@@ -141,9 +156,12 @@ test.describe('Comment Management', () => {
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
-      // Click on a comment icon to open existing thread
-      const commentIcon = page.locator('.comment-icon').first();
-      await commentIcon.click();
+      // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('.diff-viewer').click();
+      
+      // Click on a message button with existing comments to open thread
+      const messageButton = page.locator('.diff-line-message-btn.has-message').first();
+      await messageButton.click();
       
       // Modal should appear with existing comments
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
@@ -161,6 +179,7 @@ test.describe('Comment Management', () => {
       
       // Success! No error should be shown
     } finally {
+      await mockServer.reset(); // Reset data for next test
       await mockServer.stop();
     }
   });

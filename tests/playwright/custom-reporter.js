@@ -37,8 +37,14 @@ class CustomReporter {
       this.skippedTests++;
     }
 
-    // Log every 10 tests
-    if (this.currentCount % 10 === 0 || this.currentCount === this.totalTests) {
+    // Log every 10 tests OR when we reach the total
+    // Fixed: Handle edge cases for small test counts (< 10 tests)
+    const shouldLog = 
+      this.currentCount % 10 === 0 || 
+      this.currentCount === this.totalTests ||
+      (this.totalTests < 10 && this.currentCount === this.totalTests);
+    
+    if (shouldLog) {
       const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
       
       // Calculate ETA based on average time per test
@@ -48,7 +54,7 @@ class CustomReporter {
       const etaSeconds = Math.ceil(etaMs / 1000);
       
       let etaStr = '';
-      if (this.currentCount < this.totalTests) {
+      if (this.currentCount < this.totalTests && remainingTests > 0) {
         if (etaSeconds < 60) {
           etaStr = ` ETA: ${etaSeconds}s`;
         } else {

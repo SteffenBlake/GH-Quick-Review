@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
-test.describe('Repos Dropdown', () => {
+test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
   test('should show loading spinner while fetching repos', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000, { latency: 2000 }); // Add latency to see loading
@@ -27,7 +27,7 @@ test.describe('Repos Dropdown', () => {
 
   test('should display repos dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -102,7 +102,7 @@ test.describe('Repos Dropdown', () => {
 
   test('should allow selecting a repository from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -137,7 +137,7 @@ test.describe('Repos Dropdown', () => {
 
   test('should persist selected repo across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -178,7 +178,7 @@ test.describe('Repos Dropdown', () => {
 
   test('should clear selected repo on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

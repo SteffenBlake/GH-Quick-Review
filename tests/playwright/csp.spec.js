@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
  * 2. Manual inspection of dist/index.html after build
  */
 
-test.describe('Content Security Policy', () => {
+test.describe('Content Security Policy', { tag: '@parallel' }, () => {
   test('should have CSP meta tag with dev environment settings', async ({ page }) => {
     await page.goto('/GH-Quick-Review/');
     

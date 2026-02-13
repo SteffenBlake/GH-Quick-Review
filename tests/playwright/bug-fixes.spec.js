@@ -3,10 +3,10 @@ import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
 
-test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
+test.describe('Bug Fixes - Directory Scrolling and Comment Icons', { tag: '@parallel' }, () => {
   test('should show MessageAlert icon on lines with comments', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
     
     try {
       // Check heartbeat FIRST to fail fast if server is broken
@@ -16,7 +16,7 @@ test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
@@ -48,14 +48,14 @@ test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
 
   test('should show MessageAlert always, MessagePlus only on hover', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
     
     try {
       await page.goto(BASE_URL);
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('selected_repo', 'test_repo_1');
+        localStorage.setItem('selected_repo', 'test_user/test_repo_1');
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
