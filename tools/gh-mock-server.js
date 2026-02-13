@@ -1010,10 +1010,10 @@ class GitHubMockServer {
         node_id: `PRR_${repoData.nextReviewId - 1}`,
         pull_number: parseInt(pullNumber),
         user: {
-          login: 'test_user',
-          id: 1000,
-          node_id: 'U_kgDOTestUser',
-          avatar_url: 'https://avatars.githubusercontent.com/u/1000?v=4',
+          login: 'reviewer1',
+          id: 201,
+          node_id: 'U_kgDOReviewer1',
+          avatar_url: 'https://avatars.githubusercontent.com/u/201?v=4',
           type: 'User'
         },
         body: body.body || '',

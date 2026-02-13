@@ -16,8 +16,15 @@ import {
   useUpdateComment,
   useDeleteComment,
 } from '../stores/commentsStore';
+import {
+  useActiveReview,
+  useCreateReview,
+  useAddReviewComment,
+  useSubmitReview,
+} from '../stores/reviewsStore';
 import { useCurrentUser } from '../stores/userStore';
 import { usePrData } from '../stores/prDataStore';
+import { settings } from '../stores/settingsStore';
 
 // Icon constants
 const ICON_PENCIL = '\udb81\ude4f';
@@ -41,10 +48,16 @@ export function CommentModal() {
   // Fetch current user
   const { data: currentUser } = useCurrentUser();
   
+  // Fetch active review for current user
+  const { data: activeReview } = useActiveReview();
+  
   // Mutations
   const createComment = useCreateComment();
   const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
+  const createReview = useCreateReview();
+  const addReviewComment = useAddReviewComment();
+  const submitReview = useSubmitReview();
 
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
@@ -92,29 +105,48 @@ export function CommentModal() {
     try {
       const commitSha = prData.pull.head.sha;
       
-      if (isNewComment) {
-        // Create new comment at specific line
-        await createComment.mutateAsync({
+      // Check if we have an active review
+      if (activeReview) {
+        // Add comment to existing review
+        const commentData = {
+          reviewId: activeReview.id,
           body: commentText,
           commitId: commitSha,
-          path: selectedCommentLocation.value.filename,
-          line: selectedCommentLocation.value.lineNumber,
+          path: isNewComment 
+            ? selectedCommentLocation.value.filename 
+            : selectedCommentChain.value.filename,
+          line: isNewComment 
+            ? selectedCommentLocation.value.lineNumber 
+            : selectedCommentChain.value.lineNumber,
           side: 'RIGHT',
-        });
+        };
+        
+        await addReviewComment.mutateAsync(commentData);
       } else {
-        // Reply to existing thread (create comment in response to first comment)
-        const threadComments = selectedCommentChain.value?.comments || [];
-        if (threadComments.length > 0) {
-          await createComment.mutateAsync({
-            body: commentText,
-            commitId: commitSha,
-            path: selectedCommentChain.value.filename,
-            line: selectedCommentChain.value.lineNumber,
-            side: 'RIGHT',
-            in_reply_to: threadComments[0].id,
-          });
-        }
+        // No active review - create one first, then add comment
+        const newReview = await createReview.mutateAsync({
+          commitId: commitSha,
+          body: '',
+          event: 'PENDING',
+        });
+        
+        // Now add comment to the newly created review
+        const commentData = {
+          reviewId: newReview.id,
+          body: commentText,
+          commitId: commitSha,
+          path: isNewComment 
+            ? selectedCommentLocation.value.filename 
+            : selectedCommentChain.value.filename,
+          line: isNewComment 
+            ? selectedCommentLocation.value.lineNumber 
+            : selectedCommentChain.value.lineNumber,
+          side: 'RIGHT',
+        };
+        
+        await addReviewComment.mutateAsync(commentData);
       }
+      
       setCommentText('');
       hideCommentModal();
     } catch (error) {
@@ -169,6 +201,25 @@ export function CommentModal() {
     } catch (error) {
       console.error('Failed to delete comment:', error);
       alert('Failed to delete comment. Please try again.');
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!activeReview) return;
+    
+    try {
+      const reviewBody = settings.value.reviewSubmissionComment || '';
+      
+      await submitReview.mutateAsync({
+        reviewId: activeReview.id,
+        body: reviewBody,
+        event: 'REQUEST_CHANGES',
+      });
+      
+      hideCommentModal();
+    } catch (error) {
+      console.error('Failed to submit review:', error);
+      alert('Failed to submit review. Please try again.');
     }
   };
 
@@ -272,6 +323,15 @@ export function CommentModal() {
             rows={6}
           />
           <div className="comment-modal-actions">
+            {activeReview && (
+              <button
+                type="button"
+                className="comment-modal-submit-review-btn"
+                onClick={handleSubmitReview}
+              >
+                Submit Review: Request Changes
+              </button>
+            )}
             <button
               type="button"
               className="comment-modal-cancel-btn"
@@ -284,7 +344,7 @@ export function CommentModal() {
               className="comment-modal-submit-btn"
               disabled={!commentText.trim()}
             >
-              {isNewComment ? 'Comment' : 'Reply'}
+              {activeReview ? 'Add comment' : 'Add Comment and start review'}
             </button>
           </div>
         </form>
