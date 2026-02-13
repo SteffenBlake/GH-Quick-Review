@@ -999,6 +999,7 @@ body {
   align-items: center;
   justify-content: center;
   min-width: 2rem;
+  height: 1.4rem;
 }
 
 .diff-line-message-btn {
@@ -1010,8 +1011,8 @@ body {
   font-size: 0.9rem;
   display: none;
   color: var(--text-primary);
-  width: 2rem;
-  height: 2rem;
+  width: 1.4rem;
+  height: 1.4rem;
   border: 1px solid var(--border);
   border-radius: 4px;
 }
@@ -1039,6 +1040,7 @@ body {
   text-align: center;
   font-weight: bold;
   padding: 0 0.5rem;
+  height: 1.4rem;
 }
 
 /* Line number */
@@ -1049,6 +1051,7 @@ body {
   color: var(--text-secondary);
   user-select: none;
   font-family: inherit;
+  height: 1.4rem;
 }
 
 /* Code content */
@@ -1058,12 +1061,12 @@ body {
   padding: 0;
   white-space: pre;
   font-family: inherit;
+  height: 1.4rem;
 }
 
 /* Let hljs theme control background and colors */
 .diff-line-code code.hljs {
   font-family: inherit !important;
-  padding: 0.25rem 0.5rem !important;
 }
 
 
