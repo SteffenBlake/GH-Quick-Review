@@ -1132,6 +1132,78 @@ class GitHubMockServer {
             }
           }
         });
+      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviews')) {
+        // Handle pullRequest reviews query
+        const { variables } = body;
+        if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Variables with owner, repo, and prNumber are required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const { owner, repo, prNumber } = variables;
+        
+        // Load repo data
+        const repoData = this.loadRepoData(repo);
+        const pull = repoData.pulls.get(parseInt(prNumber));
+        
+        if (!pull) {
+          return this.sendResponse(res, 200, {
+            data: {
+              repository: null
+            }
+          });
+        }
+        
+        // Get all reviews for this PR
+        const reviews = Array.from(repoData.reviews.values())
+          .filter(review => review.pull_number === parseInt(prNumber));
+        
+        // Build GraphQL response with reviews and their comments
+        const reviewNodes = reviews.map(review => {
+          // Get all comments for this review
+          const reviewComments = Array.from(repoData.comments.values())
+            .filter(comment => comment.pull_request_review_id === review.id);
+          
+          return {
+            id: review.node_id,
+            state: review.state,
+            comments: {
+              nodes: reviewComments.map(comment => ({
+                id: `PRRC_${comment.id}`,
+                body: comment.body,
+                path: comment.path,
+                line: comment.line,
+                startLine: comment.start_line,
+                createdAt: comment.created_at,
+                updatedAt: comment.updated_at,
+                diffHunk: comment.diff_hunk,
+                pullRequestReview: {
+                  id: review.node_id,
+                  state: review.state
+                },
+                author: {
+                  login: comment.user.login
+                }
+              }))
+            }
+          };
+        });
+        
+        this.sendResponse(res, 200, {
+          data: {
+            repository: {
+              pullRequest: {
+                reviews: {
+                  nodes: reviewNodes
+                }
+              }
+            }
+          }
+        });
       } else if (query.includes('addPullRequestReviewThread')) {
         // Handle addPullRequestReviewThread mutation
         const { variables } = body;

@@ -122,6 +122,32 @@
       "start_line": 1,
       "start_side": "RIGHT",
       "in_reply_to_id": null
+    },
+    {
+      "id": 3002,
+      "pull_number": 2,
+      "diff_hunk": "@@ -0,0 +1,10 @@\n+/* Dark theme */",
+      "path": "styles/dark.css",
+      "position": 1,
+      "original_position": 1,
+      "commit_id": "yaml456def789",
+      "original_commit_id": "yaml456def789",
+      "pull_request_review_id": 5001,
+      "user": {
+        "login": "reviewer1",
+        "id": 201,
+        "type": "User"
+      },
+      "body": "This is a pending review comment",
+      "created_at": "2024-01-18T11:00:00Z",
+      "updated_at": "2024-01-18T11:00:00Z",
+      "html_url": "https://github.com/test_user/test_repo_2/pull/2#discussion_r3002",
+      "pull_request_url": "https://api.github.com/repos/test_user/test_repo_2/pulls/2",
+      "line": 3,
+      "side": "RIGHT",
+      "start_line": null,
+      "start_side": null,
+      "in_reply_to_id": null
     }
   ],
   "reviews": [
