@@ -89,6 +89,7 @@ export function SettingsModal() {
           </label>
           <textarea
             className="settings-textarea"
+            data-testid="review-comment-textarea"
             value={draftSettings.reviewSubmissionComment}
             onChange={(e) => handleInputChange('reviewSubmissionComment', e.target.value)}
             rows={4}

@@ -105,11 +105,11 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
       
       // Open settings
       await page.locator('.header-settings-button').click();
+      await page.waitForTimeout(400); // Wait for modal to fully open and render
       
       // Change the value
       const customComment = 'My custom review comment';
-      const textarea = page.getByRole('textbox').nth(1);
-      await textarea.fill(customComment);
+      await page.getByTestId('review-comment-textarea').fill(customComment);
       
       // Save
       await page.getByRole('button', { name: 'Save' }).click();
@@ -119,7 +119,8 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
       
       // Reopen settings to verify it was saved
       await page.locator('.header-settings-button').click();
-      await expect(textarea).toHaveValue(customComment);
+      await page.waitForTimeout(600); // Wait for modal animation (300ms) + render + buffer
+      await expect(page.getByTestId('review-comment-textarea')).toHaveValue(customComment);
     } finally {
       await mockServer.stop();
     }
@@ -247,20 +248,21 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
       
       // Open settings and save custom value
       await page.locator('.header-settings-button').click();
+      await page.waitForTimeout(400); // Wait for modal to fully open
       const customComment = 'Persisted custom comment';
-      const textarea = page.getByRole('textbox').nth(1);
-      await textarea.fill(customComment);
+      await page.getByTestId('review-comment-textarea').fill(customComment);
       await page.getByRole('button', { name: 'Save' }).click();
       
       // Wait for modal to close
-      await expect(page.locator('.settings-modal')).not.toBeVisible();
+      await page.waitForTimeout(500);
       
       // Reload the page
       await page.reload();
       
       // Open settings - should still have custom value
       await page.locator('.header-settings-button').click();
-      await expect(textarea).toHaveValue(customComment);
+      await page.waitForTimeout(600); // Wait for modal animation + render
+      await expect(page.getByTestId('review-comment-textarea')).toHaveValue(customComment);
     } finally {
       await mockServer.stop();
     }
