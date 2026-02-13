@@ -85,9 +85,9 @@ test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
       await expect(reposDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       await reposDropdown.locator('.fuzzy-dropdown-control').click();
       
-      // Type to filter - use "_1" to specifically match test_repo_1
+      // Type to filter - use "repo_1" to specifically match test_repo_1
       const searchInput = reposDropdown.getByPlaceholder('Type to search...');
-      await searchInput.fill('_1');
+      await searchInput.fill('repo_1');
       
       // Should show only matching results
       const items = reposDropdown.getByRole('listitem');
@@ -387,7 +387,7 @@ test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
       await expect(page.locator('.repos-dropdown')).toBeVisible();
       
       // Open font dropdown
-      const fontPicker = page.locator('.font-picker');
+      const fontPicker = page.locator('.font-fuzzy-select');
       await fontPicker.locator('.fuzzy-dropdown-control').click();
       
       // Should show search input
