@@ -5,7 +5,13 @@
  */
 
 import { useEffect, useRef } from 'preact/hooks';
-import { highlightTheme, HIGHLIGHT_THEMES } from '../stores/highlightThemeStore.js';
+import { highlightTheme } from '../stores/highlightThemeStore.js';
+
+// Use Vite's glob import to get all highlight.js theme CSS files
+const themeModules = import.meta.glob('highlight.js/styles/*.min.css', { 
+  query: '?url',
+  eager: true 
+});
 
 export function HighlightThemeLoader() {
   const linksCreated = useRef(false);
@@ -13,34 +19,26 @@ export function HighlightThemeLoader() {
   useEffect(() => {
     // Step 1: Create <link> elements for ALL themes (only once)
     if (!linksCreated.current) {
-      const loadAllThemes = async () => {
-        for (const themeName of HIGHLIGHT_THEMES) {
-          try {
-            // Use Vite's dynamic import to get the actual URL
-            const module = await import(`highlight.js/styles/${themeName}.min.css?url`);
-            const themeUrl = module.default;
-            
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = themeUrl;
-            link.dataset.hljsTheme = themeName;
-            link.disabled = true; // Disable by default
-            document.head.appendChild(link);
-          } catch (err) {
-            console.warn(`Failed to load theme ${themeName}:`, err);
-          }
-        }
-      };
-      
-      loadAllThemes();
+      Object.entries(themeModules).forEach(([path, module]) => {
+        // Extract theme name from path: 'highlight.js/styles/github-dark.min.css' -> 'github-dark'
+        const themeName = path.match(/styles\/(.+)\.min\.css$/)[1];
+        
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = module.default; // The actual URL after Vite processing
+        link.dataset.hljsTheme = themeName;
+        link.disabled = true; // ALL disabled initially
+        document.head.appendChild(link);
+      });
       linksCreated.current = true;
     }
 
-    // Step 2: Enable the selected theme, disable all others
+    // Step 2: Enable ONLY the selected theme, disable all others
     const currentTheme = highlightTheme.value;
     document.querySelectorAll('link[data-hljs-theme]').forEach(link => {
       link.disabled = (link.dataset.hljsTheme !== currentTheme);
     });
+    
   }, [highlightTheme.value]);
 
   return null;
