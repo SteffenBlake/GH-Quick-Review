@@ -9,6 +9,7 @@ test.describe('Highlight Theme', () => {
   test('should display theme dropdown with default value', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -34,6 +35,7 @@ test.describe('Highlight Theme', () => {
   test('should allow selecting a different theme', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -60,6 +62,7 @@ test.describe('Highlight Theme', () => {
   test('should persist theme selection across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -83,6 +86,7 @@ test.describe('Highlight Theme', () => {
   test('should support fuzzy search in theme dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -109,6 +113,7 @@ test.describe('Highlight Theme', () => {
   test('should have all expected themes available', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');

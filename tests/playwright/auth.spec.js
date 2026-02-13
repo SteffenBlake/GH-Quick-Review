@@ -7,6 +7,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -36,6 +38,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -63,6 +67,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -87,6 +93,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -113,6 +121,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
       await page.reload();
@@ -129,6 +139,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
       await page.reload();
@@ -155,6 +167,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -182,6 +196,8 @@ test.describe('Authentication Flow', () => {
     const port = await mockServer.start(null, 3000);
     
     try {
+      await mockServer.checkHeartbeat();
+      
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.setItem('github_pat', 'test_token'));
       await page.reload();

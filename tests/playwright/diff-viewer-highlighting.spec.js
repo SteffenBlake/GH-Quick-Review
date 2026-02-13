@@ -9,6 +9,7 @@ test.describe('Diff Viewer Syntax Highlighting', () => {
   test('should apply highlight.js classes to code content', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       // Login and navigate to a PR
@@ -46,6 +47,7 @@ test.describe('Diff Viewer Syntax Highlighting', () => {
   test('should have git icon column for all line types including hunk headers', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       // Login and navigate to a PR
@@ -93,6 +95,7 @@ test.describe('Diff Viewer Syntax Highlighting', () => {
   test('should apply highlight theme background color to code content', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       // Login and navigate to a PR
@@ -133,6 +136,7 @@ test.describe('Diff Viewer Syntax Highlighting', () => {
   test('should update syntax highlighting when theme changes', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       // Login and navigate to a PR

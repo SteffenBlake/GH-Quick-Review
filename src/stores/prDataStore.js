@@ -29,19 +29,28 @@ export function usePrData() {
         }
 
         // Fetch all PR data in parallel
-        const [pullDetails, files, comments] = await Promise.all([
+        const [pullDetails, files, comments, reviews] = await Promise.all([
           githubClient.getPull(repo, prNumber),
           githubClient.listPullFiles(repo, prNumber),
-          githubClient.listPullComments(repo, prNumber)
+          githubClient.listPullComments(repo, prNumber),
+          githubClient.listPullReviews(repo, prNumber)
         ]);
 
         clearError();
+        
+        // Find existing pending review for current user
+        const currentUser = await githubClient.getUser();
+        const existingReview = reviews.find(
+          review => review.state === 'PENDING' && review.user.login === currentUser.login
+        );
         
         // Return raw data object
         return {
           pull: pullDetails,
           files,
-          comments
+          comments,
+          reviews,
+          existingReview
         };
       } catch (error) {
         setError(error.message || 'Failed to load PR data');

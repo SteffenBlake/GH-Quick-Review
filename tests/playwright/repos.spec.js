@@ -19,7 +19,7 @@ test.describe('Repos Dropdown', () => {
       await expect(page.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
       
       // Wait for repos to load
-      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 1000 });
     } finally {
       await mockServer.stop();
     }
@@ -28,6 +28,7 @@ test.describe('Repos Dropdown', () => {
   test('should display repos dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -98,6 +99,7 @@ test.describe('Repos Dropdown', () => {
   test('should allow selecting a repository from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -129,6 +131,7 @@ test.describe('Repos Dropdown', () => {
   test('should persist selected repo across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -166,6 +169,7 @@ test.describe('Repos Dropdown', () => {
   test('should clear selected repo on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');

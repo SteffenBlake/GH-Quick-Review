@@ -311,6 +311,81 @@ class GitHubClient {
       in_reply_to: inReplyTo,
     });
   }
+
+  /**
+   * List reviews for a pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @returns {Promise<Array>} - Array of review objects
+   */
+  async listPullReviews(repo, pullNumber) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    return this.get(`/repos/${repo}/pulls/${pullNumber}/reviews`);
+  }
+
+  /**
+   * Create a review for a pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @param {Object} review - Review object with optional body, event, and comments
+   * @returns {Promise<Object>} - Created review object
+   */
+  async createPullReview(repo, pullNumber, review) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    return this.post(`/repos/${repo}/pulls/${pullNumber}/reviews`, review);
+  }
+
+  /**
+   * Add a comment to an existing review
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @param {number} reviewId - Review ID
+   * @param {Object} comment - Comment object with body, commit_id, path, and position/line
+   * @returns {Promise<Object>} - Created comment object
+   */
+  async createReviewComment(repo, pullNumber, reviewId, comment) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    if (!reviewId) {
+      throw new Error('Review ID is required');
+    }
+    return this.post(`/repos/${repo}/pulls/${pullNumber}/reviews/${reviewId}/comments`, comment);
+  }
+
+  /**
+   * Submit a review for a pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @param {number} reviewId - Review ID
+   * @param {Object} submission - Submission object with event and optional body
+   * @returns {Promise<Object>} - Submitted review object
+   */
+  async submitReview(repo, pullNumber, reviewId, submission) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    if (!reviewId) {
+      throw new Error('Review ID is required');
+    }
+    return this.post(`/repos/${repo}/pulls/${pullNumber}/reviews/${reviewId}/events`, submission);
+  }
 }
 
 // Export singleton instance

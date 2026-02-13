@@ -5,6 +5,7 @@ test.describe('Comment Management', () => {
   test('should successfully create a new comment on a line', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -22,14 +23,14 @@ test.describe('Comment Management', () => {
       await page.locator('#pr-select').selectOption('1');
       
       // Wait for diff viewer to load
-      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
       // Click on a line number to open comment modal
       const lineNumber = page.locator('.line-number').first();
       await lineNumber.click();
       
       // Modal should appear and be focused
-      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 5000 });
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
       // Type a comment
       const textarea = page.locator('.comment-modal-textarea');
@@ -39,7 +40,7 @@ test.describe('Comment Management', () => {
       await page.getByRole('button', { name: 'Comment' }).click();
       
       // Modal should close (lose focus)
-      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 5000 });
+      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
       
       // Success! No error should be shown
       // If we got this far without an alert dialog, the comment was created successfully
@@ -51,6 +52,7 @@ test.describe('Comment Management', () => {
   test('should successfully edit an existing comment', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -68,14 +70,14 @@ test.describe('Comment Management', () => {
       await page.locator('#pr-select').selectOption('1');
       
       // Wait for diff viewer to load
-      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
       // Click on a comment icon to open existing thread
       const commentIcon = page.locator('.comment-icon').first();
       await commentIcon.click();
       
       // Modal should appear with existing comments
-      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 5000 });
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       await expect(page.locator('.comment-item')).toBeVisible();
       
       // Click edit button on the first comment (assuming user owns it based on test data)
@@ -93,7 +95,7 @@ test.describe('Comment Management', () => {
       await page.getByRole('button', { name: 'Save' }).click();
       
       // Edit form should close
-      await expect(editTextarea).not.toBeVisible({ timeout: 5000 });
+      await expect(editTextarea).not.toBeVisible({ timeout: 1000 });
       
       // Success! No error should be shown
     } finally {
@@ -104,6 +106,7 @@ test.describe('Comment Management', () => {
   test('should successfully reply to an existing comment thread', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -121,14 +124,14 @@ test.describe('Comment Management', () => {
       await page.locator('#pr-select').selectOption('1');
       
       // Wait for diff viewer to load
-      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
       // Click on a comment icon to open existing thread
       const commentIcon = page.locator('.comment-icon').first();
       await commentIcon.click();
       
       // Modal should appear with existing comments
-      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 5000 });
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       await expect(page.locator('.comment-item')).toBeVisible();
       
       // Type a reply
@@ -139,7 +142,7 @@ test.describe('Comment Management', () => {
       await page.getByRole('button', { name: 'Reply' }).click();
       
       // Modal should close
-      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 5000 });
+      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
       
       // Success! No error should be shown
     } finally {

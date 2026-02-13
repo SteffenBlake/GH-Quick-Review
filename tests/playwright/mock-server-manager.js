@@ -14,9 +14,12 @@ export class MockServerManager {
   async start(userDirPath = null, port = 0, config = {}) {
     const testUserDir = userDirPath || resolve(__dirname, '../../tools/test_user');
     
+    // Always run in silent mode during tests to reduce output spam
+    const testConfig = { ...config, silent: true };
+    
     return new Promise((resolvePromise, reject) => {
       try {
-        const { server, close } = startServer(testUserDir, port, config);
+        const { server, close } = startServer(testUserDir, port, testConfig);
         
         server.on('listening', () => {
           const address = server.address();
@@ -33,6 +36,35 @@ export class MockServerManager {
         reject(err);
       }
     });
+  }
+
+  async checkHeartbeat() {
+    if (!this.port) {
+      throw new Error('Mock server not started - no port available');
+    }
+    
+    const url = `http://localhost:${this.port}/heartbeat`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 500); // 500ms timeout
+    
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      
+      if (!response.ok) {
+        throw new Error(`Heartbeat failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.status !== 'ok') {
+        throw new Error(`Heartbeat returned unexpected status: ${data.status}`);
+      }
+      
+      return true;
+    } catch (error) {
+      clearTimeout(timeout);
+      throw new Error(`Mock server heartbeat failed: ${error.message}`);
+    }
   }
 
   async stop() {

@@ -43,10 +43,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  maxFailures: 1, // Stop immediately on first failure for faster feedback
+  reporter: 'list', // Use built-in list reporter until custom reporter is fixed
+  timeout: 10000, // 10 second test timeout
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
+    actionTimeout: 5000, // 5 second timeout for individual actions (was too short at 1s)
   },
   projects: [
     {

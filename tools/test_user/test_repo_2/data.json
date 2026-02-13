@@ -121,5 +121,33 @@
       "start_side": "RIGHT",
       "in_reply_to_id": null
     }
+  ],
+  "reviews": [
+    {
+      "id": 5001,
+      "node_id": "PRR_5001",
+      "pull_number": 2,
+      "user": {
+        "login": "test_user",
+        "id": 1000,
+        "node_id": "U_kgDOTestUser",
+        "avatar_url": "https://avatars.githubusercontent.com/u/1000?v=4",
+        "type": "User"
+      },
+      "body": "",
+      "state": "PENDING",
+      "html_url": "https://github.com/test_user/test_repo_2/pull/2#pullrequestreview-5001",
+      "pull_request_url": "https://api.github.com/repos/test_user/test_repo_2/pulls/2",
+      "_links": {
+        "html": {
+          "href": "https://github.com/test_user/test_repo_2/pull/2#pullrequestreview-5001"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/test_user/test_repo_2/pulls/2"
+        }
+      },
+      "commit_id": "yaml456def789",
+      "author_association": "OWNER"
+    }
   ]
 }

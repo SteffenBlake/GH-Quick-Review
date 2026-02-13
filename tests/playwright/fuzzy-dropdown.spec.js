@@ -58,6 +58,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should open and show search input when clicked', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -91,6 +92,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should filter results based on fuzzy search', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -122,6 +124,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should highlight matched characters in search results', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -156,6 +159,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should show "No results found" when search has no matches', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -185,6 +189,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should select item on click and close dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -217,6 +222,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should navigate with arrow keys', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -253,6 +259,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should select item with Enter key', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -291,6 +298,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('repos dropdown should close on Escape key', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -322,6 +330,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('pulls dropdown should be disabled when no repo is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -346,6 +355,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('pulls dropdown should handle long PR titles correctly', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -385,6 +395,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('font dropdown should work with fuzzy search', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -424,6 +435,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('dropdowns should have fixed width and not overflow header', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -466,6 +478,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('dropdown menu should be visually shown and not covered up by other elements', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -512,6 +525,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('clicking dropdown and immediately typing should auto-focus and work', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -552,6 +566,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('clicking input field when dropdown is open should not close dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -590,6 +605,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('fuzzy search should match characters in different order (true fuzzy matching)', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -630,6 +646,7 @@ test.describe('Fuzzy Dropdown Component', () => {
   test('fuzzy search should handle typos and approximate matches', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');

@@ -11,6 +11,7 @@ test.describe('File Navigation and Sticky Headers', () => {
   test('clicking a file in directory browser scrolls to that file', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -49,6 +50,7 @@ test.describe('File Navigation and Sticky Headers', () => {
   test('scrolling through files auto-selects them in directory browser', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -92,6 +94,7 @@ test.describe('File Navigation and Sticky Headers', () => {
   test('file card headers are sticky when scrolling', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -152,6 +155,7 @@ test.describe('File Navigation and Sticky Headers', () => {
   test('no feedback loop between click and scroll selection', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');

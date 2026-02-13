@@ -254,36 +254,41 @@ When you end a session prematurely:
 **When corrected on any matter, update this AGENTS.md file immediately.** Add the correction as a new guideline in the appropriate section to prevent repeating the same mistake. This ensures continuous learning and improvement of coding standards.
 
 ### Session Management Protocol
-**CRITICAL: NEVER END THE SESSION BY ASKING A QUESTION WITHOUT WAITING FOR A RESPONSE!**
+**🔥 CRITICAL RULE: NEVER EVER EVER END THE SESSION AFTER ASKING A QUESTION! 🔥**
 
-**When you have a question or need clarification:**
-1. Ask your question in text
-2. IMMEDIATELY execute `sleep 30` bash command to wait for the user's response
-3. DO NOT end your response without the sleep command
-4. The user's response may be delayed - ALWAYS WAIT
+**THE ABSOLUTE LAW OF ASKING QUESTIONS:**
+
+1. **Ask your question in text**
+2. **IMMEDIATELY execute `sleep 30` bash command to wait for the user's response**
+3. **AFTER THE SLEEP, KEEP WORKING! CONTINUE WITH YOUR BEST GUESS!**
+4. **NEVER NEVER NEVER END THE SESSION AFTER A QUESTION!**
+
+**THIS IS THE WORKFLOW:**
+```
+Step 1: Ask question
+Step 2: Run sleep 30 (gives user time to respond)
+Step 3: KEEP GOING - make your best decision and continue working
+Step 4: DO NOT END THE SESSION
+```
+
+**Example - CORRECT way to handle uncertainty:**
+```
+I need clarification on X vs Y. I'll pause 30 seconds for input, then proceed with option X as it seems most logical.
+```
+Then run: `sleep 30`
+Then CONTINUE WORKING with option X.
 
 **Why this is critical:**
-- Ending the session loses ALL context and progress
-- All your work, understanding, and state is lost
-- You have to start over from scratch
-- This wastes time and is extremely frustrating
+- Ending the session loses ALL context and progress forever
+- All your work, understanding, and state is completely lost
+- You have to start over from absolute scratch
+- This wastes massive amounts of time and frustrates the user immensely
 
-**Example - CORRECT way to ask a question:**
-```
-I need clarification on how the cancel button should work. Should it:
-1. Call hideCommentModal() to clear signals
-2. Just blur the modal
-3. Something else?
-
-Wait, was that stupid?
-```
-
-Then IMMEDIATELY run: `bash sleep 30` to wait for response.
-
-**NEVER do this:**
-- Ask a question and end your response without sleep
-- Wait for user input without explicitly sleeping
-- Assume the session will stay alive on its own
+**ABSOLUTELY FORBIDDEN:**
+- ❌ Asking a question and ending the session
+- ❌ Waiting for user input without continuing after the pause
+- ❌ Assuming the session will stay alive on its own
+- ❌ Stopping work because you're uncertain - MAKE A DECISION AND KEEP GOING
 
 ### Problem-Solving Protocol
 **CRITICAL: When something isn't working, FIX IT. Don't give up and work around it.**
@@ -457,6 +462,33 @@ This project uses **Playwright integration tests ONLY**.
 
 **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
+   
+   - **🚨 CRITICAL: PLAYWRIGHT TESTS TAKE A LONG ASS TIME TO RUN! 🚨**
+     - **NEVER EVER run the full test suite until you are 100% DONE with EVERYTHING ELSE**
+     - The full suite takes AGES to complete - it's the VERY LAST STEP
+     - **ALWAYS run individual tests FIRST to verify your changes**
+     - Use `npm run test:playwright -- test-name.spec.js` to run a single test file
+     - Only run the full suite as the absolute final verification step when ALL work is complete
+     
+     - **💡 GENIUS STRATEGY: Run tests in the BACKGROUND while doing other work!**
+       - Use `bash` tool with `mode="async"` to run tests in background
+       - While tests run, you can take screenshots, update docs, commit progress, etc.
+       - Check test results later with `read_bash` using the shellId
+       - **🚨 CRITICAL: You CANNOT END THE SESSION until background tests FINISH and PASS! 🚨**
+         - If you start tests in background, you MUST wait for them to complete
+         - Use `read_bash` to check results every 30-60 seconds
+         - If tests fail, FIX the failures before ending session
+         - NEVER end a session with tests still running or with failing tests
+       - Example workflow:
+         ```
+         1. Start tests: bash with mode="async": npm run test:playwright
+         2. Do other work: take screenshots, update PR description
+         3. Check results: read_bash with the shellId after 60-90 seconds
+         4. Wait for completion: Keep checking until tests finish
+         5. If tests fail, fix and repeat
+         6. Only end session when ALL tests PASS
+         ```
+   
    - **Test Suite Execution Time**: The full test suite should NOT take more than 120 seconds to run
      - If the test suite takes longer than 120 seconds, STOP the run
      - Instead, run tests one at a time to identify which test(s) are problematic

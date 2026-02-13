@@ -20,7 +20,14 @@ class GitHubMockServer {
     this.userDirPath = userDirPath;
     this.config = config;
     this.latency = config.latency || 0; // Artificial delay in ms
+    this.silent = config.silent || false; // Suppress console output
     this.loadUserData();
+  }
+
+  log(...args) {
+    if (!this.silent) {
+      console.log(...args);
+    }
   }
 
   loadUserData() {
@@ -32,7 +39,7 @@ class GitHubMockServer {
     // Cache for repo data (loaded on demand)
     this.repoDataCache = new Map();
     
-    console.log(`Loaded ${this.repos.length} repositories for user`);
+    this.log(`Loaded ${this.repos.length} repositories for user`);
   }
 
   /**
@@ -182,11 +189,13 @@ class GitHubMockServer {
     const repoData = {
       pulls: new Map(data.pulls.map(pr => [pr.number, { ...pr }])),
       comments: new Map(data.comments.map(comment => [comment.id, { ...comment }])),
-      nextCommentId: Math.max(...data.comments.map(c => c.id), 0) + 1
+      reviews: new Map((data.reviews || []).map(review => [review.id, { ...review }])),
+      nextCommentId: Math.max(...data.comments.map(c => c.id), 0) + 1,
+      nextReviewId: Math.max(...(data.reviews || []).map(r => r.id), 0) + 1
     };
 
     this.repoDataCache.set(repoName, repoData);
-    console.log(`Loaded ${repoData.pulls.size} PRs and ${repoData.comments.size} comments for ${repoName}`);
+    this.log(`Loaded ${repoData.pulls.size} PRs, ${repoData.comments.size} comments, and ${repoData.reviews.size} reviews for ${repoName}`);
     return repoData;
   }
 
@@ -205,7 +214,7 @@ class GitHubMockServer {
     
     // Handle timeout - don't respond at all
     if (errorConfig === 'timeout') {
-      console.log(`  → Configured to timeout (no response)`);
+      this.log(`  → Configured to timeout (no response)`);
       // Don't send any response - let it hang
       return true;
     }
@@ -250,7 +259,7 @@ class GitHubMockServer {
         documentation_url: 'https://docs.github.com/rest'
       };
       
-      console.log(`  → Configured to return ${errorConfig}`);
+      this.log(`  → Configured to return ${errorConfig}`);
       this.sendResponse(res, errorConfig, errorData);
       return true;
     }
@@ -455,10 +464,16 @@ class GitHubMockServer {
     const urlParts = url.split('?');
     const path = urlParts[0];
     
-    console.log(`${method} ${path}`);
+    this.log(`${method} ${path}`);
     
     // Route matching
     const routes = [
+      {
+        // Heartbeat: GET /heartbeat - quick health check
+        pattern: /^\/heartbeat$/,
+        method: 'GET',
+        handler: (req, res) => this.sendResponse(res, 200, { status: 'ok', timestamp: Date.now() })
+      },
       {
         // Get authenticated user: GET /user
         pattern: /^\/user$/,
@@ -518,6 +533,30 @@ class GitHubMockServer {
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
         method: 'DELETE',
         handler: this.deleteComment.bind(this)
+      },
+      {
+        // List reviews: GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        method: 'GET',
+        handler: this.listReviews.bind(this)
+      },
+      {
+        // Create review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        method: 'POST',
+        handler: this.createReview.bind(this)
+      },
+      {
+        // Add comment to review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/comments$/,
+        method: 'POST',
+        handler: this.addReviewComment.bind(this)
+      },
+      {
+        // Submit review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events$/,
+        method: 'POST',
+        handler: this.submitReview.bind(this)
       },
       {
         // GraphQL endpoint: POST /graphql
@@ -875,6 +914,165 @@ class GitHubMockServer {
     this.sendResponse(res, 204, null);
   }
 
+  listReviews(req, res, match) {
+    if (this.checkConfiguredError('listReviews', res)) return;
+    
+    const [, owner, repo, pullNumber] = match;
+    const repoData = this.loadRepoData(repo);
+    const pull = repoData.pulls.get(parseInt(pullNumber));
+    
+    if (!pull) {
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/reviews#list-reviews-for-a-pull-request'
+      });
+    }
+    
+    // Get all reviews for this PR
+    const reviews = Array.from(repoData.reviews.values())
+      .filter(review => review.pull_number === parseInt(pullNumber));
+    
+    this.sendResponse(res, 200, reviews);
+  }
+
+  createReview(req, res, match) {
+    if (this.checkConfiguredError('createReview', res)) return;
+    
+    const [, owner, repo, pullNumber] = match;
+    
+    this.readBody(req, (body) => {
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
+      
+      if (!pull) {
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-for-a-pull-request'
+        });
+      }
+      
+      const newReview = {
+        id: repoData.nextReviewId++,
+        node_id: `PRR_${repoData.nextReviewId - 1}`,
+        pull_number: parseInt(pullNumber),
+        user: {
+          login: 'test_user',
+          id: 1000,
+          node_id: 'U_kgDOTestUser',
+          avatar_url: 'https://avatars.githubusercontent.com/u/1000?v=4',
+          type: 'User'
+        },
+        body: body.body || '',
+        state: body.event || 'PENDING',
+        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#pullrequestreview-${repoData.nextReviewId - 1}`,
+        pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
+        _links: {
+          html: {
+            href: `https://github.com/${owner}/${repo}/pull/${pullNumber}#pullrequestreview-${repoData.nextReviewId - 1}`
+          },
+          pull_request: {
+            href: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`
+          }
+        },
+        commit_id: body.commit_id || pull.head.sha,
+        author_association: 'OWNER',
+        submitted_at: body.event && body.event !== 'PENDING' ? new Date().toISOString() : undefined
+      };
+      
+      repoData.reviews.set(newReview.id, newReview);
+      this.sendResponse(res, 200, newReview);
+    });
+  }
+
+  addReviewComment(req, res, match) {
+    if (this.checkConfiguredError('addReviewComment', res)) return;
+    
+    const [, owner, repo, pullNumber, reviewId] = match;
+    
+    this.readBody(req, (body) => {
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
+      const review = repoData.reviews.get(parseInt(reviewId));
+      
+      if (!pull) {
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-comment-for-a-pull-request-review'
+        });
+      }
+      
+      if (!review) {
+        return this.sendResponse(res, 404, {
+          message: 'Review not found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-comment-for-a-pull-request-review'
+        });
+      }
+      
+      const newComment = {
+        id: repoData.nextCommentId++,
+        pull_number: parseInt(pullNumber),
+        diff_hunk: body.diff_hunk || '',
+        path: body.path || '',
+        position: body.position || null,
+        original_position: body.original_position || null,
+        commit_id: body.commit_id || pull.head.sha,
+        original_commit_id: body.original_commit_id || pull.head.sha,
+        user: {
+          login: 'test_user',
+          id: 1000,
+          type: 'User'
+        },
+        body: body.body || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#discussion_r${repoData.nextCommentId - 1}`,
+        pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
+        pull_request_review_id: parseInt(reviewId),
+        line: body.line || null,
+        side: body.side || 'RIGHT',
+        start_line: body.start_line || null,
+        start_side: body.start_side || null,
+        in_reply_to_id: body.in_reply_to_id || null
+      };
+      
+      repoData.comments.set(newComment.id, newComment);
+      this.sendResponse(res, 201, newComment);
+    });
+  }
+
+  submitReview(req, res, match) {
+    if (this.checkConfiguredError('submitReview', res)) return;
+    
+    const [, owner, repo, pullNumber, reviewId] = match;
+    
+    this.readBody(req, (body) => {
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
+      const review = repoData.reviews.get(parseInt(reviewId));
+      
+      if (!pull) {
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#submit-a-review-for-a-pull-request'
+        });
+      }
+      
+      if (!review) {
+        return this.sendResponse(res, 404, {
+          message: 'Review not found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#submit-a-review-for-a-pull-request'
+        });
+      }
+      
+      // Update review state and add submitted_at
+      review.state = body.event || 'REQUEST_CHANGES';
+      review.body = body.body || review.body;
+      review.submitted_at = new Date().toISOString();
+      
+      this.sendResponse(res, 200, review);
+    });
+  }
+
   handleGraphQL(req, res, match) {
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
@@ -990,11 +1188,15 @@ class GitHubMockServer {
 
 // Main execution
 function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000, config = {}) {
-  console.log(`Starting GitHub Mock Server...`);
-  console.log(`User directory: ${userDirPath}`);
-  console.log(`Port: ${port}`);
-  if (Object.keys(config).length > 0) {
-    console.log(`Error config:`, JSON.stringify(config, null, 2));
+  const silent = config.silent || false;
+  
+  if (!silent) {
+    console.log(`Starting GitHub Mock Server...`);
+    console.log(`User directory: ${userDirPath}`);
+    console.log(`Port: ${port}`);
+    if (Object.keys(config).length > 0 && !config.silent) {
+      console.log(`Error config:`, JSON.stringify(config, null, 2));
+    }
   }
   
   const mockServer = new GitHubMockServer(userDirPath, config);
@@ -1014,20 +1216,22 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
   
   server.listen(port, () => {
     const actualPort = server.address().port;
-    console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
-    console.log(`\nAvailable endpoints:`);
-    console.log(`  GET    /user`);
-    console.log(`  GET    /user/repos`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
-    console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
-    console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
-    console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
-    console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
-    console.log(`  POST   /graphql`);
-    console.log(`\nPress Ctrl+C to stop\n`);
+    if (!silent) {
+      console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
+      console.log(`\nAvailable endpoints:`);
+      console.log(`  GET    /user`);
+      console.log(`  GET    /user/repos`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
+      console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
+      console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
+      console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
+      console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
+      console.log(`  POST   /graphql`);
+      console.log(`\nPress Ctrl+C to stop\n`);
+    }
   });
   
   const close = (callback) => {
