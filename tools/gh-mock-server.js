@@ -460,6 +460,12 @@ class GitHubMockServer {
     // Route matching
     const routes = [
       {
+        // Get authenticated user: GET /user
+        pattern: /^\/user$/,
+        method: 'GET',
+        handler: this.getUser.bind(this)
+      },
+      {
         // List repos for user: GET /user/repos
         pattern: /^\/user\/repos$/,
         method: 'GET',
@@ -512,6 +518,12 @@ class GitHubMockServer {
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
         method: 'DELETE',
         handler: this.deleteComment.bind(this)
+      },
+      {
+        // GraphQL endpoint: POST /graphql
+        pattern: /^\/graphql$/,
+        method: 'POST',
+        handler: this.handleGraphQL.bind(this)
       }
     ];
     
@@ -543,6 +555,57 @@ class GitHubMockServer {
     }
     
     this.sendResponse(res, 200, this.repos);
+  }
+
+  getUser(req, res, match) {
+    if (this.checkConfiguredError('getUser', res)) return;
+    
+    // Check for authorization header
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return this.sendResponse(res, 401, {
+        message: 'Requires authentication',
+        documentation_url: 'https://docs.github.com/rest/users/users#get-the-authenticated-user'
+      });
+    }
+    
+    // Return authenticated user info (reviewer1 so they match comments in test data)
+    const userData = {
+      login: 'reviewer1',
+      id: 201,
+      node_id: 'U_kgDOReviewer1',
+      avatar_url: 'https://avatars.githubusercontent.com/u/201?v=4',
+      gravatar_id: '',
+      url: 'https://api.github.com/users/reviewer1',
+      html_url: 'https://github.com/reviewer1',
+      followers_url: 'https://api.github.com/users/reviewer1/followers',
+      following_url: 'https://api.github.com/users/reviewer1/following{/other_user}',
+      gists_url: 'https://api.github.com/users/reviewer1/gists{/gist_id}',
+      starred_url: 'https://api.github.com/users/reviewer1/starred{/owner}{/repo}',
+      subscriptions_url: 'https://api.github.com/users/reviewer1/subscriptions',
+      organizations_url: 'https://api.github.com/users/reviewer1/orgs',
+      repos_url: 'https://api.github.com/users/reviewer1/repos',
+      events_url: 'https://api.github.com/users/reviewer1/events{/privacy}',
+      received_events_url: 'https://api.github.com/users/reviewer1/received_events',
+      type: 'User',
+      site_admin: false,
+      name: 'Reviewer One',
+      company: null,
+      blog: '',
+      location: 'Test Location',
+      email: 'reviewer1@example.com',
+      hireable: null,
+      bio: 'Test reviewer for GH Quick Review',
+      twitter_username: null,
+      public_repos: 0,
+      public_gists: 0,
+      followers: 0,
+      following: 0,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: new Date().toISOString()
+    };
+    
+    this.sendResponse(res, 200, userData);
   }
 
   listPulls(req, res, match) {
@@ -812,6 +875,84 @@ class GitHubMockServer {
     this.sendResponse(res, 204, null);
   }
 
+  handleGraphQL(req, res, match) {
+    if (this.checkConfiguredError('handleGraphQL', res)) return;
+    
+    this.readBody(req, (body) => {
+      const { query } = body;
+      
+      if (!query) {
+        return this.sendResponse(res, 400, {
+          errors: [{
+            message: 'Query is required',
+            extensions: { code: 'BAD_USER_INPUT' }
+          }]
+        });
+      }
+      
+      // Parse the mutation to determine action
+      if (query.includes('resolveReviewThread')) {
+        // Extract thread ID from mutation
+        const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
+        if (!threadIdMatch) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'threadId is required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const threadId = threadIdMatch[1];
+        
+        // Return success response for resolve
+        this.sendResponse(res, 200, {
+          data: {
+            resolveReviewThread: {
+              thread: {
+                id: threadId,
+                isResolved: true
+              }
+            }
+          }
+        });
+      } else if (query.includes('unresolveReviewThread')) {
+        // Extract thread ID from mutation
+        const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
+        if (!threadIdMatch) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'threadId is required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const threadId = threadIdMatch[1];
+        
+        // Return success response for unresolve
+        this.sendResponse(res, 200, {
+          data: {
+            unresolveReviewThread: {
+              thread: {
+                id: threadId,
+                isResolved: false
+              }
+            }
+          }
+        });
+      } else {
+        // Unknown GraphQL operation
+        this.sendResponse(res, 400, {
+          errors: [{
+            message: 'Unknown GraphQL operation',
+            extensions: { code: 'GRAPHQL_VALIDATION_FAILED' }
+          }]
+        });
+      }
+    });
+  }
+
   readBody(req, callback) {
     let body = '';
     req.on('data', chunk => {
@@ -875,6 +1016,7 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
     const actualPort = server.address().port;
     console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
     console.log(`\nAvailable endpoints:`);
+    console.log(`  GET    /user`);
     console.log(`  GET    /user/repos`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls`);
     console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
@@ -884,6 +1026,7 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
     console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
     console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
     console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
+    console.log(`  POST   /graphql`);
     console.log(`\nPress Ctrl+C to stop\n`);
   });
   

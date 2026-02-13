@@ -339,7 +339,12 @@
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["file", "dir", "symlink", "submodule"]
+                      "enum": [
+                        "file",
+                        "dir",
+                        "symlink",
+                        "submodule"
+                      ]
                     },
                     "content": {
                       "type": "string",
@@ -719,6 +724,75 @@
           "enabledForGitHubApps": true,
           "category": "pulls",
           "subcategory": "comments"
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "summary": "Get the authenticated user",
+        "description": "Returns information about the authenticated user",
+        "tags": [
+          "users"
+        ],
+        "operationId": "users/get-authenticated",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Requires authentication"
+          }
+        }
+      }
+    },
+    "/graphql": {
+      "post": {
+        "summary": "GraphQL API endpoint",
+        "description": "Execute GraphQL queries and mutations for resolving/unresolving review threads",
+        "tags": [
+          "graphql"
+        ],
+        "operationId": "graphql/execute",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "variables": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
         }
       }
     }
