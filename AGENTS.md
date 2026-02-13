@@ -305,33 +305,62 @@ npm run test:playwright -- my-bug.spec.js
 
 **Integration Tests** (Playwright): Run with `npm run test:playwright`
    - End-to-end browser tests located in `/tests/playwright/`
-   - **Mock Server**: Available via `MockServerManager` in `/tests/playwright/mock-server-manager.js`
-     - **CRITICAL**: Each test MUST start its own instance of the mock server
-     - **CRITICAL**: Tests MUST run in serial (one at a time, workers: 1 in playwright.config.js)
-     - **CRITICAL**: Each test MUST stand up the server, run the test, then stop/release it
-     - **CRITICAL**: All tests use the SAME fixed port (3000) since they run serially
-     - **DO NOT** set up the mock server globally in `beforeEach`/`afterEach` for all tests
-     - **DO NOT** pollute the mock server state between tests
+   - **Mock Server**: Shared mock server managed by Playwright's `webServer` config
+     - **CRITICAL**: The mock server runs at port 3000 and is shared across parallel tests
+     - **CRITICAL**: Most tests run in PARALLEL (tagged `@parallel`) and share the mock server
+     - **CRITICAL**: Tests that mutate API data (POST/PATCH/DELETE) OR modify mock server config (e.g., `setConfig()` for latency/errors) MUST be tagged `@serial` to run serially
+     - **CRITICAL**: Tests that only read data (GET requests) and don't modify server config CAN be tagged `@parallel`
+     - **CRITICAL**: Tests use `MockServerManager` for heartbeat checks, reset, and config only
+     - **DO NOT** call `mockServer.start()` or `mockServer.stop()` - the server is managed by Playwright
+     - **DO NOT** pollute the mock server state between tests - use `mockServer.reset()` when needed (serial tests only)
      - **ONLY** the mock server should be mocked - everything else must be real end-to-end
      - **Environment**: Tests use `.env.test` which sets `VITE_GITHUB_API_URL=http://localhost:3000`
-     - Example:
+     - **Parallel Test Example** (most tests):
        ```javascript
-       test('my test', async ({ page }) => {
-         const mockServer = new MockServerManager();
-         const port = await mockServer.start(null, 3000); // Fixed port 3000
-         try {
-           // Navigate and interact with the real app
-           // The app will use http://localhost:3000 from .env.test
-           await page.goto('/GH-Quick-Review/');
-           // ... test interactions ...
-         } finally {
-           await mockServer.stop();
-         }
+       test.describe('My Feature', { tag: '@parallel' }, () => {
+         test('my test', async ({ page }) => {
+           const mockServer = new MockServerManager();
+           await mockServer.checkHeartbeat(); // Verify shared server is running
+           
+           try {
+             // Navigate and interact with the real app
+             await page.goto('/GH-Quick-Review/');
+             // ... test interactions ...
+           } finally {
+             await mockServer.stop(); // No-op, but kept for compatibility
+           }
+         });
+       });
+       ```
+     - **Serial Test Example** (tests that modify server config):
+       ```javascript
+       test.describe('My Feature - Server Config Tests', { tag: '@serial' }, () => {
+         test('my test with custom config', async ({ page }) => {
+           const mockServer = new MockServerManager();
+           await mockServer.checkHeartbeat();
+           await mockServer.setConfig({ latency: 1000, errors: { listPulls: 500 } });
+           
+           try {
+             // Navigate and interact
+             await page.goto('/GH-Quick-Review/');
+             // ... test interactions ...
+           } finally {
+             await mockServer.reset(); // Reset server config to default
+             await mockServer.stop(); // No-op, but kept for compatibility
+           }
+         });
        });
        ```
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
    - **CRITICAL**: There is NO such thing as "pre-existing test failures" - if tests fail, YOU broke them or didn't install Playwright browsers correctly. Always install browsers first and ensure ALL tests pass.
+   - **Test Selectors**:
+     - **ALWAYS** use explicit selectors: `data-testid`, `getByRole()`, `getByLabel()`, or unique identifiers
+     - **NEVER** use brittle selectors like `nth()`, `first()`, `last()` - these break when UI order changes
+     - **When writing tests**: If no explicit selector exists, ADD a `data-testid` attribute to the component
+     - **Example - WRONG**: `page.getByRole('textbox').nth(1)` - breaks if element order changes
+     - **Example - CORRECT**: `page.getByTestId('review-comment-textarea')` - explicit and stable
+     - Adding test IDs is acceptable and encouraged for testability
 
 **When asked to run tests, run integration tests with `npm run test:playwright`.** Unit tests are NOT used in this project.
 
