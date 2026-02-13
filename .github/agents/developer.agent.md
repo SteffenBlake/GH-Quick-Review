@@ -573,19 +573,6 @@ This project uses **Playwright integration tests ONLY**.
      - ❌ Skip tests or mark them as "flaky"
      - ❌ Assume the test is wrong without investigation
      - ❌ Make random changes hoping something will work
-     
-     **Example workflow:**
-     ```bash
-     # 1. Run single test
-     npm run test:playwright -- auth.spec.js
-     # Observe: "Error: locator.click: Timeout 5000ms exceeded"
-     
-     # 2. Read auth.spec.js to understand what it's doing
-     # 3. Set up servers and use MCP tools to reproduce
-     # 4. Discover: button selector changed from '.login-btn' to '.auth-button'
-     # 5. Fix: Update test selector OR fix the component if it was a mistake
-     # 6. Re-run test and verify it passes
-     ```
 
 ### Nerd Font Icons
 
@@ -653,3 +640,7 @@ ps aux | grep "vite" | grep -v grep | awk '{print $2}'
 # Kill specific PIDs (replace with actual PIDs)
 kill <mock_server_pid> <vite_pid>
 ```
+
+MOST CRITICAL OF ALL!!!!!
+EVERYTIME YOU MAKE CHANGES TO FILES, YOU MUST ASK YOURSELF THIS, OUT LOUD, IN THE ACTUAL CHAT:
+"WAIT, was that stupid or lazy?"
