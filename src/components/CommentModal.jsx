@@ -11,6 +11,13 @@ import {
   selectedCommentLocation,
   hideCommentModal 
 } from '../stores/commentModalStore';
+import {
+  useComments,
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+} from '../stores/commentsStore';
+import { selectedPr } from '../stores/selectedPrStore';
 
 // Icon constants
 const ICON_PENCIL = '\udb81\ude4f';
@@ -25,10 +32,13 @@ export function CommentModal() {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState('');
 
-  // Don't render if modal is not visible
-  if (!isCommentModalVisible.value) {
-    return null;
-  }
+  // Fetch all comments for the PR
+  const { data: allComments = [] } = useComments();
+  
+  // Mutations
+  const createComment = useCreateComment();
+  const updateComment = useUpdateComment();
+  const deleteComment = useDeleteComment();
 
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
@@ -42,9 +52,38 @@ export function CommentModal() {
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    // TODO: Implement comment submission via TanStack Query mutation
-    console.log('Submit comment:', commentText);
-    setCommentText('');
+    if (!commentText.trim() || !selectedPr.value) return;
+
+    try {
+      if (isNewComment) {
+        // Create new comment at specific line
+        await createComment.mutateAsync({
+          body: commentText,
+          commitId: selectedPr.value.head.sha,
+          path: selectedCommentLocation.value.filename,
+          line: selectedCommentLocation.value.lineNumber,
+          side: 'RIGHT',
+        });
+      } else {
+        // Reply to existing thread (create comment in response to first comment)
+        const threadComments = selectedCommentChain.value?.comments || [];
+        if (threadComments.length > 0) {
+          await createComment.mutateAsync({
+            body: commentText,
+            commitId: selectedPr.value.head.sha,
+            path: selectedCommentChain.value.filename,
+            line: selectedCommentChain.value.lineNumber,
+            side: 'RIGHT',
+            in_reply_to: threadComments[0].id,
+          });
+        }
+      }
+      setCommentText('');
+      hideCommentModal();
+    } catch (error) {
+      console.error('Failed to submit comment:', error);
+      alert('Failed to submit comment. Please try again.');
+    }
   };
 
   const handleCancel = () => {
@@ -53,8 +92,8 @@ export function CommentModal() {
   };
 
   const handleResolve = async () => {
-    // TODO: Implement resolve via TanStack Query mutation
-    console.log('Resolve comment chain');
+    // TODO: Implement resolve via GitHub API (requires review API)
+    console.log('Resolve comment thread');
     hideCommentModal();
   };
 
@@ -69,36 +108,31 @@ export function CommentModal() {
   };
 
   const handleSubmitEdit = async (commentId) => {
-    // TODO: Implement edit via TanStack Query mutation
-    console.log('Update comment:', commentId, editText);
-    setEditingCommentId(null);
-    setEditText('');
-  };
+    if (!editText.trim()) return;
 
-  const handleDeleteComment = async (commentId) => {
-    // TODO: Implement delete via TanStack Query mutation
-    if (confirm('Are you sure you want to delete this comment?')) {
-      console.log('Delete comment:', commentId);
+    try {
+      await updateComment.mutateAsync({ commentId, body: editText });
+      setEditingCommentId(null);
+      setEditText('');
+    } catch (error) {
+      console.error('Failed to update comment:', error);
+      alert('Failed to update comment. Please try again.');
     }
   };
 
-  // Mock data for demonstration - will be replaced with real data from store
-  const mockComments = hasCommentChain ? [
-    {
-      id: 1,
-      user: { login: 'testuser', avatar_url: '' },
-      body: 'This is a test comment',
-      created_at: '2024-01-01T00:00:00Z',
-      isCurrentUser: true,
-    },
-    {
-      id: 2,
-      user: { login: 'otheruser', avatar_url: '' },
-      body: 'This is a reply to the comment',
-      created_at: '2024-01-01T01:00:00Z',
-      isCurrentUser: false,
-    },
-  ] : [];
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      await deleteComment.mutateAsync({ commentId });
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+      alert('Failed to delete comment. Please try again.');
+    }
+  };
+
+  // Get comments for the current thread
+  const threadComments = hasCommentChain ? (selectedCommentChain.value?.comments || []) : [];
 
   return (
     <div 
@@ -123,9 +157,9 @@ export function CommentModal() {
         </div>
 
         {/* Comment chain (scrollable) */}
-        {hasCommentChain && (
+        {hasCommentChain && threadComments.length > 0 && (
           <div className="comment-modal-thread">
-            {mockComments.map((comment) => (
+            {threadComments.map((comment) => (
               <div key={comment.id} className="comment-item">
                 <div className="comment-item-header">
                   <span className="comment-item-author">{comment.user.login}</span>
