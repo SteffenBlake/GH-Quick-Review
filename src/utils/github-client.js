@@ -121,6 +121,44 @@ class GitHubClient {
   }
 
   /**
+   * Get the authenticated user
+   * @returns {Promise<Object>} - User object
+   */
+  async getUser() {
+    return this.get('/user');
+  }
+
+  /**
+   * Execute a GraphQL query or mutation
+   * @param {string} query - GraphQL query/mutation string
+   * @param {Object} variables - Variables for the query/mutation
+   * @returns {Promise<Object>} - GraphQL response with data or errors
+   */
+  async graphql(query, variables = {}) {
+    return this.post('/graphql', { query, variables });
+  }
+
+  /**
+   * Resolve a review thread
+   * @param {string} threadId - Thread ID to resolve
+   * @returns {Promise<Object>} - GraphQL response
+   */
+  async resolveReviewThread(threadId) {
+    const mutation = `mutation { resolveReviewThread(input: {threadId: "${threadId}"}) { thread { id isResolved } } }`;
+    return this.graphql(mutation);
+  }
+
+  /**
+   * Unresolve a review thread
+   * @param {string} threadId - Thread ID to unresolve
+   * @returns {Promise<Object>} - GraphQL response
+   */
+  async unresolveReviewThread(threadId) {
+    const mutation = `mutation { unresolveReviewThread(input: {threadId: "${threadId}"}) { thread { id isResolved } } }`;
+    return this.graphql(mutation);
+  }
+
+  /**
    * List pull requests for a repository
    * @param {string} repo - Full repository name (e.g., 'owner/repo')
    * @returns {Promise<Array>} - Array of pull request objects

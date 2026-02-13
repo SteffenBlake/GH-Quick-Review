@@ -17,6 +17,7 @@ import {
   useUpdateComment,
   useDeleteComment,
 } from '../stores/commentsStore';
+import { useCurrentUser } from '../stores/userStore';
 import { selectedPr } from '../stores/selectedPrStore';
 
 // Icon constants
@@ -34,6 +35,9 @@ export function CommentModal() {
 
   // Fetch all comments for the PR
   const { data: allComments = [] } = useComments();
+  
+  // Fetch current user
+  const { data: currentUser } = useCurrentUser();
   
   // Mutations
   const createComment = useCreateComment();
@@ -133,6 +137,12 @@ export function CommentModal() {
 
   // Get comments for the current thread
   const threadComments = hasCommentChain ? (selectedCommentChain.value?.comments || []) : [];
+  
+  // Map comments to add isCurrentUser flag
+  const commentsWithUserFlag = threadComments.map(comment => ({
+    ...comment,
+    isCurrentUser: currentUser && comment.user.login === currentUser.login
+  }));
 
   return (
     <div 
@@ -157,9 +167,9 @@ export function CommentModal() {
         </div>
 
         {/* Comment chain (scrollable) */}
-        {hasCommentChain && threadComments.length > 0 && (
+        {hasCommentChain && commentsWithUserFlag.length > 0 && (
           <div className="comment-modal-thread">
-            {threadComments.map((comment) => (
+            {commentsWithUserFlag.map((comment) => (
               <div key={comment.id} className="comment-item">
                 <div className="comment-item-header">
                   <span className="comment-item-author">{comment.user.login}</span>

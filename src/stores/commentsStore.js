@@ -18,8 +18,10 @@ export function useComments() {
     queryFn: async () => {
       if (!selectedRepo.value || !selectedPr.value) return [];
       
-      const [owner, repo] = selectedRepo.value.full_name.split('/');
-      return await githubClient.listComments(owner, repo, selectedPr.value.number);
+      return await githubClient.listPullComments(
+        selectedRepo.value.full_name,
+        selectedPr.value.number
+      );
     },
     enabled: !!selectedRepo.value && !!selectedPr.value,
   });
@@ -37,16 +39,10 @@ export function useCreateComment() {
         throw new Error('No PR selected');
       }
       
-      const [owner, repo] = selectedRepo.value.full_name.split('/');
-      return await githubClient.createComment(
-        owner,
-        repo,
+      return await githubClient.createPullComment(
+        selectedRepo.value.full_name,
         selectedPr.value.number,
-        body,
-        commitId,
-        path,
-        line,
-        side
+        { body, commit_id: commitId, path, line, side }
       );
     },
     onSuccess: () => {
@@ -70,8 +66,11 @@ export function useUpdateComment() {
         throw new Error('No repo selected');
       }
       
-      const [owner, repo] = selectedRepo.value.full_name.split('/');
-      return await githubClient.updateComment(owner, repo, commentId, body);
+      return await githubClient.updatePullComment(
+        selectedRepo.value.full_name,
+        commentId,
+        { body }
+      );
     },
     onSuccess: () => {
       // Invalidate comments query to refetch
@@ -94,8 +93,7 @@ export function useDeleteComment() {
         throw new Error('No repo selected');
       }
       
-      const [owner, repo] = selectedRepo.value.full_name.split('/');
-      return await githubClient.deleteComment(owner, repo, commentId);
+      return await githubClient.deletePullComment(selectedRepo.value.full_name, commentId);
     },
     onSuccess: () => {
       // Invalidate comments query to refetch
