@@ -184,7 +184,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await replyTextarea.fill('This is a reply to the thread');
       
       // Submit the reply
-      await page.getByRole('button', { name: 'Reply' }).click();
+      await page.getByRole('button', { name: 'Add Comment and start review' }).click();
       
       // Modal should close
       await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
