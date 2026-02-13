@@ -118,6 +118,21 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Edit form should close
       await expect(editTextarea).not.toBeVisible({ timeout: 1000 });
       
+      // BUG #1: Modal should STAY OPEN (remain focused) after editing
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+      
+      // Comment should show updated text (in view mode, not edit mode)
+      await expect(page.locator('.comment-item-body').first()).toContainText('This is an updated comment');
+      
+      // Close the modal by clicking the Cancel button in the comment form
+      await page.locator('.comment-modal-cancel-btn').click();
+      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+      
+      // BUG #2: Modal should be able to RE-OPEN after editing
+      await messageButton.click();
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+      await expect(page.locator('.comment-item-body').first()).toContainText('This is an updated comment');
+      
       // Success! No error should be shown
     } finally {
       await mockServer.reset(); // Reset data for next test
