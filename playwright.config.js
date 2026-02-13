@@ -43,7 +43,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: undefined, // Set per-project
-  maxFailures: 1, // Stop immediately on first failure for faster feedback
+  maxFailures: undefined, // Run all tests, don't stop on first failure
   reporter: [
     ['./tests/playwright/custom-reporter.js'],
     ['list'], // Keep list reporter for CI
@@ -61,7 +61,7 @@ export default defineConfig({
       grep: /@parallel/,
       use: { ...devices['Desktop Chrome'] },
       fullyParallel: true,
-      workers: 4, // Run 4 parallel workers for read-only tests
+      workers: 8, // Start with 8 workers, will test different counts
     },
     {
       name: 'serial-tests',
@@ -74,22 +74,14 @@ export default defineConfig({
   ],
   webServer: [
     {
-      // Start the mock server ONCE for all tests
       command: 'node tools/gh-mock-server.js tools/test_user 3000',
       port: 3000,
-      timeout: 10000,
       reuseExistingServer: !process.env.CI,
-      stdout: 'ignore',
-      stderr: 'pipe',
     },
     {
-      // Start the Vite dev server
       command: 'npm run dev -- --mode test',
       url: 'http://localhost:5173',
-      timeout: 30000,
       reuseExistingServer: !process.env.CI,
-      stdout: 'ignore',
-      stderr: 'pipe',
     },
   ],
 });
