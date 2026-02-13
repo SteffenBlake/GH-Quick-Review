@@ -110,7 +110,7 @@ function getCodeContent(line) {
  * @param {boolean} props.hasComments - Whether this line has comments
  * @param {Function} props.onClick - Click handler
  */
-export function DiffLine({ line, lineNumber, index, filename, isSelected, hasComments, onClick }) {
+export function DiffLine({ line, lineNumber, index, filename, isSelected, hasComments, commentChain, onClick }) {
   const lineInfo = getLineType(line);
   const codeContent = getCodeContent(line);
   const isHunkHeader = lineInfo.type === 'hunk';
@@ -124,9 +124,10 @@ export function DiffLine({ line, lineNumber, index, filename, isSelected, hasCom
   const handleMessageClick = (e) => {
     e.stopPropagation(); // Prevent line selection
     if (hasMessage) {
-      // TODO: Pass actual comment chain data
-      showCommentModal({ filename, lineNumber, comments: [] });
+      // Show existing comment chain
+      showCommentModal({ filename, lineNumber, comments: commentChain });
     } else {
+      // Create new comment
       showNewCommentModal(filename, lineNumber);
     }
   };

@@ -18,7 +18,7 @@ import {
   useDeleteComment,
 } from '../stores/commentsStore';
 import { useCurrentUser } from '../stores/userStore';
-import { selectedPr } from '../stores/selectedPrStore';
+import { usePrData } from '../stores/prDataStore';
 
 // Icon constants
 const ICON_PENCIL = '\udb81\ude4f';
@@ -35,6 +35,9 @@ export function CommentModal() {
 
   // Fetch all comments for the PR
   const { data: allComments = [] } = useComments();
+  
+  // Fetch PR data to get head SHA
+  const { data: prData } = usePrData();
   
   // Fetch current user
   const { data: currentUser } = useCurrentUser();
@@ -56,14 +59,16 @@ export function CommentModal() {
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!commentText.trim() || !selectedPr.value) return;
+    if (!commentText.trim() || !prData?.pull) return;
 
     try {
+      const commitSha = prData.pull.head.sha;
+      
       if (isNewComment) {
         // Create new comment at specific line
         await createComment.mutateAsync({
           body: commentText,
-          commitId: selectedPr.value.head.sha,
+          commitId: commitSha,
           path: selectedCommentLocation.value.filename,
           line: selectedCommentLocation.value.lineNumber,
           side: 'RIGHT',
@@ -74,7 +79,7 @@ export function CommentModal() {
         if (threadComments.length > 0) {
           await createComment.mutateAsync({
             body: commentText,
-            commitId: selectedPr.value.head.sha,
+            commitId: commitSha,
             path: selectedCommentChain.value.filename,
             line: selectedCommentChain.value.lineNumber,
             side: 'RIGHT',
