@@ -4,8 +4,8 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Comment Management', { tag: '@serial' }, () => {
   test('should successfully create a new comment on a line', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
-      await mockServer.checkHeartbeat();
+    mockServer.port = 3000; // Use globally started mock server
+    await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -57,13 +57,15 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Success! No error should be shown
       // If we got this far without an alert dialog, the comment was created successfully
     } finally {
+      await mockServer.reset(); // Reset data for next test
       await mockServer.stop();
     }
   });
 
   test('should successfully edit an existing comment', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
+    await mockServer.checkHeartbeat();
       await mockServer.checkHeartbeat();
     
     try {
@@ -120,13 +122,15 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       
       // Success! No error should be shown
     } finally {
+      await mockServer.reset(); // Reset data for next test
       await mockServer.stop();
     }
   });
 
   test('should successfully reply to an existing comment thread', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
+    await mockServer.checkHeartbeat();
       await mockServer.checkHeartbeat();
     
     try {
@@ -175,6 +179,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       
       // Success! No error should be shown
     } finally {
+      await mockServer.reset(); // Reset data for next test
       await mockServer.stop();
     }
   });

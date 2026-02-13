@@ -475,6 +475,20 @@ class GitHubMockServer {
         handler: (req, res) => this.sendResponse(res, 200, { status: 'ok', timestamp: Date.now() })
       },
       {
+        // Reset: POST /reset - reload test data from disk (for serial tests)
+        pattern: /^\/reset$/,
+        method: 'POST',
+        handler: (req, res) => {
+          try {
+            this.loadUserData();
+            this.repoDataCache.clear();
+            this.sendResponse(res, 200, { status: 'ok', message: 'Test data reloaded' });
+          } catch (error) {
+            this.sendResponse(res, 500, { error: 'Failed to reset', message: error.message });
+          }
+        }
+      },
+      {
         // Get authenticated user: GET /user
         pattern: /^\/user$/,
         method: 'GET',

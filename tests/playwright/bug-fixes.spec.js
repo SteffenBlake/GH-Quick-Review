@@ -6,7 +6,7 @@ const BASE_URL = '/GH-Quick-Review/';
 test.describe('Bug Fixes - Directory Scrolling and Comment Icons', { tag: '@parallel' }, () => {
   test('should show MessageAlert icon on lines with comments', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
     
     try {
       // Check heartbeat FIRST to fail fast if server is broken
@@ -48,7 +48,7 @@ test.describe('Bug Fixes - Directory Scrolling and Comment Icons', { tag: '@para
 
   test('should show MessageAlert always, MessagePlus only on hover', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
     
     try {
       await page.goto(BASE_URL);

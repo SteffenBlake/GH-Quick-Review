@@ -8,7 +8,7 @@ const FOCUS_DELAY = 100; // Time to wait for focus effects
 test.describe('Directory Browser Fixes', { tag: '@parallel' }, () => {
   test('should NOT auto-focus on page reload when PR already selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -51,7 +51,7 @@ test.describe('Directory Browser Fixes', { tag: '@parallel' }, () => {
 
   test('should collapse when clicking the collapse button', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -94,7 +94,7 @@ test.describe('Directory Browser Fixes', { tag: '@parallel' }, () => {
 
   test('toggle button should have blue highlight on hover, not turn black', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

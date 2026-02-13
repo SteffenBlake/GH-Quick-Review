@@ -4,7 +4,7 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should not show pulls dropdown when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -21,7 +21,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should show greyed out dropdown when no repo is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -85,7 +85,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should display PRs dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -179,7 +179,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should allow selecting a PR from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -220,7 +220,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should persist selected PR across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -266,7 +266,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should clear selected PR when repo changes', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -318,7 +318,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should clear selected PR on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -372,7 +372,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should truncate long PR titles with CSS', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -418,7 +418,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should re-enable PR dropdown when repo is selected after being disabled', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

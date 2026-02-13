@@ -8,7 +8,7 @@ const FOCUS_DELAY = 100; // Time to wait for focus effects
 test.describe('Directory Browser', { tag: '@parallel' }, () => {
   test('should not be visible when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -25,7 +25,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should not be visible when logged in but no PR selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -45,7 +45,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should expand when PR is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -70,7 +70,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should show expand button when collapsed', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -106,7 +106,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should collapse when clicking outside', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -144,7 +144,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should expand when expand button is clicked', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -180,7 +180,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should re-expand when PR selection changes', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -215,7 +215,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should be positioned at 20% down from viewport top', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = await mockServer.start(null, 3000);
+    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -254,7 +254,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should show directory menu button with proper styling', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -287,7 +287,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should open dropdown menu and show settings options', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -321,7 +321,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should persist Start Collapsed setting in localStorage', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -350,7 +350,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should persist Auto Expand setting in localStorage', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -379,7 +379,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should clear directory settings on logout', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -408,7 +408,7 @@ test.describe('Directory Browser', { tag: '@parallel' }, () => {
 
   test('should display checkmark icon when setting is enabled', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000);
+    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
