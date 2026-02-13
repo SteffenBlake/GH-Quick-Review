@@ -14,13 +14,13 @@ import { githubClient } from '../utils/github-client';
  */
 export function useComments() {
   return useQuery({
-    queryKey: ['comments', selectedRepo.value?.full_name, selectedPr.value?.number],
+    queryKey: ['comments', selectedRepo.value, selectedPr.value],
     queryFn: async () => {
       if (!selectedRepo.value || !selectedPr.value) return [];
       
       return await githubClient.listPullComments(
-        selectedRepo.value.full_name,
-        selectedPr.value.number
+        selectedRepo.value,
+        selectedPr.value
       );
     },
     enabled: !!selectedRepo.value && !!selectedPr.value,
@@ -40,15 +40,15 @@ export function useCreateComment() {
       }
       
       return await githubClient.createPullComment(
-        selectedRepo.value.full_name,
-        selectedPr.value.number,
+        selectedRepo.value,
+        selectedPr.value,
         { body, commit_id: commitId, path, line, side }
       );
     },
     onSuccess: () => {
       // Invalidate comments query to refetch
       queryClient.invalidateQueries({
-        queryKey: ['comments', selectedRepo.value?.full_name, selectedPr.value?.number]
+        queryKey: ['comments', selectedRepo.value, selectedPr.value]
       });
     },
   });
@@ -67,7 +67,7 @@ export function useUpdateComment() {
       }
       
       return await githubClient.updatePullComment(
-        selectedRepo.value.full_name,
+        selectedRepo.value,
         commentId,
         { body }
       );
@@ -75,7 +75,7 @@ export function useUpdateComment() {
     onSuccess: () => {
       // Invalidate comments query to refetch
       queryClient.invalidateQueries({
-        queryKey: ['comments', selectedRepo.value?.full_name, selectedPr.value?.number]
+        queryKey: ['comments', selectedRepo.value, selectedPr.value]
       });
     },
   });
@@ -93,12 +93,12 @@ export function useDeleteComment() {
         throw new Error('No repo selected');
       }
       
-      return await githubClient.deletePullComment(selectedRepo.value.full_name, commentId);
+      return await githubClient.deletePullComment(selectedRepo.value, commentId);
     },
     onSuccess: () => {
       // Invalidate comments query to refetch
       queryClient.invalidateQueries({
-        queryKey: ['comments', selectedRepo.value?.full_name, selectedPr.value?.number]
+        queryKey: ['comments', selectedRepo.value, selectedPr.value]
       });
     },
   });
