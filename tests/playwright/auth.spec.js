@@ -4,7 +4,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Authentication Flow', { tag: '@parallel' }, () => {
   test('should display login page when not authenticated', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server // Use shared server
     
     try {
       await mockServer.checkHeartbeat();
@@ -35,7 +34,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should save token to localStorage and show main content on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();
@@ -64,7 +62,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should trim whitespace from token before saving', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();
@@ -90,7 +87,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should not allow login with empty token', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();
@@ -118,7 +114,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should show logout button when authenticated', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();
@@ -136,7 +131,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should clear token and return to login page on logout', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();
@@ -164,7 +158,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should persist authentication across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();
@@ -193,7 +186,6 @@ test.describe('Authentication Flow', { tag: '@parallel' }, () => {
 
   test('should show login page if localStorage is cleared externally', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
     
     try {
       await mockServer.checkHeartbeat();

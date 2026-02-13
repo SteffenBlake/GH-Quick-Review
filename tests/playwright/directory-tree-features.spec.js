@@ -3,10 +3,40 @@ import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
 
+/**
+ * Ensures the directory browser is open. Opens it if it's currently closed.
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ */
+async function ensureDirectoryOpen(page) {
+  const dirBrowser = page.locator('.directory-browser');
+  const isOpen = await dirBrowser.evaluate((el) => {
+    // Check if the browser has focus-within (open state) by checking if any child has focus
+    return el.matches(':focus-within');
+  });
+  
+  if (!isOpen) {
+    await page.locator('.directory-browser-toggle').click();
+  }
+}
+
+/**
+ * Ensures the directory browser is closed. Closes it if it's currently open.
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ */
+async function ensureDirectoryClosed(page) {
+  const dirBrowser = page.locator('.directory-browser');
+  const isOpen = await dirBrowser.evaluate((el) => {
+    return el.matches(':focus-within');
+  });
+  
+  if (isOpen) {
+    await page.locator('.directory-browser-toggle').click();
+  }
+}
+
 test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, () => {
   test('should display nested directory structure with icons', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -23,16 +53,17 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       await expect(page.locator('.directory-browser')).toBeVisible();
       
       // Check that nested directories are visible
-      await expect(page.locator('text=src')).toBeVisible();
-      await expect(page.locator('text=styles')).toBeVisible();
-      await expect(page.locator('text=themes')).toBeVisible();
-      await expect(page.locator('text=utils')).toBeVisible();
-      await expect(page.locator('text=api')).toBeVisible();
+      // Use .entry-name to avoid matching file paths that contain the same text
+      await expect(page.locator('.entry-name:has-text("src")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("styles")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("themes")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("utils")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("api")').first()).toBeVisible();
       
       // Check that files are visible
-      await expect(page.locator('text=dark.css')).toBeVisible();
-      await expect(page.locator('text=client.ts')).toBeVisible();
-      await expect(page.locator('text=config.json')).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("dark.css")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("client.ts")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("config.json")').first()).toBeVisible();
     } finally {
       await mockServer.stop();
     }
@@ -40,7 +71,6 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
 
   test('should show git status indicators for files', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -58,7 +88,7 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       // Check for git status indicators
       const modifiedFiles = page.locator('.git-status:has-text("~")');
-      await expect(modifiedFiles).toHaveCount(2); // dark.css and client.ts are modified
+      await expect(modifiedFiles).toHaveCount(3); // config.json, dark.css and client.ts are modified
       
       const addedFiles = page.locator('.git-status:has-text("+")');
       await expect(addedFiles.first()).toBeVisible(); // Multiple new files
@@ -69,7 +99,6 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
 
   test('should collapse and expand directories when clicked', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -84,9 +113,12 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       await expect(page.locator('.directory-browser')).toBeVisible();
       
+      // Ensure the directory browser is open
+      await ensureDirectoryOpen(page);
+      
       // Initially, nested directories should be visible (expanded)
-      await expect(page.locator('text=themes')).toBeVisible();
-      await expect(page.locator('text=dark.css')).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("themes")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("dark.css")').first()).toBeVisible();
       
       // Click the styles directory to collapse it
       await page.locator('.directory-entry-content:has-text("styles")').first().click();
@@ -95,16 +127,16 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       await page.waitForTimeout(100);
       
       // themes and dark.css should no longer be visible
-      await expect(page.locator('text=themes')).not.toBeVisible();
-      await expect(page.locator('text=dark.css')).not.toBeVisible();
+      await expect(page.locator('.entry-name:has-text("themes")').first()).not.toBeVisible();
+      await expect(page.locator('.entry-name:has-text("dark.css")').first()).not.toBeVisible();
       
       // Click styles again to expand
       await page.locator('.directory-entry-content:has-text("styles")').first().click();
       await page.waitForTimeout(100);
       
       // Should be visible again
-      await expect(page.locator('text=themes')).toBeVisible();
-      await expect(page.locator('text=dark.css')).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("themes")').first()).toBeVisible();
+      await expect(page.locator('.entry-name:has-text("dark.css")').first()).toBeVisible();
     } finally {
       await mockServer.stop();
     }
@@ -112,7 +144,6 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
 
   test('should select a file when clicked and highlight it', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -126,6 +157,9 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       await page.reload();
       
       await expect(page.locator('.directory-browser')).toBeVisible();
+      
+      // Ensure the directory browser is open
+      await ensureDirectoryOpen(page);
       
       // Click on a file
       const clientTsEntry = page.locator('.directory-entry-content:has-text("client.ts")').first();
@@ -155,7 +189,6 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
 
   test('should show comment indicators for files with comments', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -181,7 +214,6 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
 
   test('should sort directories before files', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -196,16 +228,19 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       await expect(page.locator('.directory-browser')).toBeVisible();
       
+      // Ensure the directory browser is open
+      await ensureDirectoryOpen(page);
+      
       // Get all top-level entries
       const entries = page.locator('.directory-tree > .directory-entry');
       const firstEntry = entries.first();
       const lastEntry = entries.last();
       
-      // First entry should be the src directory (has a chevron)
-      await expect(firstEntry.locator('.chevron')).toBeVisible();
+      // First entry should be the src directory (has a chevron in its direct child .directory-entry-content)
+      await expect(firstEntry.locator('> .directory-entry-content > .chevron')).toBeVisible();
       
-      // Last entries should be files (no chevron)
-      await expect(lastEntry.locator('.chevron')).not.toBeVisible();
+      // Last entry should be a file (no chevron in its direct child .directory-entry-content)
+      await expect(lastEntry.locator('> .directory-entry-content > .chevron')).not.toBeVisible();
     } finally {
       await mockServer.stop();
     }
@@ -213,7 +248,6 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
 
   test('should display appropriate file icons for different file types', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

@@ -8,7 +8,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
   test('should apply highlight.js classes to code content', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -46,7 +45,6 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
 
   test('should have git icon column for all line types including hunk headers', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -94,7 +92,6 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
 
   test('should apply highlight theme background color to code content', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -118,7 +115,8 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
       await page.waitForSelector('.diff-viewer');
       
       // Check that code content has background color from theme
-      const codeElement = page.locator('.diff-line-code').first();
+      // The highlight.js theme applies background to the <code> element, not the <pre> element
+      const codeElement = page.locator('.diff-line-code code.hljs').first();
       await expect(codeElement).toBeVisible();
       
       const backgroundColor = await codeElement.evaluate(el => {
@@ -135,7 +133,6 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
 
   test('should update syntax highlighting when theme changes', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -159,7 +156,8 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
       await page.waitForSelector('.diff-viewer');
       
       // Get initial background color
-      const codeElement = page.locator('.diff-line-code').first();
+      // The highlight.js theme applies background to the <code> element, not the <pre> element
+      const codeElement = page.locator('.diff-line-code code.hljs').first();
       const initialBg = await codeElement.evaluate(el => {
         return window.getComputedStyle(el).backgroundColor;
       });

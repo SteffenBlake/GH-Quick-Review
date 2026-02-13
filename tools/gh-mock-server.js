@@ -482,9 +482,49 @@ class GitHubMockServer {
           try {
             this.loadUserData();
             this.repoDataCache.clear();
-            this.sendResponse(res, 200, { status: 'ok', message: 'Test data reloaded' });
+            // Also clear error configurations
+            const preserveOptions = { silent: this.silent };
+            Object.keys(this.config).forEach(key => {
+              if (key !== 'silent' && key !== 'latency') {
+                delete this.config[key];
+              }
+            });
+            this.latency = 0;
+            this.sendResponse(res, 200, { status: 'ok', message: 'Test data and config reloaded' });
           } catch (error) {
             this.sendResponse(res, 500, { error: 'Failed to reset', message: error.message });
+          }
+        }
+      },
+      {
+        // Configure errors/latency: POST /config - set error responses for endpoints (for serial tests)
+        pattern: /^\/config$/,
+        method: 'POST',
+        handler: async (req, res) => {
+          try {
+            let body = '';
+            for await (const chunk of req) {
+              body += chunk;
+            }
+            const config = JSON.parse(body);
+            
+            // Update error configurations
+            if (config.errors) {
+              Object.assign(this.config, config.errors);
+            }
+            
+            // Update latency
+            if (config.latency !== undefined) {
+              this.latency = config.latency;
+            }
+            
+            this.sendResponse(res, 200, { 
+              status: 'ok', 
+              message: 'Configuration updated',
+              config: { errors: this.config, latency: this.latency }
+            });
+          } catch (error) {
+            this.sendResponse(res, 400, { error: 'Invalid config', message: error.message });
           }
         }
       },

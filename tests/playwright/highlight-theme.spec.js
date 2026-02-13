@@ -8,7 +8,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Highlight Theme', { tag: '@parallel' }, () => {
   test('should display theme dropdown with default value', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -34,7 +33,6 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
   test('should allow selecting a different theme', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -61,7 +59,6 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
   test('should persist theme selection across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -85,7 +82,6 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
   test('should support fuzzy search in theme dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -112,7 +108,6 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
   test('should have all expected themes available', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

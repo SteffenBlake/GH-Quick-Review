@@ -4,7 +4,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Comment Management', { tag: '@serial' }, () => {
   test('should successfully create a new comment on a line', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
     await mockServer.checkHeartbeat();
     
     try {
@@ -64,7 +63,6 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
 
   test('should successfully edit an existing comment', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
     await mockServer.checkHeartbeat();
       await mockServer.checkHeartbeat();
     
@@ -129,7 +127,6 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
 
   test('should successfully reply to an existing comment thread', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
     await mockServer.checkHeartbeat();
       await mockServer.checkHeartbeat();
     

@@ -10,7 +10,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => {
   test('clicking a file in directory browser scrolls to that file', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -49,7 +48,6 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
   test('scrolling through files auto-selects them in directory browser', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -93,7 +91,6 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
   test('file card headers are sticky when scrolling', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -154,7 +151,6 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
   test('no feedback loop between click and scroll selection', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -175,7 +171,7 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
       
       // Click on example.js
       await page.getByRole('list').getByText('example.js').click();
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(500);
       
       // Get initial scroll position
       const initialScrollTop = await page.evaluate(() => {
@@ -185,7 +181,7 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
       
       // The scroll position should be relatively stable after the initial scroll animation
       // Wait a bit more to ensure no additional scrolling happens
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(500);
       
       const finalScrollTop = await page.evaluate(() => {
         const main = document.querySelector('main');

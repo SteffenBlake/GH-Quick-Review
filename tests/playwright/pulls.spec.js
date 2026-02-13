@@ -4,7 +4,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should not show pulls dropdown when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -21,7 +20,6 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should show greyed out dropdown when no repo is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -50,42 +48,8 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
     }
   });
 
-  test('should show loading spinner while fetching PRs', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { latency: 2000 });
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
-      
-      // Wait for repos dropdown to finish loading (latency is 2000ms)
-      const repoDropdown = page.locator('#repo-select');
-      await expect(repoDropdown).toBeVisible();
-      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
-      
-      // Select a repo
-      await repoDropdown.locator('.fuzzy-dropdown-control').click();
-      await repoDropdown.getByText('test_repo_1').click();
-      
-      // Should see loading spinner for PRs inside the PR dropdown (latency is 2000ms)
-      const prDropdown = page.locator('#pr-select');
-      await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
-      
-      // Wait for PRs to load - dropdown control should no longer be disabled
-      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
-    } finally {
-      await mockServer.stop();
-    }
-  });
-
   test('should display PRs dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -123,63 +87,8 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
     }
   });
 
-  test('should show error page when PRs fetch returns 500', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { listPulls: 500 });
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
-      
-      // Wait for repos dropdown and select a repo
-      const repoDropdown = page.locator('#repo-select');
-      await expect(repoDropdown).toBeVisible();
-      await repoDropdown.locator('.fuzzy-dropdown-control').click();
-      await repoDropdown.getByText('test_repo_1').click();
-      
-      // Should show error page
-      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
-      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
-    } finally {
-      await mockServer.stop();
-    }
-  });
-
-  test('should show error page when PRs fetch returns 401', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { listPulls: 401 });
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
-      
-      // Wait for repos dropdown and select a repo
-      const repoDropdown = page.locator('#repo-select');
-      await expect(repoDropdown).toBeVisible();
-      await repoDropdown.locator('.fuzzy-dropdown-control').click();
-      await repoDropdown.getByText('test_repo_1').click();
-      
-      // Should show error page
-      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
-      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
-    } finally {
-      await mockServer.stop();
-    }
-  });
-
   test('should allow selecting a PR from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -220,7 +129,6 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should persist selected PR across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -266,7 +174,6 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should clear selected PR when repo changes', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -318,7 +225,6 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should clear selected PR on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -372,7 +278,6 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should truncate long PR titles with CSS', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -418,7 +323,6 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should re-enable PR dropdown when repo is selected after being disabled', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -452,6 +356,102 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
       const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
       expect(options.length).toBe(2);
     } finally {
+      await mockServer.stop();
+    }
+  });
+});
+
+// Tests that modify mock server configuration must run serially
+test.describe('Pulls Dropdown - Server Config Tests', { tag: '@serial' }, () => {
+  test('should show loading spinner while fetching PRs', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ latency: 1000 });
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Wait for repos dropdown to finish loading
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 3000 });
+      
+      // Select a repo
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      // Should see loading spinner for PRs inside the PR dropdown
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
+      
+      // Wait for PRs to load - dropdown control should no longer be disabled
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 3000 });
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should show error page when PRs fetch returns 500', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listPulls: 500 } });
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Wait for repos dropdown and select a repo
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      // Should show error page
+      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
+      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should show error page when PRs fetch returns 401', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listPulls: 401 } });
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Wait for repos dropdown and select a repo
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+      
+      // Should show error page
+      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
+      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
+    } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
