@@ -955,6 +955,7 @@ body {
   display: flex;
   flex-direction: column;
   width: fit-content;
+  min-width: 100%;
 }
 
 /* Diff Line */
