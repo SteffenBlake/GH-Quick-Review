@@ -3,6 +3,37 @@ import { MockServerManager } from './mock-server-manager.js';
 
 const BASE_URL = '/GH-Quick-Review/';
 
+/**
+ * Ensures the directory browser is open. Opens it if it's currently closed.
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ */
+async function ensureDirectoryOpen(page) {
+  const dirBrowser = page.locator('.directory-browser');
+  const isOpen = await dirBrowser.evaluate((el) => {
+    // Check if the browser has focus-within (open state) by checking if any child has focus
+    return el.matches(':focus-within');
+  });
+  
+  if (!isOpen) {
+    await page.locator('.directory-browser-toggle').click();
+  }
+}
+
+/**
+ * Ensures the directory browser is closed. Closes it if it's currently open.
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ */
+async function ensureDirectoryClosed(page) {
+  const dirBrowser = page.locator('.directory-browser');
+  const isOpen = await dirBrowser.evaluate((el) => {
+    return el.matches(':focus-within');
+  });
+  
+  if (isOpen) {
+    await page.locator('.directory-browser-toggle').click();
+  }
+}
+
 test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, () => {
   test('should display nested directory structure with icons', async ({ page }) => {
     const mockServer = new MockServerManager();
@@ -85,12 +116,15 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       await expect(page.locator('.directory-browser')).toBeVisible();
       
+      // Ensure the directory browser is open
+      await ensureDirectoryOpen(page);
+      
       // Initially, nested directories should be visible (expanded)
       await expect(page.locator('.entry-name:has-text("themes")').first()).toBeVisible();
       await expect(page.locator('.entry-name:has-text("dark.css")').first()).toBeVisible();
       
-      // Click the styles directory to collapse it (force click as it might be outside viewport)
-      await page.locator('.directory-entry-content:has-text("styles")').first().click({ force: true });
+      // Click the styles directory to collapse it
+      await page.locator('.directory-entry-content:has-text("styles")').first().click();
       
       // Wait a moment for the collapse
       await page.waitForTimeout(100);
@@ -99,8 +133,8 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       await expect(page.locator('.entry-name:has-text("themes")').first()).not.toBeVisible();
       await expect(page.locator('.entry-name:has-text("dark.css")').first()).not.toBeVisible();
       
-      // Click styles again to expand (force click as it might be outside viewport)
-      await page.locator('.directory-entry-content:has-text("styles")').first().click({ force: true });
+      // Click styles again to expand
+      await page.locator('.directory-entry-content:has-text("styles")').first().click();
       await page.waitForTimeout(100);
       
       // Should be visible again
@@ -128,9 +162,12 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       await expect(page.locator('.directory-browser')).toBeVisible();
       
-      // Click on a file (force click as it might be outside viewport)
+      // Ensure the directory browser is open
+      await ensureDirectoryOpen(page);
+      
+      // Click on a file
       const clientTsEntry = page.locator('.directory-entry-content:has-text("client.ts")').first();
-      await clientTsEntry.click({ force: true });
+      await clientTsEntry.click();
       
       // Wait for selection
       await page.waitForTimeout(100);
@@ -138,9 +175,9 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       // Check that the file is now selected (has the .selected class)
       await expect(clientTsEntry).toHaveClass(/selected/);
       
-      // Click on another file (force click as it might be outside viewport)
+      // Click on another file
       const configJsonEntry = page.locator('.directory-entry-content:has-text("config.json")').first();
-      await configJsonEntry.click({ force: true });
+      await configJsonEntry.click();
       
       await page.waitForTimeout(100);
       
@@ -197,16 +234,19 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       await expect(page.locator('.directory-browser')).toBeVisible();
       
+      // Ensure the directory browser is open
+      await ensureDirectoryOpen(page);
+      
       // Get all top-level entries
       const entries = page.locator('.directory-tree > .directory-entry');
       const firstEntry = entries.first();
       const lastEntry = entries.last();
       
-      // First entry should be the src directory (has a chevron)
-      await expect(firstEntry.locator('.chevron')).toBeVisible();
+      // First entry should be the src directory (has a chevron in its direct child .directory-entry-content)
+      await expect(firstEntry.locator('> .directory-entry-content > .chevron')).toBeVisible();
       
-      // Last entries should be files (no chevron)
-      await expect(lastEntry.locator('.chevron')).not.toBeVisible();
+      // Last entry should be a file (no chevron in its direct child .directory-entry-content)
+      await expect(lastEntry.locator('> .directory-entry-content > .chevron')).not.toBeVisible();
     } finally {
       await mockServer.stop();
     }
