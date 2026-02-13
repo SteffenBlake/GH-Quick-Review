@@ -28,6 +28,7 @@ export function ReposDropdown() {
   return (
     <div className="repos-dropdown">
       <FuzzyDropdown
+        id="repo-select"
         value={selectedRepo.value}
         onChange={setSelectedRepo}
         options={options}

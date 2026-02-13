@@ -32,6 +32,7 @@ export function PullsDropdown() {
   return (
     <div className="pulls-dropdown">
       <FuzzyDropdown
+        id="pr-select"
         value={selectedPr.value}
         onChange={setSelectedPr}
         options={options}
