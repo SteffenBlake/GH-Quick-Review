@@ -1081,16 +1081,20 @@ body {
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 20000;
   outline: none;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.2s ease;
 }
 
-/* Show modal when it has focus-within */
-.comment-modal:focus-within {
-  display: flex;
+/* Hide modal when it loses focus */
+.comment-modal:not(:focus-within) {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .comment-modal-content {
