@@ -474,12 +474,19 @@ This project uses **Playwright integration tests ONLY**.
        - Use `bash` tool with `mode="async"` to run tests in background
        - While tests run, you can take screenshots, update docs, commit progress, etc.
        - Check test results later with `read_bash` using the shellId
+       - **🚨 CRITICAL: You CANNOT END THE SESSION until background tests FINISH and PASS! 🚨**
+         - If you start tests in background, you MUST wait for them to complete
+         - Use `read_bash` to check results every 30-60 seconds
+         - If tests fail, FIX the failures before ending session
+         - NEVER end a session with tests still running or with failing tests
        - Example workflow:
          ```
          1. Start tests: bash with mode="async": npm run test:playwright
          2. Do other work: take screenshots, update PR description
          3. Check results: read_bash with the shellId after 60-90 seconds
-         4. If tests fail, fix and repeat
+         4. Wait for completion: Keep checking until tests finish
+         5. If tests fail, fix and repeat
+         6. Only end session when ALL tests PASS
          ```
    
    - **Test Suite Execution Time**: The full test suite should NOT take more than 120 seconds to run

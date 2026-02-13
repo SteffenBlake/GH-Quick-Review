@@ -43,7 +43,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: [
+    ['./tests/playwright/custom-reporter.js'],
+    ['html', { open: 'never' }]
+  ],
   timeout: 10000, // 10 second test timeout
   use: {
     baseURL: 'http://localhost:5173',

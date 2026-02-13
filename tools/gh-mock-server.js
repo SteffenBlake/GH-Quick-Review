@@ -20,7 +20,14 @@ class GitHubMockServer {
     this.userDirPath = userDirPath;
     this.config = config;
     this.latency = config.latency || 0; // Artificial delay in ms
+    this.silent = config.silent || false; // Suppress console output
     this.loadUserData();
+  }
+
+  log(...args) {
+    if (!this.silent) {
+      console.log(...args);
+    }
   }
 
   loadUserData() {
@@ -32,7 +39,7 @@ class GitHubMockServer {
     // Cache for repo data (loaded on demand)
     this.repoDataCache = new Map();
     
-    console.log(`Loaded ${this.repos.length} repositories for user`);
+    this.log(`Loaded ${this.repos.length} repositories for user`);
   }
 
   /**
@@ -188,7 +195,7 @@ class GitHubMockServer {
     };
 
     this.repoDataCache.set(repoName, repoData);
-    console.log(`Loaded ${repoData.pulls.size} PRs, ${repoData.comments.size} comments, and ${repoData.reviews.size} reviews for ${repoName}`);
+    this.log(`Loaded ${repoData.pulls.size} PRs, ${repoData.comments.size} comments, and ${repoData.reviews.size} reviews for ${repoName}`);
     return repoData;
   }
 
@@ -207,7 +214,7 @@ class GitHubMockServer {
     
     // Handle timeout - don't respond at all
     if (errorConfig === 'timeout') {
-      console.log(`  → Configured to timeout (no response)`);
+      this.log(`  → Configured to timeout (no response)`);
       // Don't send any response - let it hang
       return true;
     }
@@ -252,7 +259,7 @@ class GitHubMockServer {
         documentation_url: 'https://docs.github.com/rest'
       };
       
-      console.log(`  → Configured to return ${errorConfig}`);
+      this.log(`  → Configured to return ${errorConfig}`);
       this.sendResponse(res, errorConfig, errorData);
       return true;
     }
@@ -457,7 +464,7 @@ class GitHubMockServer {
     const urlParts = url.split('?');
     const path = urlParts[0];
     
-    console.log(`${method} ${path}`);
+    this.log(`${method} ${path}`);
     
     // Route matching
     const routes = [
@@ -1175,11 +1182,15 @@ class GitHubMockServer {
 
 // Main execution
 function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000, config = {}) {
-  console.log(`Starting GitHub Mock Server...`);
-  console.log(`User directory: ${userDirPath}`);
-  console.log(`Port: ${port}`);
-  if (Object.keys(config).length > 0) {
-    console.log(`Error config:`, JSON.stringify(config, null, 2));
+  const silent = config.silent || false;
+  
+  if (!silent) {
+    console.log(`Starting GitHub Mock Server...`);
+    console.log(`User directory: ${userDirPath}`);
+    console.log(`Port: ${port}`);
+    if (Object.keys(config).length > 0 && !config.silent) {
+      console.log(`Error config:`, JSON.stringify(config, null, 2));
+    }
   }
   
   const mockServer = new GitHubMockServer(userDirPath, config);
@@ -1199,20 +1210,22 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
   
   server.listen(port, () => {
     const actualPort = server.address().port;
-    console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
-    console.log(`\nAvailable endpoints:`);
-    console.log(`  GET    /user`);
-    console.log(`  GET    /user/repos`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
-    console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
-    console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
-    console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
-    console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
-    console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
-    console.log(`  POST   /graphql`);
-    console.log(`\nPress Ctrl+C to stop\n`);
+    if (!silent) {
+      console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
+      console.log(`\nAvailable endpoints:`);
+      console.log(`  GET    /user`);
+      console.log(`  GET    /user/repos`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
+      console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
+      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
+      console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
+      console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
+      console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
+      console.log(`  POST   /graphql`);
+      console.log(`\nPress Ctrl+C to stop\n`);
+    }
   });
   
   const close = (callback) => {

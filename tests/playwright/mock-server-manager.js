@@ -14,9 +14,12 @@ export class MockServerManager {
   async start(userDirPath = null, port = 0, config = {}) {
     const testUserDir = userDirPath || resolve(__dirname, '../../tools/test_user');
     
+    // Always run in silent mode during tests to reduce output spam
+    const testConfig = { ...config, silent: true };
+    
     return new Promise((resolvePromise, reject) => {
       try {
-        const { server, close } = startServer(testUserDir, port, config);
+        const { server, close } = startServer(testUserDir, port, testConfig);
         
         server.on('listening', () => {
           const address = server.address();
