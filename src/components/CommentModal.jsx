@@ -6,7 +6,6 @@
 
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { 
-  isCommentModalVisible, 
   selectedCommentChain,
   selectedCommentLocation,
   hideCommentModal 
@@ -49,13 +48,15 @@ export function CommentModal() {
 
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
+  const isModalActive = hasCommentChain || isNewComment;
 
-  // Auto-focus the modal when it becomes visible
+  // Auto-focus the modal when it becomes active (when user triggers it to show)
+  // The CSS :focus-within handles visibility - focused = visible, not focused = hidden
   useEffect(() => {
-    if (isCommentModalVisible.value && modalRef.current) {
+    if (isModalActive && modalRef.current) {
       modalRef.current.focus();
     }
-  }, [isCommentModalVisible.value]);
+  }, [isModalActive]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
