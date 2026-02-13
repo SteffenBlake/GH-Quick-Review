@@ -30,9 +30,16 @@ test.describe('Comment Management', () => {
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
-      // Click on a line number to open comment modal
-      const lineNumber = page.locator('.line-number').first();
-      await lineNumber.click();
+      // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('.diff-viewer').click();
+      
+      // Hover over a line to reveal the message button
+      const diffLine = page.locator('.diff-line').first();
+      await diffLine.hover();
+      
+      // Click on a message button to open comment modal
+      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      await messageButton.click();
       
       // Modal should appear and be focused
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
@@ -82,16 +89,20 @@ test.describe('Comment Management', () => {
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
-      // Click on a comment icon to open existing thread
-      const commentIcon = page.locator('.comment-icon').first();
-      await commentIcon.click();
+      // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('.diff-viewer').click();
+      
+      // Click on a message button with existing comments to open thread
+      const messageButton = page.locator('.diff-line-message-btn.has-message').first();
+      await messageButton.click();
       
       // Modal should appear with existing comments
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       await expect(page.locator('.comment-item')).toBeVisible();
       
-      // Click edit button on the first comment (assuming user owns it based on test data)
+      // Wait for edit button to appear (requires user data to load first)
       const editButton = page.locator('.comment-edit-btn').first();
+      await expect(editButton).toBeVisible({ timeout: 5000 });
       await editButton.click();
       
       // Edit textarea should appear
@@ -101,8 +112,8 @@ test.describe('Comment Management', () => {
       // Modify the comment
       await editTextarea.fill('This is an updated comment');
       
-      // Click Save
-      await page.getByRole('button', { name: 'Save' }).click();
+      // Click Save (use .first() since there might be other Save buttons on the page)
+      await page.getByRole('button', { name: 'Save' }).first().click();
       
       // Edit form should close
       await expect(editTextarea).not.toBeVisible({ timeout: 1000 });
@@ -141,9 +152,12 @@ test.describe('Comment Management', () => {
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
       
-      // Click on a comment icon to open existing thread
-      const commentIcon = page.locator('.comment-icon').first();
-      await commentIcon.click();
+      // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('.diff-viewer').click();
+      
+      // Click on a message button with existing comments to open thread
+      const messageButton = page.locator('.diff-line-message-btn.has-message').first();
+      await messageButton.click();
       
       // Modal should appear with existing comments
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });

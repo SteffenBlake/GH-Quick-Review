@@ -293,6 +293,11 @@ test.describe('Pulls Dropdown', () => {
       // Verify PR selection
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
       
+      // Click on main content to unfocus directory browser (which auto-focuses on PR selection)
+      await page.locator('main').click();
+      // Wait for directory browser to slide out (transition is 0.3s)
+      await page.waitForTimeout(400);
+      
       // Change repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_2').click();

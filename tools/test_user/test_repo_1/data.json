@@ -131,8 +131,8 @@
       "commit_id": "abc123def456",
       "original_commit_id": "abc123def456",
       "user": {
-        "login": "reviewer2",
-        "id": 202,
+        "login": "reviewer1",
+        "id": 201,
         "type": "User"
       },
       "body": "Is `authTime` being used anywhere? If not, consider removing it to keep the middleware lean.",
