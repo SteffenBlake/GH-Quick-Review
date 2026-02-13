@@ -53,6 +53,9 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     actionTimeout: 1000, // 1s timeout - local mock server is FAST, anything longer indicates a bug
+    expect: {
+      timeout: 1000, // 1s timeout for expect assertions - consistent with actionTimeout
+    },
   },
   projects: [
     {
