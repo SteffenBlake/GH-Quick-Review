@@ -38,6 +38,35 @@ export class MockServerManager {
     });
   }
 
+  async checkHeartbeat() {
+    if (!this.port) {
+      throw new Error('Mock server not started - no port available');
+    }
+    
+    const url = `http://localhost:${this.port}/heartbeat`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 500); // 500ms timeout
+    
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      
+      if (!response.ok) {
+        throw new Error(`Heartbeat failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.status !== 'ok') {
+        throw new Error(`Heartbeat returned unexpected status: ${data.status}`);
+      }
+      
+      return true;
+    } catch (error) {
+      clearTimeout(timeout);
+      throw new Error(`Mock server heartbeat failed: ${error.message}`);
+    }
+  }
+
   async stop() {
     if (this.server && this.close) {
       return new Promise((resolve) => {

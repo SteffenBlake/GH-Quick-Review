@@ -9,6 +9,9 @@ test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
     await mockServer.start(null, 3000);
     
     try {
+      // Check heartbeat FIRST to fail fast if server is broken
+      await mockServer.checkHeartbeat();
+      
       await page.goto(BASE_URL);
       await page.evaluate(() => {
         localStorage.clear();

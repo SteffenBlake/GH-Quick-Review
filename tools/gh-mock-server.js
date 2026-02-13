@@ -469,6 +469,12 @@ class GitHubMockServer {
     // Route matching
     const routes = [
       {
+        // Heartbeat: GET /heartbeat - quick health check
+        pattern: /^\/heartbeat$/,
+        method: 'GET',
+        handler: (req, res) => this.sendResponse(res, 200, { status: 'ok', timestamp: Date.now() })
+      },
+      {
         // Get authenticated user: GET /user
         pattern: /^\/user$/,
         method: 'GET',
