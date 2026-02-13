@@ -1312,6 +1312,23 @@ body {
   justify-content: flex-end;
 }
 
+.comment-modal-submit-review-btn {
+  background-color: #fbbf24;
+  color: var(--bg-primary);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-right: auto;
+}
+
+.comment-modal-submit-review-btn:hover {
+  background-color: #f59e0b;
+}
+
 .comment-modal-cancel-btn {
   background-color: #6b7280;
   color: white;
