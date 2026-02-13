@@ -308,7 +308,8 @@ npm run test:playwright -- my-bug.spec.js
    - **Mock Server**: Shared mock server managed by Playwright's `webServer` config
      - **CRITICAL**: The mock server runs at port 3000 and is shared across parallel tests
      - **CRITICAL**: Most tests run in PARALLEL (tagged `@parallel`) and share the mock server
-     - **CRITICAL**: Only tests that modify mock server config (e.g., `setConfig()` for latency/errors) MUST be tagged `@serial` to run serially
+     - **CRITICAL**: Tests that mutate API data (POST/PATCH/DELETE) OR modify mock server config (e.g., `setConfig()` for latency/errors) MUST be tagged `@serial` to run serially
+     - **CRITICAL**: Tests that only read data (GET requests) and don't modify server config CAN be tagged `@parallel`
      - **CRITICAL**: Tests use `MockServerManager` for heartbeat checks, reset, and config only
      - **DO NOT** call `mockServer.start()` or `mockServer.stop()` - the server is managed by Playwright
      - **DO NOT** pollute the mock server state between tests - use `mockServer.reset()` when needed (serial tests only)

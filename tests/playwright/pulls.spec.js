@@ -364,6 +364,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 // Tests that modify mock server configuration must run serially
 test.describe('Pulls Dropdown - Server Config Tests', { tag: '@serial' }, () => {
   test('should show loading spinner while fetching PRs', async ({ page }) => {
+    test.setTimeout(10000); // Increase timeout for latency test
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ latency: 1000 });
