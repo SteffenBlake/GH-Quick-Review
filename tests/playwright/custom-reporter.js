@@ -40,10 +40,28 @@ class CustomReporter {
     // Log every 10 tests
     if (this.currentCount % 10 === 0 || this.currentCount === this.totalTests) {
       const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
+      
+      // Calculate ETA based on average time per test
+      const avgTimePerTest = (Date.now() - this.startTime) / this.currentCount;
+      const remainingTests = this.totalTests - this.currentCount;
+      const etaMs = avgTimePerTest * remainingTests;
+      const etaSeconds = Math.ceil(etaMs / 1000);
+      
+      let etaStr = '';
+      if (this.currentCount < this.totalTests) {
+        if (etaSeconds < 60) {
+          etaStr = ` ETA: ${etaSeconds}s`;
+        } else {
+          const minutes = Math.floor(etaSeconds / 60);
+          const seconds = etaSeconds % 60;
+          etaStr = ` ETA: ${minutes}m ${seconds}s`;
+        }
+      }
+      
       console.log(
         `📊 Progress: ${this.currentCount}/${this.totalTests} tests ` +
         `(✓ ${this.passedTests} ✗ ${this.failedTests} ⊘ ${this.skippedTests}) ` +
-        `[${elapsed}s]`
+        `[${elapsed}s]${etaStr}`
       );
       this.lastLoggedCount = this.currentCount;
     }
