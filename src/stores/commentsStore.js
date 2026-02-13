@@ -87,10 +87,19 @@ export function useComments() {
         commentsMap.set(comment.id, comment);
       });
       
-      // Add GraphQL comments only if they don't already exist
-      // This handles the case where a comment transitions from PENDING to submitted
+      // Merge GraphQL comment data (especially _isPending flag) with existing comments
+      // or add new comments that don't exist in REST yet
       graphqlComments.forEach(comment => {
-        if (!commentsMap.has(comment.id)) {
+        const existing = commentsMap.get(comment.id);
+        if (existing) {
+          // Comment exists in both - merge the _isPending flag from GraphQL
+          commentsMap.set(comment.id, {
+            ...existing,
+            _isPending: comment._isPending,
+            _reviewState: comment._reviewState
+          });
+        } else {
+          // New comment only in GraphQL (truly pending, not yet in REST)
           commentsMap.set(comment.id, comment);
         }
       });
