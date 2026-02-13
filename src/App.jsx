@@ -16,6 +16,7 @@ import { Footer } from './components/Footer';
 import { DirectoryBrowser } from './components/DirectoryBrowser';
 import { DiffViewer } from './components/DiffViewer';
 import { HighlightThemeLoader } from './components/HighlightThemeLoader';
+import { CommentModal } from './components/CommentModal';
 
 function MainContent() {
   // Check for any errors in the unified error store
@@ -69,6 +70,7 @@ export function App() {
         />
         <HighlightThemeLoader />
         <DirectoryBrowser />
+        <CommentModal />
         {!token.value ? (
           <LoginPage />
         ) : (

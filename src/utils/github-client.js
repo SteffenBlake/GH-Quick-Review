@@ -19,13 +19,15 @@ class GitHubClient {
   }
 
   /**
-   * Make a GET request to the GitHub API
+   * Make a request to the GitHub API
+   * @param {string} method - HTTP method (GET, POST, PATCH, DELETE)
    * @param {string} endpoint - API endpoint (e.g., '/user/repos')
+   * @param {Object} body - Optional request body for POST/PATCH
    * @param {string} token - Optional token override (uses stored token if not provided)
    * @returns {Promise<any>} - Response data
    * @throws {Error} - If request fails
    */
-  async get(endpoint, token = null) {
+  async request(method, endpoint, body = null, token = null) {
     const authToken = token || getToken();
     if (!authToken) {
       throw new Error('No authentication token provided');
@@ -33,14 +35,21 @@ class GitHubClient {
 
     const baseUrl = this.getBaseUrl();
     const url = new URL(endpoint, baseUrl);
-    const response = await fetch(url, {
-      method: 'GET',
+    const options = {
+      method,
       headers: {
         'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${authToken}`,
         'X-GitHub-Api-Version': '2022-11-28',
       },
-    });
+    };
+
+    if (body && (method === 'POST' || method === 'PATCH')) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
 
     if (!response.ok) {
       const error = new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
@@ -49,7 +58,58 @@ class GitHubClient {
       throw error;
     }
 
+    // DELETE requests may not have a response body
+    if (method === 'DELETE' && response.status === 204) {
+      return null;
+    }
+
     return response.json();
+  }
+
+  /**
+   * Make a GET request to the GitHub API
+   * @param {string} endpoint - API endpoint (e.g., '/user/repos')
+   * @param {string} token - Optional token override (uses stored token if not provided)
+   * @returns {Promise<any>} - Response data
+   * @throws {Error} - If request fails
+   */
+  async get(endpoint, token = null) {
+    return this.request('GET', endpoint, null, token);
+  }
+
+  /**
+   * Make a POST request to the GitHub API
+   * @param {string} endpoint - API endpoint
+   * @param {Object} body - Request body
+   * @param {string} token - Optional token override
+   * @returns {Promise<any>} - Response data
+   * @throws {Error} - If request fails
+   */
+  async post(endpoint, body, token = null) {
+    return this.request('POST', endpoint, body, token);
+  }
+
+  /**
+   * Make a PATCH request to the GitHub API
+   * @param {string} endpoint - API endpoint
+   * @param {Object} body - Request body
+   * @param {string} token - Optional token override
+   * @returns {Promise<any>} - Response data
+   * @throws {Error} - If request fails
+   */
+  async patch(endpoint, body, token = null) {
+    return this.request('PATCH', endpoint, body, token);
+  }
+
+  /**
+   * Make a DELETE request to the GitHub API
+   * @param {string} endpoint - API endpoint
+   * @param {string} token - Optional token override
+   * @returns {Promise<any>} - Response data (may be null)
+   * @throws {Error} - If request fails
+   */
+  async delete(endpoint, token = null) {
+    return this.request('DELETE', endpoint, null, token);
   }
 
   /**
@@ -138,6 +198,80 @@ class GitHubClient {
       throw new Error('Pull request number is required');
     }
     return this.get(`/repos/${repo}/pulls/${pullNumber}/comments`);
+  }
+
+  /**
+   * Create a review comment on a pull request
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @param {Object} comment - Comment object with body, commit_id, path, and position/line
+   * @returns {Promise<Object>} - Created comment object
+   */
+  async createPullComment(repo, pullNumber, comment) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    return this.post(`/repos/${repo}/pulls/${pullNumber}/comments`, comment);
+  }
+
+  /**
+   * Update a review comment
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} commentId - Comment ID
+   * @param {Object} update - Update object with body field
+   * @returns {Promise<Object>} - Updated comment object
+   */
+  async updatePullComment(repo, commentId, update) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!commentId) {
+      throw new Error('Comment ID is required');
+    }
+    return this.patch(`/repos/${repo}/pulls/comments/${commentId}`, update);
+  }
+
+  /**
+   * Delete a review comment
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} commentId - Comment ID
+   * @returns {Promise<null>} - No content on success
+   */
+  async deletePullComment(repo, commentId) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!commentId) {
+      throw new Error('Comment ID is required');
+    }
+    return this.delete(`/repos/${repo}/pulls/comments/${commentId}`);
+  }
+
+  /**
+   * Reply to a review comment (creates a comment in the same thread)
+   * @param {string} repo - Full repository name (e.g., 'owner/repo')
+   * @param {number} pullNumber - Pull request number
+   * @param {number} inReplyTo - Comment ID to reply to
+   * @param {string} body - Comment body
+   * @returns {Promise<Object>} - Created comment object
+   */
+  async replyToPullComment(repo, pullNumber, inReplyTo, body) {
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!pullNumber) {
+      throw new Error('Pull request number is required');
+    }
+    if (!inReplyTo) {
+      throw new Error('Reply target comment ID is required');
+    }
+    return this.post(`/repos/${repo}/pulls/${pullNumber}/comments`, {
+      body,
+      in_reply_to: inReplyTo,
+    });
   }
 }
 
