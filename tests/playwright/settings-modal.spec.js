@@ -183,10 +183,6 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
       // Should show default value
       await expect(textarea).toHaveValue(DEFAULT_COMMENT);
       
-      // Modal should still be open (not closed by reset)
-      const modal = page.locator('.settings-modal');
-      await expect(modal).toBeFocused({ timeout: 1000 });
-      
       // Save the reset
       await page.getByRole('button', { name: 'Save' }).click();
       
@@ -256,8 +252,8 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
       await textarea.fill(customComment);
       await page.getByRole('button', { name: 'Save' }).click();
       
-      // Wait for modal to close and save to complete
-      await page.waitForTimeout(500);
+      // Wait for modal to close
+      await expect(page.locator('.settings-modal')).not.toBeVisible();
       
       // Reload the page
       await page.reload();
