@@ -96,9 +96,11 @@ export function CommentModal() {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e) => {
     setCommentText('');
     hideCommentModal();
+    // Remove focus from the cancel button so modal loses :focus-within and hides
+    e.currentTarget.blur();
   };
 
   const handleResolve = async () => {
