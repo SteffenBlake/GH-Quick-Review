@@ -98,7 +98,7 @@ test.describe('Dropdown Width Constraints', { tag: '@parallel' }, () => {
       
       // Get positions of PR dropdown and font picker
       const prDropdownBox = await page.locator('.pr-fuzzy-select').boundingBox();
-      const fontPickerBox = await page.locator('.font-picker').boundingBox();
+      const fontPickerBox = await page.locator('.font-fuzzy-select').boundingBox();
       
       // PR dropdown should not overlap with font picker
       // PR dropdown's right edge should be to the left of font picker's left edge
