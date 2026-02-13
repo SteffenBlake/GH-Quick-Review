@@ -9,6 +9,7 @@ test.describe('Font Consistency', () => {
   test('header title should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -39,6 +40,7 @@ test.describe('Font Consistency', () => {
   test('repo dropdown should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -69,6 +71,7 @@ test.describe('Font Consistency', () => {
   test('PR dropdown should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -99,6 +102,7 @@ test.describe('Font Consistency', () => {
   test('font dropdown itself should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -129,6 +133,7 @@ test.describe('Font Consistency', () => {
   test('logout button should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -159,6 +164,7 @@ test.describe('Font Consistency', () => {
   test('main content text should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -189,6 +195,7 @@ test.describe('Font Consistency', () => {
   test('main content heading should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -219,6 +226,7 @@ test.describe('Font Consistency', () => {
   test('footer copyright text should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -249,6 +257,7 @@ test.describe('Font Consistency', () => {
   test('footer links should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -279,6 +288,7 @@ test.describe('Font Consistency', () => {
   test('login page heading should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -304,6 +314,7 @@ test.describe('Font Consistency', () => {
   test('login input field should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -329,6 +340,7 @@ test.describe('Font Consistency', () => {
   test('login button should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -354,6 +366,7 @@ test.describe('Font Consistency', () => {
   test('login page description text should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -379,6 +392,7 @@ test.describe('Font Consistency', () => {
   test('login page documentation links should use selected font', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');

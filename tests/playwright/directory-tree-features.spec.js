@@ -7,6 +7,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should display nested directory structure with icons', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -40,6 +41,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should show git status indicators for files', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -68,6 +70,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should collapse and expand directories when clicked', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -110,6 +113,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should select a file when clicked and highlight it', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -152,6 +156,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should show comment indicators for files with comments', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -177,6 +182,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should sort directories before files', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -208,6 +214,7 @@ test.describe('Directory Browser - File Tree Features', () => {
   test('should display appropriate file icons for different file types', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);

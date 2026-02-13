@@ -9,6 +9,7 @@ test.describe('Dropdown Width Constraints', () => {
   test('PR dropdown should not exceed container width with long PR name', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -75,6 +76,7 @@ test.describe('Dropdown Width Constraints', () => {
   test('PR dropdown should be visible and not hidden by font picker', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');

@@ -9,6 +9,7 @@ test.describe('Empty Code Blocks in Diff Hunks', () => {
   test('should render empty code blocks with a space instead of being totally empty', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       // Login and navigate to a PR

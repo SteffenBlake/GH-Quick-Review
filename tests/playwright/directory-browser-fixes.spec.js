@@ -9,6 +9,7 @@ test.describe('Directory Browser Fixes', () => {
   test('should NOT auto-focus on page reload when PR already selected', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       // Set up: already logged in with PR selected
@@ -51,6 +52,7 @@ test.describe('Directory Browser Fixes', () => {
   test('should collapse when clicking the collapse button', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -93,6 +95,7 @@ test.describe('Directory Browser Fixes', () => {
   test('toggle button should have blue highlight on hover, not turn black', async ({ page }) => {
     const mockServer = new MockServerManager();
     const port = await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);

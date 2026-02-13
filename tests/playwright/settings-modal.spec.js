@@ -8,6 +8,7 @@ test.describe('Settings Modal', () => {
   test('should show settings button only when logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -34,6 +35,7 @@ test.describe('Settings Modal', () => {
   test('should open and close settings modal', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -71,6 +73,7 @@ test.describe('Settings Modal', () => {
   test('should display default review comment', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -94,6 +97,7 @@ test.describe('Settings Modal', () => {
   test('should save custom settings', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -128,6 +132,7 @@ test.describe('Settings Modal', () => {
   test('should cancel changes without saving', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -158,6 +163,7 @@ test.describe('Settings Modal', () => {
   test('should reset to defaults', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -204,6 +210,7 @@ test.describe('Settings Modal', () => {
   test('should clear settings on logout', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);
@@ -240,6 +247,7 @@ test.describe('Settings Modal', () => {
   test('should persist settings across page reload', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto(BASE_URL);

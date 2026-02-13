@@ -5,6 +5,7 @@ test.describe('Pulls Dropdown', () => {
   test('should not show pulls dropdown when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -21,6 +22,7 @@ test.describe('Pulls Dropdown', () => {
   test('should show greyed out dropdown when no repo is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -79,6 +81,7 @@ test.describe('Pulls Dropdown', () => {
   test('should display PRs dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -163,6 +166,7 @@ test.describe('Pulls Dropdown', () => {
   test('should allow selecting a PR from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -198,6 +202,7 @@ test.describe('Pulls Dropdown', () => {
   test('should persist selected PR across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -240,6 +245,7 @@ test.describe('Pulls Dropdown', () => {
   test('should clear selected PR when repo changes', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -283,6 +289,7 @@ test.describe('Pulls Dropdown', () => {
   test('should clear selected PR on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -334,6 +341,7 @@ test.describe('Pulls Dropdown', () => {
   test('should truncate long PR titles with CSS', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -373,6 +381,7 @@ test.describe('Pulls Dropdown', () => {
   test('should re-enable PR dropdown when repo is selected after being disabled', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.start(null, 3000);
+      await mockServer.checkHeartbeat();
     
     try {
       await page.goto('/GH-Quick-Review/');
