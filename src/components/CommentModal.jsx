@@ -48,15 +48,14 @@ export function CommentModal() {
 
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
-  const isModalActive = hasCommentChain || isNewComment;
 
-  // Auto-focus the modal when it becomes active (when user triggers it to show)
+  // Auto-focus the modal whenever the signals change (even if setting the same value again)
   // The CSS :focus-within handles visibility - focused = visible, not focused = hidden
   useEffect(() => {
-    if (isModalActive && modalRef.current) {
+    if ((hasCommentChain || isNewComment) && modalRef.current) {
       modalRef.current.focus();
     }
-  }, [isModalActive]);
+  }, [selectedCommentChain.value, selectedCommentLocation.value]);
 
   // Update selectedCommentChain when allComments changes (after mutations)
   // This keeps the modal in sync with fresh comment data
