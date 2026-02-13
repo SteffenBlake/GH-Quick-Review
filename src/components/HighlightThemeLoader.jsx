@@ -4,38 +4,32 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useEffect } from 'preact/hooks';
-import { highlightTheme } from '../stores/highlightThemeStore.js';
+import { useEffect, useRef } from 'preact/hooks';
+import { highlightTheme, HIGHLIGHT_THEMES } from '../stores/highlightThemeStore.js';
 
-/**
- * Component that loads and manages highlight.js theme CSS
- * Uses Vite's dynamic import to load theme CSS from node_modules at build time
- */
 export function HighlightThemeLoader() {
+  const linksCreated = useRef(false);
+
   useEffect(() => {
-    const theme = highlightTheme.value;
-    
-    // Dynamically import the theme CSS
-    // Vite will handle this at build time and code-split appropriately
-    const loadTheme = async () => {
-      try {
-        // Dynamic import of CSS file - Vite will bundle this
-        await import(`highlight.js/styles/${theme}.min.css`);
-      } catch (err) {
-        console.warn(`Failed to load theme: ${theme}`, err);
-        // Fallback to default theme
-        if (theme !== 'github-dark') {
-          try {
-            await import('highlight.js/styles/github-dark.min.css');
-          } catch (fallbackErr) {
-            console.error('Failed to load fallback theme', fallbackErr);
-          }
-        }
-      }
-    };
-    
-    loadTheme();
+    // Step 1: Create <link> elements for ALL themes (only once)
+    if (!linksCreated.current) {
+      HIGHLIGHT_THEMES.forEach(themeName => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `/node_modules/highlight.js/styles/${themeName}.min.css`;
+        link.dataset.hljsTheme = themeName;
+        link.disabled = true; // Disable by default
+        document.head.appendChild(link);
+      });
+      linksCreated.current = true;
+    }
+
+    // Step 2: Enable the selected theme, disable all others
+    const currentTheme = highlightTheme.value;
+    document.querySelectorAll('link[data-hljs-theme]').forEach(link => {
+      link.disabled = (link.dataset.hljsTheme !== currentTheme);
+    });
   }, [highlightTheme.value]);
-  
-  return null; // This component doesn't render anything
+
+  return null;
 }
