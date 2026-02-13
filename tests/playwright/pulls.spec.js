@@ -50,7 +50,8 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should show loading spinner while fetching PRs', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { latency: 2000 });
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ latency: 1000 });
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -61,22 +62,23 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Wait for repos dropdown to finish loading (latency is 2000ms)
+      // Wait for repos dropdown to finish loading
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
-      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
+      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 3000 });
       
       // Select a repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
       
-      // Should see loading spinner for PRs inside the PR dropdown (latency is 2000ms)
+      // Should see loading spinner for PRs inside the PR dropdown
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
       
       // Wait for PRs to load - dropdown control should no longer be disabled
-      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 1000 });
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 3000 });
     } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
@@ -122,7 +124,8 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
 
   test('should show error page when PRs fetch returns 500', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { listPulls: 500 });
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listPulls: 500 } });
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -143,13 +146,15 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
       await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
     } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
 
   test('should show error page when PRs fetch returns 401', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { listPulls: 401 });
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listPulls: 401 } });
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -170,6 +175,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
       await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
     } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });

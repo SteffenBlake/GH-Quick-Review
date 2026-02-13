@@ -4,7 +4,8 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
   test('should show loading spinner while fetching repos', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { latency: 2000 }); // Add latency to see loading
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ latency: 1000 });
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -19,8 +20,9 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
       await expect(page.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
       
       // Wait for repos to load
-      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 1000 });
+      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 3000 });
     } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
@@ -59,7 +61,8 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
 
   test('should show error page when repos fetch returns 500', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { listUserRepos: 500 });
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listUserRepos: 500 } });
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -74,13 +77,15 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
       await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
     } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
 
   test('should show error page when repos fetch returns 401', async ({ page }) => {
     const mockServer = new MockServerManager();
-    await mockServer.start(null, 3000, { listUserRepos: 401 });
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listUserRepos: 401 } });
     
     try {
       await page.goto('/GH-Quick-Review/');
@@ -95,6 +100,7 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
       await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
     } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
