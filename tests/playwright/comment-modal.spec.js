@@ -25,8 +25,8 @@ test.describe('Comment Modal', () => {
       await page.click('text=test_repo_1');
       
       // Select a PR
-      await page.waitForSelector('text=#1 - Add new feature');
-      await page.click('text=#1 - Add new feature');
+      await page.waitForSelector('text=Add new feature');
+      await page.click('text=Add new feature');
       
       // Wait for diff to load
       await page.waitForSelector('.diff-line');
@@ -71,8 +71,8 @@ test.describe('Comment Modal', () => {
       // Navigate to a PR with diffs
       await page.waitForSelector('text=test_repo_1');
       await page.click('text=test_repo_1');
-      await page.waitForSelector('text=#1 - Add new feature');
-      await page.click('text=#1 - Add new feature');
+      await page.waitForSelector('text=Add new feature');
+      await page.click('text=Add new feature');
       await page.waitForSelector('.diff-line');
       
       // Open modal
@@ -106,8 +106,8 @@ test.describe('Comment Modal', () => {
       // Navigate to a PR
       await page.waitForSelector('text=test_repo_1');
       await page.click('text=test_repo_1');
-      await page.waitForSelector('text=#1 - Add new feature');
-      await page.click('text=#1 - Add new feature');
+      await page.waitForSelector('text=Add new feature');
+      await page.click('text=Add new feature');
       await page.waitForSelector('.diff-line');
       
       // Open modal
@@ -141,8 +141,8 @@ test.describe('Comment Modal', () => {
       // Navigate to a PR
       await page.waitForSelector('text=test_repo_1');
       await page.click('text=test_repo_1');
-      await page.waitForSelector('text=#1 - Add new feature');
-      await page.click('text=#1 - Add new feature');
+      await page.waitForSelector('text=Add new feature');
+      await page.click('text=Add new feature');
       await page.waitForSelector('.diff-line');
       
       // Open modal
@@ -176,8 +176,8 @@ test.describe('Comment Modal', () => {
       // Navigate to a PR
       await page.waitForSelector('text=test_repo_1');
       await page.click('text=test_repo_1');
-      await page.waitForSelector('text=#1 - Add new feature');
-      await page.click('text=#1 - Add new feature');
+      await page.waitForSelector('text=Add new feature');
+      await page.click('text=Add new feature');
       await page.waitForSelector('.diff-line');
       
       // Open modal
