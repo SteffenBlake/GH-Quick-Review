@@ -118,7 +118,8 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
       await page.waitForSelector('.diff-viewer');
       
       // Check that code content has background color from theme
-      const codeElement = page.locator('.diff-line-code').first();
+      // The highlight.js theme applies background to the <code> element, not the <pre> element
+      const codeElement = page.locator('.diff-line-code code.hljs').first();
       await expect(codeElement).toBeVisible();
       
       const backgroundColor = await codeElement.evaluate(el => {
@@ -159,7 +160,8 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
       await page.waitForSelector('.diff-viewer');
       
       // Get initial background color
-      const codeElement = page.locator('.diff-line-code').first();
+      // The highlight.js theme applies background to the <code> element, not the <pre> element
+      const codeElement = page.locator('.diff-line-code code.hljs').first();
       const initialBg = await codeElement.evaluate(el => {
         return window.getComputedStyle(el).backgroundColor;
       });
