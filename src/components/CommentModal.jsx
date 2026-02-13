@@ -58,6 +58,34 @@ export function CommentModal() {
     }
   }, [isModalActive]);
 
+  // Update selectedCommentChain when allComments changes (after mutations)
+  // This keeps the modal in sync with fresh comment data
+  useEffect(() => {
+    if (hasCommentChain && allComments.length > 0) {
+      const { filename, lineNumber } = selectedCommentChain.value;
+      
+      // Find updated comments for this file/line
+      const updatedChain = allComments.filter(comment => 
+        comment.path === filename && 
+        (comment.line === lineNumber || comment.start_line === lineNumber)
+      );
+      
+      if (updatedChain.length > 0) {
+        // Update with fresh data
+        selectedCommentChain.value = {
+          filename,
+          lineNumber,
+          comments: updatedChain
+        };
+        
+        // Ensure modal stays focused after data refresh
+        if (modalRef.current && document.activeElement !== modalRef.current) {
+          modalRef.current.focus();
+        }
+      }
+    }
+  }, [allComments, hasCommentChain]);
+
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim() || !prData?.pull) return;
