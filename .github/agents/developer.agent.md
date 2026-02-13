@@ -18,6 +18,107 @@ THIS IS CRITICAL, YOU MUST DO THIS EVERY TIME TO AVOID LOSING CONTEXT AND DERAIL
 
 **IMPORTANT: You MUST say "IN FULL" - not just "I will now reload my agent file" - the exact phrase is: "I will now reload my agent file IN FULL"**
 
+---
+
+# 🚨 CRITICAL: SESSION COMPLETION REQUIREMENTS 🚨
+
+## WHEN YOU ARE ALLOWED TO END A SESSION
+
+**YOU ARE ONLY ALLOWED TO END A SESSION WHEN 100% OF THE FOLLOWING CONDITIONS ARE MET:**
+
+### ✅ Completion Checklist - ALL MUST BE TRUE:
+
+1. **ALL Features Implemented**
+   - Every single feature requested is fully implemented
+   - No placeholder code, no stub functions, no "TODO" comments
+   - No half-finished work of any kind
+   - All edge cases handled
+   - All error cases handled
+
+2. **ALL Tests Passing**
+   - Every single test passes without errors
+   - Tests have been run and verified
+   - No skipped tests, no disabled tests, no ignored failures
+   - If you broke existing tests, you fixed them
+   - Build succeeds without errors or warnings
+
+3. **ALL Scenarios Tested**
+   - Manual testing completed for all user-facing changes
+   - All UI states verified (loading, success, error, empty)
+   - All user interactions tested
+   - Screenshots taken for all relevant UI states
+   - Edge cases manually verified
+
+4. **ALL Code Quality Standards Met**
+   - Code follows all patterns in this agent file
+   - No linting errors
+   - Proper error handling everywhere
+   - Clean, readable, well-documented code
+   - No security vulnerabilities
+
+5. **ALL Changes Committed and Pushed**
+   - All changes committed via report_progress
+   - PR description is complete and accurate
+   - All screenshots included in PR description
+   - No uncommitted changes remain
+
+### ❌ NEVER END A SESSION IF:
+
+- **ANY** feature is incomplete or partially implemented
+- **ANY** test is failing
+- **ANY** scenario hasn't been tested
+- **ANY** TODO or placeholder code exists
+- **ANY** half-finished work remains
+- You're waiting for something to build/install/download
+- You have questions that need answers
+- You're debugging something that isn't working yet
+- **ANY WORK REMAINS WHATSOEVER**
+
+### 🛑 ABSOLUTELY UNACCEPTABLE:
+
+**UNDER NO CIRCUMSTANCES DO YOU END A SESSION WITH:**
+- "I'll finish this later"
+- "The remaining work is..."
+- "TODO: ..."
+- "This needs further testing"
+- "There are some edge cases to handle"
+- "I'll fix the failing tests next time"
+- "This is mostly done"
+- Any variation of incomplete work
+
+### ⚠️ THE CONSEQUENCES OF ENDING EARLY:
+
+When you end a session prematurely:
+- ALL context is lost forever
+- The next session starts from scratch
+- All your understanding and progress is gone
+- You have to re-learn everything
+- You waste massive amounts of time
+- You frustrate the user immensely
+
+### ✅ THE CORRECT APPROACH:
+
+**If you're not 100% done:**
+1. Keep working until you ARE 100% done
+2. Fix every issue, no matter how small
+3. Test everything thoroughly
+4. Only then end the session
+
+**If you need help:**
+1. Ask your question
+2. Run `sleep 30` to wait for response
+3. DO NOT end the session
+4. Continue working after you get the answer
+
+**If something isn't working:**
+1. Debug it and fix it
+2. Don't work around it
+3. Don't skip it
+4. Don't leave it for later
+5. FIX IT NOW
+
+---
+
 # Agent Instructions for GH-Quick-Review
 
 ## Core Principles
