@@ -231,8 +231,8 @@ test.describe('Directory Browser', () => {
       // Wait for directory browser to appear
       await expect(page.locator('.directory-browser')).toBeVisible();
       
-      // Check position - computed style will convert vh to px
-      const position = await page.locator('.directory-browser').evaluate(el => {
+      // Check toggle button position - it should be at 20vh
+      const position = await page.locator('.directory-browser-toggle').evaluate(el => {
         const styles = window.getComputedStyle(el);
         const viewportHeight = window.innerHeight;
         const topPx = parseInt(styles.top);
@@ -240,13 +240,13 @@ test.describe('Directory Browser', () => {
         return {
           position: styles.position,
           topVh: Math.round(topVh),
-          left: styles.left
+          right: styles.right
         };
       });
       
-      expect(position.position).toBe('fixed');
+      expect(position.position).toBe('absolute');
       expect(position.topVh).toBe(20);
-      expect(position.left).toBe('0px');
+      expect(position.right).toBe('2px');
     } finally {
       await mockServer.stop();
     }
@@ -300,6 +300,16 @@ test.describe('Directory Browser', () => {
       });
       await page.reload();
       
+      // Wait for directory browser to be visible
+      const directoryBrowser = page.locator('.directory-browser');
+      await expect(directoryBrowser).toBeVisible();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      
+      // Wait a moment for the slide-in animation
+      await page.waitForTimeout(400);
+      
       await page.click('.directory-menu-button');
       await expect(page.locator('.directory-menu-dropdown')).toBeVisible();
       await expect(page.locator('.directory-menu-item').nth(0)).toContainText('Start Collapsed');
@@ -323,6 +333,10 @@ test.describe('Directory Browser', () => {
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       await page.click('.directory-menu-item:has-text("Start Collapsed")');
@@ -348,6 +362,10 @@ test.describe('Directory Browser', () => {
         localStorage.setItem('selected_pr', '1');
       });
       await page.reload();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       await page.click('.directory-menu-item:has-text("Auto Expand")');
@@ -403,6 +421,10 @@ test.describe('Directory Browser', () => {
         localStorage.setItem('directory_start_collapsed', 'true');
       });
       await page.reload();
+      
+      // Click the toggle button to expand the directory browser
+      await page.click('.directory-browser-toggle');
+      await page.waitForTimeout(400);
       
       await page.click('.directory-menu-button');
       
