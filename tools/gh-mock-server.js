@@ -182,11 +182,13 @@ class GitHubMockServer {
     const repoData = {
       pulls: new Map(data.pulls.map(pr => [pr.number, { ...pr }])),
       comments: new Map(data.comments.map(comment => [comment.id, { ...comment }])),
-      nextCommentId: Math.max(...data.comments.map(c => c.id), 0) + 1
+      reviews: new Map((data.reviews || []).map(review => [review.id, { ...review }])),
+      nextCommentId: Math.max(...data.comments.map(c => c.id), 0) + 1,
+      nextReviewId: Math.max(...(data.reviews || []).map(r => r.id), 0) + 1
     };
 
     this.repoDataCache.set(repoName, repoData);
-    console.log(`Loaded ${repoData.pulls.size} PRs and ${repoData.comments.size} comments for ${repoName}`);
+    console.log(`Loaded ${repoData.pulls.size} PRs, ${repoData.comments.size} comments, and ${repoData.reviews.size} reviews for ${repoName}`);
     return repoData;
   }
 
@@ -518,6 +520,30 @@ class GitHubMockServer {
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
         method: 'DELETE',
         handler: this.deleteComment.bind(this)
+      },
+      {
+        // List reviews: GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        method: 'GET',
+        handler: this.listReviews.bind(this)
+      },
+      {
+        // Create review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        method: 'POST',
+        handler: this.createReview.bind(this)
+      },
+      {
+        // Add comment to review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/comments$/,
+        method: 'POST',
+        handler: this.addReviewComment.bind(this)
+      },
+      {
+        // Submit review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events$/,
+        method: 'POST',
+        handler: this.submitReview.bind(this)
       },
       {
         // GraphQL endpoint: POST /graphql
@@ -873,6 +899,165 @@ class GitHubMockServer {
     }
     
     this.sendResponse(res, 204, null);
+  }
+
+  listReviews(req, res, match) {
+    if (this.checkConfiguredError('listReviews', res)) return;
+    
+    const [, owner, repo, pullNumber] = match;
+    const repoData = this.loadRepoData(repo);
+    const pull = repoData.pulls.get(parseInt(pullNumber));
+    
+    if (!pull) {
+      return this.sendResponse(res, 404, {
+        message: 'Not Found',
+        documentation_url: 'https://docs.github.com/rest/pulls/reviews#list-reviews-for-a-pull-request'
+      });
+    }
+    
+    // Get all reviews for this PR
+    const reviews = Array.from(repoData.reviews.values())
+      .filter(review => review.pull_number === parseInt(pullNumber));
+    
+    this.sendResponse(res, 200, reviews);
+  }
+
+  createReview(req, res, match) {
+    if (this.checkConfiguredError('createReview', res)) return;
+    
+    const [, owner, repo, pullNumber] = match;
+    
+    this.readBody(req, (body) => {
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
+      
+      if (!pull) {
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-for-a-pull-request'
+        });
+      }
+      
+      const newReview = {
+        id: repoData.nextReviewId++,
+        node_id: `PRR_${repoData.nextReviewId - 1}`,
+        pull_number: parseInt(pullNumber),
+        user: {
+          login: 'test_user',
+          id: 1000,
+          node_id: 'U_kgDOTestUser',
+          avatar_url: 'https://avatars.githubusercontent.com/u/1000?v=4',
+          type: 'User'
+        },
+        body: body.body || '',
+        state: body.event || 'PENDING',
+        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#pullrequestreview-${repoData.nextReviewId - 1}`,
+        pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
+        _links: {
+          html: {
+            href: `https://github.com/${owner}/${repo}/pull/${pullNumber}#pullrequestreview-${repoData.nextReviewId - 1}`
+          },
+          pull_request: {
+            href: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`
+          }
+        },
+        commit_id: body.commit_id || pull.head.sha,
+        author_association: 'OWNER',
+        submitted_at: body.event && body.event !== 'PENDING' ? new Date().toISOString() : undefined
+      };
+      
+      repoData.reviews.set(newReview.id, newReview);
+      this.sendResponse(res, 200, newReview);
+    });
+  }
+
+  addReviewComment(req, res, match) {
+    if (this.checkConfiguredError('addReviewComment', res)) return;
+    
+    const [, owner, repo, pullNumber, reviewId] = match;
+    
+    this.readBody(req, (body) => {
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
+      const review = repoData.reviews.get(parseInt(reviewId));
+      
+      if (!pull) {
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-comment-for-a-pull-request-review'
+        });
+      }
+      
+      if (!review) {
+        return this.sendResponse(res, 404, {
+          message: 'Review not found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-comment-for-a-pull-request-review'
+        });
+      }
+      
+      const newComment = {
+        id: repoData.nextCommentId++,
+        pull_number: parseInt(pullNumber),
+        diff_hunk: body.diff_hunk || '',
+        path: body.path || '',
+        position: body.position || null,
+        original_position: body.original_position || null,
+        commit_id: body.commit_id || pull.head.sha,
+        original_commit_id: body.original_commit_id || pull.head.sha,
+        user: {
+          login: 'test_user',
+          id: 1000,
+          type: 'User'
+        },
+        body: body.body || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#discussion_r${repoData.nextCommentId - 1}`,
+        pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
+        pull_request_review_id: parseInt(reviewId),
+        line: body.line || null,
+        side: body.side || 'RIGHT',
+        start_line: body.start_line || null,
+        start_side: body.start_side || null,
+        in_reply_to_id: body.in_reply_to_id || null
+      };
+      
+      repoData.comments.set(newComment.id, newComment);
+      this.sendResponse(res, 201, newComment);
+    });
+  }
+
+  submitReview(req, res, match) {
+    if (this.checkConfiguredError('submitReview', res)) return;
+    
+    const [, owner, repo, pullNumber, reviewId] = match;
+    
+    this.readBody(req, (body) => {
+      const repoData = this.loadRepoData(repo);
+      const pull = repoData.pulls.get(parseInt(pullNumber));
+      const review = repoData.reviews.get(parseInt(reviewId));
+      
+      if (!pull) {
+        return this.sendResponse(res, 404, {
+          message: 'Not Found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#submit-a-review-for-a-pull-request'
+        });
+      }
+      
+      if (!review) {
+        return this.sendResponse(res, 404, {
+          message: 'Review not found',
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#submit-a-review-for-a-pull-request'
+        });
+      }
+      
+      // Update review state and add submitted_at
+      review.state = body.event || 'REQUEST_CHANGES';
+      review.body = body.body || review.body;
+      review.submitted_at = new Date().toISOString();
+      
+      this.sendResponse(res, 200, review);
+    });
   }
 
   handleGraphQL(req, res, match) {
