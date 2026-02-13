@@ -23,11 +23,11 @@ export function DiffHunk({ diff, filename }) {
     setSelectedLine(selectedLine === lineIndex ? null : lineIndex);
   };
   
-  // Build a Set of line numbers that have comments
-  const linesWithComments = new Set();
-  unresolvedChains.forEach(({ lineNumber }) => {
+  // Build a Map of line numbers to their comment chains
+  const commentChainsByLine = new Map();
+  unresolvedChains.forEach(({ lineNumber, chain }) => {
     if (lineNumber) {
-      linesWithComments.add(lineNumber);
+      commentChainsByLine.set(lineNumber, chain);
     }
   });
   
@@ -47,13 +47,15 @@ export function DiffHunk({ diff, filename }) {
     }
     
     // Check if this line has comments
-    const hasComments = lineNumber !== null && linesWithComments.has(lineNumber);
+    const commentChain = lineNumber !== null ? commentChainsByLine.get(lineNumber) : null;
+    const hasComments = commentChain !== null && commentChain !== undefined;
     
     return {
       line,
       lineNumber,
       index,
-      hasComments
+      hasComments,
+      commentChain
     };
   });
   
@@ -68,6 +70,7 @@ export function DiffHunk({ diff, filename }) {
           filename={filename}
           isSelected={selectedLine === lineData.index}
           hasComments={lineData.hasComments}
+          commentChain={lineData.commentChain}
           onClick={() => handleLineClick(lineData.index)}
         />
       ))}

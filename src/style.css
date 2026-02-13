@@ -1073,39 +1073,31 @@ body {
   font-family: inherit !important;
 }
 
-/* Comment Modal */
+/* Comment Modal - Just the content box, no full-screen backdrop */
 .comment-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20000;
-  outline: none;
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.2s ease;
-}
-
-/* Hide modal when it loses focus */
-.comment-modal:not(:focus-within) {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.comment-modal-content {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(-200%);
+  width: 80vw;
+  max-height: 80vh;
   background-color: var(--bg-secondary);
   border: 2px solid var(--border);
   border-radius: 8px;
-  width: 80vw;
-  max-height: 80vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 20000;
+  outline: none;
+  opacity: 0;
+  /* Smooth transitions */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Show modal when focused (slide in and fade in) */
+.comment-modal:focus-within {
+  transform: translate(-50%, -50%) translateY(0);
+  opacity: 1;
 }
 
 .comment-modal-header {

@@ -6,9 +6,6 @@
 
 import { signal } from '@preact/signals';
 
-// Modal visibility state
-export const isCommentModalVisible = signal(false);
-
 // Currently selected comment chain (null when no chain is selected)
 export const selectedCommentChain = signal(null);
 
@@ -22,7 +19,6 @@ export const selectedCommentLocation = signal(null);
 export function showCommentModal(commentChain) {
   selectedCommentChain.value = commentChain;
   selectedCommentLocation.value = null;
-  isCommentModalVisible.value = true;
 }
 
 /**
@@ -33,14 +29,12 @@ export function showCommentModal(commentChain) {
 export function showNewCommentModal(filename, lineNumber) {
   selectedCommentLocation.value = { filename, lineNumber };
   selectedCommentChain.value = null;
-  isCommentModalVisible.value = true;
 }
 
 /**
  * Hide the comment modal and clear state
  */
 export function hideCommentModal() {
-  isCommentModalVisible.value = false;
   selectedCommentChain.value = null;
   selectedCommentLocation.value = null;
 }
