@@ -30,6 +30,9 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - Checkmark: \uf00c
 - Pencil: \udb81\ude4f
 - X: \uf467
+- Gears: \uf085
+- Empty Checkbox: \ue640
+- Checked Checkbox: \udb83\udc52
 
 ## Usage
 

@@ -12,6 +12,7 @@ import {
   setHighlightTheme, 
   HIGHLIGHT_THEMES 
 } from '../stores/highlightThemeStore.js';
+import { showSettings } from '../stores/settingsStore.js';
 
 export function Header({ font, setFont, authenticated, onLogout }) {
   const fontOptions = [
@@ -67,6 +68,11 @@ export function Header({ font, setFont, authenticated, onLogout }) {
           className="theme-fuzzy-select"
         />
       </div>
+      {authenticated && (
+        <button onClick={showSettings} className="header-settings-button" title="Settings">
+          {'\uf085'}
+        </button>
+      )}
       {authenticated && (
         <button onClick={onLogout} className="header-logout-button" title="Logout">
           Logout {'\udb81\uddfd'}
