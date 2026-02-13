@@ -37,13 +37,14 @@ test.describe('Pulls Dropdown', () => {
       await expect(page.locator('#repo-select')).toBeVisible();
       
       // PR dropdown should be visible but disabled
-      await expect(page.locator('#pr-select')).toBeVisible();
-      await expect(page.locator('#pr-select')).toBeDisabled();
+      const prSelect = page.locator('#pr-select');
+      await expect(prSelect).toBeVisible();
+      
+      // Check that the control has disabled class
+      await expect(prSelect.locator('.fuzzy-dropdown-control')).toHaveClass(/disabled/);
       
       // Should show "Pull Request..." placeholder
-      const prSelect = page.locator('#pr-select');
-      const selectedText = await prSelect.evaluate(el => el.options[el.selectedIndex].text);
-      expect(selectedText).toBe('Pull Request...');
+      await expect(prSelect.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
     } finally {
       await mockServer.stop();
     }
@@ -62,17 +63,21 @@ test.describe('Pulls Dropdown', () => {
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      // Wait for repos dropdown to finish loading (latency is 2000ms)
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
       
-      // Should see loading spinner for PRs
-      await expect(page.locator('.pulls-loading')).toBeVisible({ timeout: 1000 });
-      await expect(page.getByText(/Loading\.\.\./i)).toBeVisible();
+      // Select a repo
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
-      // Wait for PRs to load
-      await expect(page.locator('#pr-select')).toBeVisible({ timeout: 5000 });
-      await expect(page.locator('.pulls-loading')).not.toBeVisible();
+      // Should see loading spinner for PRs inside the PR dropdown (latency is 2000ms)
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
+      
+      // Wait for PRs to load - dropdown control should no longer be disabled
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 5000 });
     } finally {
       await mockServer.stop();
     }
@@ -93,19 +98,24 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
-      // Wait for PRs dropdown to appear
-      await expect(page.locator('#pr-select')).toBeVisible();
+      // Wait for PRs dropdown to be enabled
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       
-      // Should have "Pull Request..." option
-      const firstOption = await page.locator('#pr-select option').first().textContent();
-      expect(firstOption).toBe('Pull Request...');
+      // Should show "Pull Request..." placeholder when nothing selected
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
+      
+      // Click to open dropdown
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
       
       // Should have PR options with format "#{number} - {title}"
-      const options = await page.locator('#pr-select option').allTextContents();
-      expect(options.length).toBeGreaterThan(1); // Should have placeholder + PRs
+      const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
+      expect(options.length).toBe(2); // test_pull_1 and test_pull_2
       expect(options).toContainEqual(expect.stringContaining('#1 -'));
       expect(options).toContainEqual(expect.stringContaining('#2 -'));
     } finally {
@@ -127,8 +137,10 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
       // Should show error page
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
@@ -152,8 +164,10 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
       // Should show error page
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
@@ -178,22 +192,27 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
-      // Wait for PR dropdown
-      await expect(page.locator('#pr-select')).toBeVisible();
+      // Wait for PR dropdown to be enabled
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      
+      // Click to open PR dropdown
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
       
       // Get available PRs
-      const options = await page.locator('#pr-select option').allTextContents();
-      expect(options.length).toBeGreaterThan(1); // Should have placeholder + PRs
+      const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
+      expect(options.length).toBe(2); // test_pull_1 and test_pull_2
       
-      // Select a PR
-      await page.locator('#pr-select').selectOption('1');
+      // Select PR #1
+      await prDropdown.getByText('#1 -').click();
       
-      // Verify selection
-      const selectedValue = await page.locator('#pr-select').inputValue();
-      expect(selectedValue).toBe('1');
+      // Verify selection - dropdown should show the PR text
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
     } finally {
       await mockServer.stop();
     }
@@ -214,14 +233,18 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
       // Wait for PR dropdown
-      await expect(page.locator('#pr-select')).toBeVisible();
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       
       // Select a PR
-      await page.locator('#pr-select').selectOption('1');
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
       
       // Verify selection persisted to localStorage
       const storedPr = await page.evaluate(() => localStorage.getItem('selected_pr'));
@@ -231,12 +254,11 @@ test.describe('Pulls Dropdown', () => {
       await page.reload();
       
       // Wait for dropdowns to appear again
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await expect(page.locator('#pr-select')).toBeVisible();
+      await expect(repoDropdown).toBeVisible();
+      await expect(prDropdown).toBeVisible();
       
       // Verify selection is still there
-      const selectedValue = await page.locator('#pr-select').inputValue();
-      expect(selectedValue).toBe('1');
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
     } finally {
       await mockServer.stop();
     }
@@ -257,26 +279,29 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
       // Wait for PR dropdown and select a PR
-      await expect(page.locator('#pr-select')).toBeVisible();
-      await page.locator('#pr-select').selectOption('1');
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
       
       // Verify PR selection
-      let selectedPrValue = await page.locator('#pr-select').inputValue();
-      expect(selectedPrValue).toBe('1');
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
       
       // Change repo
-      await page.locator('#repo-select').selectOption('test_user/test_repo_2');
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_2').click();
       
-      // Wait for PR dropdown to reload
-      await expect(page.locator('#pr-select')).toBeVisible();
+      // Wait for PR dropdown to reload - it should become disabled then re-enabled
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       
-      // Verify PR dropdown is reset to empty (no selection)
-      selectedPrValue = await page.locator('#pr-select').inputValue();
-      expect(selectedPrValue).toBe('');
+      // Verify PR dropdown is reset to placeholder (no selection)
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
       
       // Verify selected PR was cleared from localStorage
       const storedPr = await page.evaluate(() => localStorage.getItem('selected_pr'));
@@ -301,16 +326,19 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
       // Wait for PR dropdown and select a PR
-      await expect(page.locator('#pr-select')).toBeVisible();
-      await page.locator('#pr-select').selectOption('1');
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
       
       // Verify PR selection
-      let selectedPrValue = await page.locator('#pr-select').inputValue();
-      expect(selectedPrValue).toBe('1');
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
       
       // Logout
       await page.getByRole('button', { name: /Logout/i }).click();
@@ -327,12 +355,11 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for dropdowns
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await expect(page.locator('#pr-select')).toBeVisible();
+      await expect(repoDropdown).toBeVisible();
+      await expect(prDropdown).toBeVisible();
       
-      // Verify PR dropdown is reset to empty (no selection)
-      selectedPrValue = await page.locator('#pr-select').inputValue();
-      expect(selectedPrValue).toBe('');
+      // Verify PR dropdown is reset to placeholder (no selection)
+      await expect(prDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
     } finally {
       await mockServer.stop();
     }
@@ -353,14 +380,20 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown and select a repo
-      await expect(page.locator('#repo-select')).toBeVisible();
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
       // Wait for PR dropdown
-      await expect(page.locator('#pr-select')).toBeVisible();
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       
-      // Check that option elements have CSS for text truncation
-      const optionStyle = await page.locator('#pr-select option').first().evaluate((el) => {
+      // Click to open PR dropdown
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      
+      // Check that fuzzy dropdown option elements have CSS for text truncation
+      const optionStyle = await prDropdown.locator('.fuzzy-dropdown-option').first().evaluate((el) => {
         const computed = window.getComputedStyle(el);
         return {
           whiteSpace: computed.whiteSpace,
@@ -373,7 +406,7 @@ test.describe('Pulls Dropdown', () => {
       expect(optionStyle.whiteSpace).toBe('nowrap');
       expect(optionStyle.overflow).toBe('hidden');
       expect(optionStyle.textOverflow).toBe('ellipsis');
-    } finally {
+    } finally{
       await mockServer.stop();
     }
   });
@@ -393,23 +426,26 @@ test.describe('Pulls Dropdown', () => {
       await page.getByRole('button', { name: 'Login' }).click();
       
       // Wait for repos dropdown
-      await expect(page.locator('#repo-select')).toBeVisible();
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
       
-      // PR dropdown should be disabled initially
-      await expect(page.locator('#pr-select')).toBeDisabled();
+      // PR dropdown should be disabled initially (has disabled class)
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control')).toHaveClass(/disabled/);
       
       // Select a repo
-      await page.locator('#repo-select').selectOption('test_user/test_repo_1');
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
       
-      // Wait for PRs to load
-      await expect(page.locator('#pr-select')).toBeVisible();
+      // Wait for PRs to load - dropdown control should no longer be disabled
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       
-      // PR dropdown should now be enabled
-      await expect(page.locator('#pr-select')).toBeEnabled();
+      // Click to open PR dropdown
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
       
       // Should have PR options
-      const options = await page.locator('#pr-select option').allTextContents();
-      expect(options.length).toBeGreaterThan(1);
+      const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
+      expect(options.length).toBe(2);
     } finally {
       await mockServer.stop();
     }

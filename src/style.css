@@ -571,6 +571,9 @@ body {
   cursor: pointer;
   transition: background-color 0.15s;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fuzzy-dropdown-option:last-child {
