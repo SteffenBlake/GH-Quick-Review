@@ -2,31 +2,6 @@ import { test, expect } from '@playwright/test';
 import { MockServerManager } from './mock-server-manager.js';
 
 test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
-  test('should show loading spinner while fetching repos', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    await mockServer.checkHeartbeat();
-    await mockServer.setConfig({ latency: 1000 });
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
-      
-      // Should see loading spinner
-      await expect(page.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
-      
-      // Wait for repos to load
-      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 3000 });
-    } finally {
-      await mockServer.reset();
-      await mockServer.stop();
-    }
-  });
-
   test('should display repos dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
@@ -55,52 +30,6 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
       expect(options).toContain('test_repo_1');
       expect(options).toContain('test_repo_2');
     } finally {
-      await mockServer.stop();
-    }
-  });
-
-  test('should show error page when repos fetch returns 500', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    await mockServer.checkHeartbeat();
-    await mockServer.setConfig({ errors: { listUserRepos: 500 } });
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
-      
-      // Should show error page
-      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
-      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
-    } finally {
-      await mockServer.reset();
-      await mockServer.stop();
-    }
-  });
-
-  test('should show error page when repos fetch returns 401', async ({ page }) => {
-    const mockServer = new MockServerManager();
-    await mockServer.checkHeartbeat();
-    await mockServer.setConfig({ errors: { listUserRepos: 401 } });
-    
-    try {
-      await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
-      await page.reload();
-      
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
-      
-      // Should show error page
-      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
-      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
-    } finally {
-      await mockServer.reset();
       await mockServer.stop();
     }
   });
@@ -225,6 +154,80 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
       // Verify dropdown is reset to placeholder (no selection)
       await expect(repoDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Repo...');
     } finally {
+      await mockServer.stop();
+    }
+  });
+});
+
+// Tests that modify mock server configuration must run serially
+test.describe('Repos Dropdown - Server Config Tests', { tag: '@serial' }, () => {
+  test('should show loading spinner while fetching repos', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ latency: 1000 });
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Should see loading spinner
+      await expect(page.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
+      
+      // Wait for repos to load
+      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 3000 });
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should show error page when repos fetch returns 500', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listUserRepos: 500 } });
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Should show error page
+      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
+      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should show error page when repos fetch returns 401', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+    await mockServer.setConfig({ errors: { listUserRepos: 401 } });
+    
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+      
+      // Should show error page
+      await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
+      await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
+    } finally {
+      await mockServer.reset();
       await mockServer.stop();
     }
   });
