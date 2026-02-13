@@ -1073,7 +1073,7 @@ body {
   font-family: inherit !important;
 }
 
-/* Comment Modal */
+/* Comment Modal - CSS-only show/hide using :focus-within (same pattern as directory browser) */
 .comment-modal {
   position: fixed;
   top: 0;
@@ -1086,15 +1086,19 @@ body {
   justify-content: center;
   z-index: 20000;
   outline: none;
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.2s ease;
-}
-
-/* Hide modal when it loses focus */
-.comment-modal:not(:focus-within) {
+  /* Hide off-screen by default */
+  transform: translateY(-200%);
   opacity: 0;
   pointer-events: none;
+  /* Smooth transitions */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Show modal when focused (slide in and fade in) */
+.comment-modal:focus-within {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .comment-modal-content {

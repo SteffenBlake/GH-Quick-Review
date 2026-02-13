@@ -96,11 +96,13 @@ export function CommentModal() {
     }
   };
 
-  const handleCancel = (e) => {
+  const handleCancel = () => {
     setCommentText('');
     hideCommentModal();
-    // Remove focus from the cancel button so modal loses :focus-within and hides
-    e.currentTarget.blur();
+    // Blur to hide modal (same pattern as directory browser)
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
   };
 
   const handleResolve = async () => {
@@ -152,20 +154,11 @@ export function CommentModal() {
     isCurrentUser: currentUser && comment.user.login === currentUser.login
   }));
 
-  const handleBackdropClick = (e) => {
-    // Only close if clicking the backdrop itself, not the content
-    if (e.target === e.currentTarget) {
-      hideCommentModal();
-      e.currentTarget.blur();
-    }
-  };
-
   return (
     <div 
       ref={modalRef}
       className="comment-modal"
       tabIndex={-1}
-      onClick={handleBackdropClick}
     >
       <div className="comment-modal-content">
         {/* Header with Resolve button */}
