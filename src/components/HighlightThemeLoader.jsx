@@ -13,14 +13,26 @@ export function HighlightThemeLoader() {
   useEffect(() => {
     // Step 1: Create <link> elements for ALL themes (only once)
     if (!linksCreated.current) {
-      HIGHLIGHT_THEMES.forEach(themeName => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = `/node_modules/highlight.js/styles/${themeName}.min.css`;
-        link.dataset.hljsTheme = themeName;
-        link.disabled = true; // Disable by default
-        document.head.appendChild(link);
-      });
+      const loadAllThemes = async () => {
+        for (const themeName of HIGHLIGHT_THEMES) {
+          try {
+            // Use Vite's dynamic import to get the actual URL
+            const module = await import(`highlight.js/styles/${themeName}.min.css?url`);
+            const themeUrl = module.default;
+            
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = themeUrl;
+            link.dataset.hljsTheme = themeName;
+            link.disabled = true; // Disable by default
+            document.head.appendChild(link);
+          } catch (err) {
+            console.warn(`Failed to load theme ${themeName}:`, err);
+          }
+        }
+      };
+      
+      loadAllThemes();
       linksCreated.current = true;
     }
 
