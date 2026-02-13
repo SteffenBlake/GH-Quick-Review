@@ -528,6 +528,69 @@ This project uses **Playwright integration tests ONLY**.
    - **MANDATORY**: Playwright browsers must be installed before running integration tests
    - **Installation command**: `npx playwright install chromium`
    - **CRITICAL**: There is NO such thing as "pre-existing test failures" - if tests fail, YOU broke them or didn't install Playwright browsers correctly. Always install browsers first and ensure ALL tests pass.
+   
+   - **🚨 CRITICAL: DEBUGGING FAILING PLAYWRIGHT TESTS 🚨**
+     - **NEVER run all tests at once** - this is ultra time consuming and wastes tonnes of time
+     - **ALWAYS run tests ONE AT A TIME** and fix them individually
+     - Many tests may be failing due to recent changes when tests weren't running on pipeline
+     - This creates the illusion of passing tests when they've actually been broken
+     
+     **Systematic Debugging Workflow:**
+     1. **Run the individual test** to get the exact fail point
+        - Example: `npm run test:playwright -- auth.spec.js`
+        - Note the EXACT error message and line number
+     
+     2. **Read the test file in FULL**
+        - Understand every step the test is taking
+        - Note the exact order of operations
+        - Understand what the test expects to happen
+     
+     3. **Reproduce with Playwright MCP tools**
+        - Set up the dev server and mock server
+        - Use `playwright-browser_navigate`, `playwright-browser_click`, etc.
+        - REPEAT THE EXACT SAME STEPS IN EXACT SAME ORDER EXACT SAME WAY
+        - You will very likely bump into the same exact problem
+     
+     4. **Use proper debugging**
+        - Analyze the actual state of the website with JavaScript
+        - Use `playwright-browser_evaluate` to inspect DOM state
+        - Check what elements actually exist vs. what the test expects
+        - Look at computed styles, element visibility, etc.
+     
+     5. **Fix the root cause**
+        - It's INCREDIBLY RARE you need to add timeouts
+        - The website runs locally with millisecond response times
+        - If something times out, it's ACTUALLY BROKEN or the test is wrong
+        - Common issues:
+          - Elements not rendering due to broken code
+          - Selectors changed and test needs updating
+          - Clicking wrong elements or in wrong order
+          - State not being set up correctly
+     
+     6. **Verify the fix**
+        - Run the individual test again
+        - Ensure it passes consistently
+        - Move on to the next failing test
+     
+     **DO NOT:**
+     - ❌ Run all tests and try to fix everything at once
+     - ❌ Add arbitrary timeouts to "fix" timing issues
+     - ❌ Skip tests or mark them as "flaky"
+     - ❌ Assume the test is wrong without investigation
+     - ❌ Make random changes hoping something will work
+     
+     **Example workflow:**
+     ```bash
+     # 1. Run single test
+     npm run test:playwright -- auth.spec.js
+     # Observe: "Error: locator.click: Timeout 5000ms exceeded"
+     
+     # 2. Read auth.spec.js to understand what it's doing
+     # 3. Set up servers and use MCP tools to reproduce
+     # 4. Discover: button selector changed from '.login-btn' to '.auth-button'
+     # 5. Fix: Update test selector OR fix the component if it was a mistake
+     # 6. Re-run test and verify it passes
+     ```
 
 ### Nerd Font Icons
 

@@ -77,6 +77,7 @@ function HighlightedText({ text, indices = [] }) {
  * @param {Error} props.error - Error object
  * @param {boolean} props.disabled - Disabled state
  * @param {string} props.className - CSS class name
+ * @param {string} props.id - HTML id attribute
  */
 export function FuzzyDropdown({
   value,
@@ -87,6 +88,7 @@ export function FuzzyDropdown({
   error = null,
   disabled = false,
   className = '',
+  id = '',
 }) {
   const [searchText, setSearchText] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -208,7 +210,7 @@ export function FuzzyDropdown({
   const isDisabled = disabled || isLoading;
 
   return (
-    <div className={`fuzzy-dropdown ${className}`} ref={dropdownRef}>
+    <div id={id} className={`fuzzy-dropdown ${className}`} ref={dropdownRef}>
       <div
         className={`fuzzy-dropdown-control ${isOpen ? 'open' : ''} ${isDisabled ? 'disabled' : ''}`}
         onClick={() => !isDisabled && setIsOpen(!isOpen)}
@@ -217,7 +219,7 @@ export function FuzzyDropdown({
       >
         {isLoading ? (
           <div className="fuzzy-dropdown-loading">
-            <LoadingSpinner text="Loading" />
+            <LoadingSpinner text="Loading..." />
           </div>
         ) : error ? (
           <div className="fuzzy-dropdown-error">
