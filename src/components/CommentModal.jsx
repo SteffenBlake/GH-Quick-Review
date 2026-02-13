@@ -155,12 +155,12 @@ export function CommentModal() {
   }));
 
   return (
-    <div 
-      ref={modalRef}
-      className="comment-modal"
-      tabIndex={-1}
-    >
-      <div className="comment-modal-content">
+    <div className="comment-modal">
+      <div 
+        ref={modalRef}
+        className="comment-modal-content"
+        tabIndex={-1}
+      >
         {/* Header with Resolve button */}
         <div className="comment-modal-header">
           <h2>

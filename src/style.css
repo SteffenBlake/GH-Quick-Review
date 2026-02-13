@@ -1085,20 +1085,19 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 20000;
-  outline: none;
+  /* Backdrop never blocks pointer events - clicks pass through */
+  pointer-events: none;
   /* Hide off-screen by default */
   transform: translateY(-200%);
   opacity: 0;
-  pointer-events: none;
   /* Smooth transitions */
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Show modal when focused (slide in and fade in) */
+/* Show modal when content is focused (slide in and fade in) */
 .comment-modal:focus-within {
   transform: translateY(0);
   opacity: 1;
-  pointer-events: auto;
 }
 
 .comment-modal-content {
@@ -1110,6 +1109,9 @@ body {
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  outline: none;
+  /* Content has pointer events only when modal is visible */
+  pointer-events: auto;
 }
 
 .comment-modal-header {
