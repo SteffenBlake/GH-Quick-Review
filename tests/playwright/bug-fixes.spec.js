@@ -19,7 +19,7 @@ test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
       await page.reload();
       
       // Wait for diff viewer to load
-      await expect(page.locator('.file-card').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('.file-card').first()).toBeVisible({ timeout: 1000 });
       await expect(page.locator('.diff-line').first()).toBeVisible();
       
       // Check that MessageAlert buttons exist for lines with comments
@@ -58,7 +58,7 @@ test.describe('Bug Fixes - Directory Scrolling and Comment Icons', () => {
       await page.reload();
       
       // Wait for diff viewer
-      await expect(page.locator('.file-card').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('.file-card').first()).toBeVisible({ timeout: 1000 });
       await expect(page.locator('.diff-line').first()).toBeVisible();
       
       // Find a line WITH a comment (has-message)

@@ -49,7 +49,7 @@ test.describe('Settings Modal', () => {
       
       // Modal should be visible
       const modal = page.locator('.settings-modal');
-      await expect(modal).toBeFocused({ timeout: 2000 });
+      await expect(modal).toBeFocused({ timeout: 1000 });
       
       // Should have Settings heading with gear icon
       const heading = page.getByRole('heading', { name: / Settings/ });

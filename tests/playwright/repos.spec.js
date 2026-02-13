@@ -19,7 +19,7 @@ test.describe('Repos Dropdown', () => {
       await expect(page.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
       
       // Wait for repos to load
-      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('#repo-select')).toBeVisible({ timeout: 1000 });
     } finally {
       await mockServer.stop();
     }

@@ -44,10 +44,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   maxFailures: 1, // Stop immediately on first failure for faster feedback
-  reporter: [
-    ['./tests/playwright/custom-reporter.js'],
-    ['html', { open: 'never' }]
-  ],
+  reporter: 'list', // Use built-in list reporter until custom reporter is fixed
   timeout: 10000, // 10 second test timeout
   use: {
     baseURL: 'http://localhost:5173',
