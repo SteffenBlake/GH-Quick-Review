@@ -300,13 +300,36 @@ Then CONTINUE WORKING with option X.
 - Only seek help if you've genuinely tried to fix it and can't figure it out
 
 ### Screenshot Protocol
+**🚨 CRITICAL: ALWAYS DISPLAY SCREENSHOTS IN CHAT IMMEDIATELY! 🚨**
+
 **NEVER create custom screenshot test files or scripts.** You have built-in MCP tools for taking screenshots:
 - Use `playwright-browser_navigate` to navigate to pages
 - Use `playwright-browser_click`, `playwright-browser_type`, etc. to interact with the page
 - Use `playwright-browser_take_screenshot` to capture screenshots - this returns GitHub URLs
-- IMMEDIATELY display the returned URL in chat using `![Description](url)` markdown
-- DO NOT create test files like `take-screenshots.spec.js` - use the MCP tools directly
-- **CRITICAL**: After taking each screenshot, run `sleep 10` bash command to give the user time to respond and verify the screenshot
+
+**🔥 MANDATORY SCREENSHOT DISPLAY PROTOCOL 🔥**
+1. **IMMEDIATELY after `playwright-browser_take_screenshot` returns a URL, you MUST display it in chat**
+2. **Use markdown format: `![Description](https://github.com/user-attachments/assets/...)`**
+3. **The user CANNOT see screenshots unless you show them in chat with markdown**
+4. **DO NOT just save screenshots to files - the user needs to SEE them in the chat**
+5. **After showing the screenshot, run `sleep 10` bash command to give the user time to verify it**
+
+**Example - CORRECT workflow:**
+```
+1. Take screenshot: playwright-browser_take_screenshot
+2. System returns: https://github.com/user-attachments/assets/abc123...
+3. IMMEDIATELY show in chat: ![Login page](https://github.com/user-attachments/assets/abc123...)
+4. User can now SEE the screenshot
+5. Run: sleep 10 (wait for user feedback)
+```
+
+**❌ WRONG - DO NOT DO THIS:**
+- Taking a screenshot and NOT showing it in chat
+- Mentioning you took a screenshot without displaying it
+- Saying "screenshot saved to /tmp/..." without showing the actual image
+- Waiting until later to show screenshots
+
+**DO NOT create test files like `take-screenshots.spec.js` - use the MCP tools directly**
 
 ### Wait/Pause Protocol
 **When the user tells you to wait or pause:**
