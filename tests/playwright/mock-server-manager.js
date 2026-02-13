@@ -8,8 +8,8 @@ const __dirname = dirname(__filename);
 export class MockServerManager {
   constructor() {
     this.server = null;
-    this.port = null;
-    this.useSharedServer = false; // Flag for parallel tests
+    this.port = 3000; // Default to shared mock server port
+    this.useSharedServer = true; // Default to using shared server for most tests
   }
 
   /**

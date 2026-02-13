@@ -6,7 +6,6 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
 
   test('should display repos dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -43,7 +42,6 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
 
   test('should allow selecting a repository from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -78,7 +76,6 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
 
   test('should persist selected repo across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -119,7 +116,6 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
 
   test('should clear selected repo on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -173,7 +169,6 @@ test.describe('Repos Dropdown', { tag: '@parallel' }, () => {
 test.describe('Repos Dropdown - Server Config Tests', { tag: '@serial' }, () => {
   test('should show loading spinner while fetching repos', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000;
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ latency: 1000 }); // Add latency to see loading
     
@@ -199,7 +194,6 @@ test.describe('Repos Dropdown - Server Config Tests', { tag: '@serial' }, () => 
 
   test('should show error page when repos fetch returns 500', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000;
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ errors: { listUserRepos: 500 } });
     
@@ -223,7 +217,6 @@ test.describe('Repos Dropdown - Server Config Tests', { tag: '@serial' }, () => 
 
   test('should show error page when repos fetch returns 401', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000;
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ errors: { listUserRepos: 401 } });
     

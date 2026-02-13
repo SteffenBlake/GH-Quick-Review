@@ -8,7 +8,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('Dropdown Width Constraints', { tag: '@parallel' }, () => {
   test('PR dropdown should not exceed container width with long PR name', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -75,7 +74,6 @@ test.describe('Dropdown Width Constraints', { tag: '@parallel' }, () => {
   
   test('PR dropdown should be visible and not hidden by font picker', async ({ page }) => {
     const mockServer = new MockServerManager();
-    mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {

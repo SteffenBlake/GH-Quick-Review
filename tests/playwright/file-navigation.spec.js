@@ -10,7 +10,6 @@ import { MockServerManager } from './mock-server-manager.js';
 test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => {
   test('clicking a file in directory browser scrolls to that file', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -49,7 +48,6 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
   test('scrolling through files auto-selects them in directory browser', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -93,7 +91,6 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
   test('file card headers are sticky when scrolling', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
@@ -154,7 +151,6 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
   test('no feedback loop between click and scroll selection', async ({ page }) => {
     const mockServer = new MockServerManager();
-    const port = mockServer.port = 3000; // Use globally started mock server
       await mockServer.checkHeartbeat();
     
     try {
