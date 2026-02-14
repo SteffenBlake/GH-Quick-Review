@@ -1171,6 +1171,16 @@ body {
   font-size: 0.85rem;
 }
 
+.comment-pending-badge {
+  color: #fbbf24;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #fbbf24;
+  background-color: rgba(251, 191, 36, 0.1);
+}
+
 .comment-item-actions {
   margin-left: auto;
   display: flex;

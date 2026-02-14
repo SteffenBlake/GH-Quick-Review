@@ -11,6 +11,7 @@ import { githubClient } from '../utils/github-client';
 
 /**
  * Hook to fetch all comments for the currently selected PR
+ * Merges comments from REST API (submitted comments) and GraphQL (pending review comments)
  */
 export function useComments() {
   return useQuery({
@@ -18,10 +19,93 @@ export function useComments() {
     queryFn: async () => {
       if (!selectedRepo.value || !selectedPr.value) return [];
       
-      return await githubClient.listPullComments(
+      // Fetch submitted comments from REST API
+      const restComments = await githubClient.listPullComments(
         selectedRepo.value,
         selectedPr.value
       );
+      
+      // Fetch reviews with comments from GraphQL (including PENDING reviews)
+      // Parse owner/repo from full repo name
+      const [owner, repo] = selectedRepo.value.split('/');
+      let graphqlComments = [];
+      
+      try {
+        const graphqlResponse = await githubClient.fetchReviewsWithComments(
+          owner,
+          repo,
+          selectedPr.value
+        );
+        
+        // Extract comments from GraphQL response
+        if (graphqlResponse?.data?.repository?.pullRequest?.reviews?.nodes) {
+          const reviews = graphqlResponse.data.repository.pullRequest.reviews.nodes;
+          
+          // Flatten all comments from all reviews
+          graphqlComments = reviews.flatMap(review => 
+            (review.comments?.nodes || []).map(comment => ({
+              // Transform GraphQL comment to REST API format
+              id: parseInt(comment.id.replace('PRRC_', '')), // Extract numeric ID
+              pull_number: selectedPr.value,
+              diff_hunk: comment.diffHunk || '',
+              path: comment.path || '',
+              position: null,
+              original_position: null,
+              commit_id: null, // Not available in GraphQL response
+              original_commit_id: null,
+              user: {
+                login: comment.author?.login || 'unknown',
+                id: 0,
+                type: 'User'
+              },
+              body: comment.body || '',
+              created_at: comment.createdAt,
+              updated_at: comment.updatedAt,
+              html_url: '',
+              pull_request_url: '',
+              line: comment.line,
+              side: 'RIGHT',
+              start_line: comment.startLine,
+              start_side: comment.startLine ? 'RIGHT' : null,
+              in_reply_to_id: null,
+              _isPending: review.state === 'PENDING', // Add flag for pending comments
+              _reviewState: review.state // Store review state for debugging
+            }))
+          );
+        }
+      } catch (error) {
+        console.error('Failed to fetch GraphQL comments:', error);
+        // Continue with REST comments only if GraphQL fails
+      }
+      
+      // Merge and deduplicate comments
+      // Create a map by comment ID to avoid duplicates
+      const commentsMap = new Map();
+      
+      // Add REST comments first (they are the source of truth for submitted comments)
+      restComments.forEach(comment => {
+        commentsMap.set(comment.id, comment);
+      });
+      
+      // Merge GraphQL comment data (especially _isPending flag) with existing comments
+      // or add new comments that don't exist in REST yet
+      graphqlComments.forEach(comment => {
+        const existing = commentsMap.get(comment.id);
+        if (existing) {
+          // Comment exists in both - merge the _isPending flag from GraphQL
+          commentsMap.set(comment.id, {
+            ...existing,
+            _isPending: comment._isPending,
+            _reviewState: comment._reviewState
+          });
+        } else {
+          // New comment only in GraphQL (truly pending, not yet in REST)
+          commentsMap.set(comment.id, comment);
+        }
+      });
+      
+      // Convert map back to array
+      return Array.from(commentsMap.values());
     },
     enabled: !!selectedRepo.value && !!selectedPr.value,
   });

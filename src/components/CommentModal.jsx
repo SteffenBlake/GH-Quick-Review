@@ -261,6 +261,9 @@ export function CommentModal() {
                   <span className="comment-item-date">
                     {new Date(comment.created_at).toLocaleString()}
                   </span>
+                  {comment._isPending && (
+                    <span className="comment-pending-badge">Pending</span>
+                  )}
                   {comment.isCurrentUser && (
                     <div className="comment-item-actions">
                       <button

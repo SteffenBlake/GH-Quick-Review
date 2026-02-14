@@ -431,6 +431,67 @@ class GitHubClient {
     }
     return this.post(`/repos/${repo}/pulls/${pullNumber}/reviews/${reviewId}/events`, submission);
   }
+
+  /**
+   * Fetch reviews with comments via GraphQL
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name (not full name)
+   * @param {number} prNumber - Pull request number
+   * @returns {Promise<Object>} - GraphQL response with reviews and comments
+   */
+  async fetchReviewsWithComments(owner, repo, prNumber) {
+    if (!owner) {
+      throw new Error('Repository owner is required');
+    }
+    if (!repo) {
+      throw new Error('Repository name is required');
+    }
+    if (!prNumber) {
+      throw new Error('Pull request number is required');
+    }
+
+    const query = `
+      query($owner: String!, $repo: String!, $prNumber: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $prNumber) {
+            reviews(first: 100, states: [PENDING, COMMENTED, APPROVED, CHANGES_REQUESTED]) {
+              nodes {
+                id
+                state
+                comments(first: 100) {
+                  nodes {
+                    id
+                    body
+                    path
+                    line
+                    startLine
+                    createdAt
+                    updatedAt
+                    diffHunk
+                    pullRequestReview {
+                      id
+                      state
+                    }
+                    author {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      owner,
+      repo,
+      prNumber
+    };
+
+    return this.graphql(query, variables);
+  }
 }
 
 // Export singleton instance

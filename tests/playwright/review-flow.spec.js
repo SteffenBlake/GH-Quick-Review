@@ -15,7 +15,7 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
       
-      // Select test_repo_1 which has NO active review
+      // Select test_repo_1 PR #2 which has NO active review
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
@@ -24,7 +24,7 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       await prDropdown.locator('.fuzzy-dropdown-control').click();
-      await prDropdown.getByText('#1 -').click();
+      await prDropdown.getByText('#2 -').click();
       
       // Wait for diff viewer to load
       await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
