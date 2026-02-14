@@ -7,6 +7,7 @@
 import { useMemo } from 'preact/hooks';
 import { usePrData } from './prDataStore.js';
 import { useDirectoryTree } from './directoryTreeStore.js';
+import { useComments } from './commentsStore.js';
 
 /**
  * Parse a diff hunk header to extract line number information
@@ -198,12 +199,14 @@ function getFilesInDirectoryOrder(tree) {
  * Process PR data to create diffs by file with assigned comment chains
  * @param {Object} prData - PR data from prDataStore
  * @param {Object} tree - Directory tree structure
+ * @param {Array} mergedComments - Merged comments from useComments (includes _isPending flag)
  * @returns {Array} - Array of file objects with diffs and comments
  */
-function processDiffsByFile(prData, tree) {
+function processDiffsByFile(prData, tree, mergedComments) {
   if (!prData || !prData.files) return [];
 
-  const { files, comments } = prData;
+  const { files } = prData;
+  const comments = mergedComments || [];
   
   // Get files in directory browser order
   const orderedFilePaths = getFilesInDirectoryOrder(tree);
@@ -298,20 +301,21 @@ function processDiffsByFile(prData, tree) {
 
 /**
  * Hook to get diffs organized by file with comment chains
- * This is a computed store based on PR data and directory tree
+ * This is a computed store based on PR data, directory tree, and merged comments
  */
 export function useDiffsByFile() {
   const { data: prData, isLoading: prLoading, error: prError } = usePrData();
   const { tree, isLoading: treeLoading, error: treeError } = useDirectoryTree();
+  const { data: mergedComments, isLoading: commentsLoading, error: commentsError } = useComments();
 
   const diffsByFile = useMemo(() => {
     if (!prData || !tree) return [];
-    return processDiffsByFile(prData, tree);
-  }, [prData, tree]);
+    return processDiffsByFile(prData, tree, mergedComments || []);
+  }, [prData, tree, mergedComments]);
 
   return {
     diffsByFile,
-    isLoading: prLoading || treeLoading,
-    error: prError || treeError
+    isLoading: prLoading || treeLoading || commentsLoading,
+    error: prError || treeError || commentsError
   };
 }

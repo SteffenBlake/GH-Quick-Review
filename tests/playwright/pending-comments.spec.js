@@ -112,6 +112,9 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
       // Count message buttons before reload
       const messageButtonsBefore = page.locator('.diff-line-message-btn.has-message');
       const countBefore = await messageButtonsBefore.count();
+      
+      // PR #1 has 3 comments total (all should have message buttons)
+      expect(countBefore).toBe(3);
       expect(countBefore).toBeGreaterThan(0);
       
       // Reload the page to simulate user refresh
@@ -123,6 +126,7 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
       // Count message buttons after reload - should be the same
       const messageButtonsAfter = page.locator('.diff-line-message-btn.has-message');
       const countAfter = await messageButtonsAfter.count();
+      expect(countAfter).toBe(3);
       expect(countAfter).toBe(countBefore);
       
       // Now find and verify the pending comment still has its badge
@@ -186,8 +190,14 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
       const messageButtons = page.locator('.diff-line-message-btn.has-message');
       const count = await messageButtons.count();
       
-      // PR #1 has 3 comments total (2 submitted + 1 pending)
-      // All should be displayed
+      // PR #1 has 3 comments total:
+      // - Comment 1001 (submitted, example.js line 15)
+      // - Comment 1002 (submitted, example.cs line 32)
+      // - Comment 4001 (pending, example.js line 4)
+      // All should be displayed as message buttons
+      expect(count).toBe(3);
+      
+      // Also verify count is greater than 0 for backwards compatibility
       expect(count).toBeGreaterThan(0);
       
       // Success - comments were merged correctly from both sources!
