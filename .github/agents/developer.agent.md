@@ -656,11 +656,14 @@ You should use the playwright MCP tools to navigate the UI and take screenshots 
 
 **7. Stop Servers When Done**
 ```bash
-# Find PIDs
+# Find ONLY the mock server PID (not all node processes!)
 ps aux | grep "node tools/gh-mock-server" | grep -v grep | awk '{print $2}'
+
+# Find ONLY the vite dev server PID
 ps aux | grep "vite" | grep -v grep | awk '{print $2}'
 
-# Kill specific PIDs (replace with actual PIDs)
+# Kill ONLY these specific PIDs (NOT all node processes)
+# CRITICAL: Never use 'killall node' or kill all node PIDs - you ARE a node process!
 kill <mock_server_pid> <vite_pid>
 ```
 
