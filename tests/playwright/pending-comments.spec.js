@@ -59,8 +59,10 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
           const badgeColor = await pendingBadge.first().evaluate(el => {
             return window.getComputedStyle(el).color;
           });
-          // RGB for #fbbf24 is approximately rgb(251, 191, 36)
+          // RGB for #fbbf24 is rgb(251, 191, 36)
           expect(badgeColor).toContain('251');
+          expect(badgeColor).toContain('191');
+          expect(badgeColor).toContain('36');
           
           foundPendingComment = true;
           break;
