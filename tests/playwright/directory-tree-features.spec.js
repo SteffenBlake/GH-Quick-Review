@@ -203,10 +203,31 @@ test.describe('Directory Browser - File Tree Features', { tag: '@parallel' }, ()
       
       await expect(page.locator('.directory-browser')).toBeVisible();
       
-      // test_repo_1 PR #1 has comments on example.cs and example.js
-      // Check for comment indicators
+      // test_repo_1 PR #1 has comments on:
+      // - empty-lines.txt: 1 PENDING comment (line 3) - ISOLATED pending comment test case!
+      // - example.js: 1 COMMENTED comment (line 15)
+      // - example.cs: 1 COMMENTED comment (line 32)
+      // The comment indicator is just an ICON (not a number), shown when commentCount > 0
+      
+      // Check for comment indicators - should be exactly 3 (one per file with comments)
       const commentIndicators = page.locator('.comment-indicator');
-      await expect(commentIndicators.first()).toBeVisible();
+      await expect(commentIndicators).toHaveCount(3);
+      
+      // CRITICAL: Check empty-lines.txt has a comment indicator
+      // This file ONLY has a PENDING comment, nothing else
+      // If this shows up, pending comments are working correctly!
+      const emptyLinesEntry = page.locator('.directory-entry-content:has-text("empty-lines.txt")');
+      const emptyLinesIndicator = emptyLinesEntry.locator('.comment-indicator');
+      await expect(emptyLinesIndicator).toBeVisible();
+      
+      // Also check the other files for completeness
+      const exampleJsEntry = page.locator('.directory-entry-content:has-text("example.js")');
+      const exampleJsIndicator = exampleJsEntry.locator('.comment-indicator');
+      await expect(exampleJsIndicator).toBeVisible();
+      
+      const exampleCsEntry = page.locator('.directory-entry-content:has-text("example.cs")');
+      const exampleCsIndicator = exampleCsEntry.locator('.comment-indicator');
+      await expect(exampleCsIndicator).toBeVisible();
     } finally {
       await mockServer.stop();
     }
