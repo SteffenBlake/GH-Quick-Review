@@ -91,9 +91,12 @@ export function CommentModal() {
         };
         
         // Ensure modal stays focused after data refresh
-        if (modalRef.current && document.activeElement !== modalRef.current) {
-          modalRef.current.focus();
-        }
+        // Use setTimeout to ensure focus is applied after any re-renders from the data update
+        setTimeout(() => {
+          if (modalRef.current) {
+            modalRef.current.focus();
+          }
+        }, 0);
       }
     }
   }, [allComments, hasCommentChain]);
