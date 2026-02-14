@@ -92,11 +92,12 @@ export function CommentModal() {
         
         // Ensure modal stays focused after data refresh
         // Use setTimeout to ensure focus is applied after any re-renders from the data update
+        // Small delay (50ms) to ensure all re-renders complete in busy test environments
         setTimeout(() => {
           if (modalRef.current) {
             modalRef.current.focus();
           }
-        }, 0);
+        }, 50);
       }
     }
   }, [allComments, hasCommentChain]);
@@ -238,6 +239,17 @@ export function CommentModal() {
       ref={modalRef}
       className="comment-modal"
       tabIndex={-1}
+      onBlur={(e) => {
+        // If the modal is losing focus but a comment chain or new comment is active,
+        // refocus the modal after a brief delay to prevent focus loss during data refetches
+        if (hasCommentChain || isNewComment) {
+          setTimeout(() => {
+            if (modalRef.current && (hasCommentChain || isNewComment)) {
+              modalRef.current.focus();
+            }
+          }, 100);
+        }
+      }}
     >
         {/* Header with Resolve button */}
         <div className="comment-modal-header">
