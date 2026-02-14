@@ -573,12 +573,6 @@ class GitHubMockServer {
         handler: this.getContents.bind(this)
       },
       {
-        // List review comments: GET /repos/{owner}/{repo}/pulls/{pull_number}/comments
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments$/,
-        method: 'GET',
-        handler: this.listComments.bind(this)
-      },
-      {
         // Add review comment: POST /repos/{owner}/{repo}/pulls/{pull_number}/comments
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments$/,
         method: 'POST',
@@ -823,27 +817,6 @@ class GitHubMockServer {
         documentation_url: 'https://docs.github.com/rest'
       });
     }
-  }
-
-  listComments(req, res, match) {
-    if (this.checkConfiguredError('listComments', res)) return;
-    
-    const [, owner, repo, pullNumber] = match;
-    const repoData = this.loadRepoData(repo);
-    const pull = repoData.pulls.get(parseInt(pullNumber));
-    
-    if (!pull) {
-      return this.sendResponse(res, 404, {
-        message: 'Not Found',
-        documentation_url: 'https://docs.github.com/rest/pulls/comments#list-review-comments-on-a-pull-request'
-      });
-    }
-    
-    // Get all comments for this PR
-    const comments = Array.from(repoData.comments.values())
-      .filter(comment => comment.pull_number === parseInt(pullNumber));
-    
-    this.sendResponse(res, 200, comments);
   }
 
   addComment(req, res, match) {
@@ -1486,7 +1459,6 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
       console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
       console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
       console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
-      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
       console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
       console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
       console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
