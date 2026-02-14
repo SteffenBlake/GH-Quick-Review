@@ -222,21 +222,7 @@ class GitHubClient {
     return this.get(endpoint);
   }
 
-  /**
-   * List review comments on a pull request
-   * @param {string} repo - Full repository name (e.g., 'owner/repo')
-   * @param {number} pullNumber - Pull request number
-   * @returns {Promise<Array>} - Array of review comment objects
-   */
-  async listPullComments(repo, pullNumber) {
-    if (!repo) {
-      throw new Error('Repository name is required');
-    }
-    if (!pullNumber) {
-      throw new Error('Pull request number is required');
-    }
-    return this.get(`/repos/${repo}/pulls/${pullNumber}/comments`);
-  }
+
 
   /**
    * Create a review comment on a pull request
@@ -433,13 +419,13 @@ class GitHubClient {
   }
 
   /**
-   * Fetch reviews with comments via GraphQL
+   * Fetch review threads with comments via GraphQL
    * @param {string} owner - Repository owner
    * @param {string} repo - Repository name (not full name)
    * @param {number} prNumber - Pull request number
-   * @returns {Promise<Object>} - GraphQL response with reviews and comments
+   * @returns {Promise<Object>} - GraphQL response with review threads and comments
    */
-  async fetchReviewsWithComments(owner, repo, prNumber) {
+  async fetchReviewThreads(owner, repo, prNumber) {
     if (!owner) {
       throw new Error('Repository owner is required');
     }
@@ -454,26 +440,32 @@ class GitHubClient {
       query($owner: String!, $repo: String!, $prNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $prNumber) {
-            reviews(first: 100, states: [PENDING, COMMENTED, APPROVED, CHANGES_REQUESTED]) {
+            reviewThreads(first: 100) {
               nodes {
                 id
-                state
+                isResolved
+                isOutdated
+                isCollapsed
+                path
+                originalLine
+                line
                 comments(first: 100) {
                   nodes {
                     id
+                    databaseId
                     body
                     path
                     line
                     startLine
+                    diffHunk
                     createdAt
                     updatedAt
-                    diffHunk
+                    author {
+                      login
+                    }
                     pullRequestReview {
                       id
                       state
-                    }
-                    author {
-                      login
                     }
                   }
                 }

@@ -180,7 +180,14 @@ class GitHubMockServer {
 
     if (!existsSync(dataPath)) {
       console.warn(`Data file not found for repo: ${repoName}`);
-      return { pulls: new Map(), comments: new Map(), nextCommentId: 1 };
+      return { 
+        pulls: new Map(), 
+        comments: new Map(), 
+        reviews: new Map(),
+        reviewThreads: new Map(),
+        nextCommentId: 1,
+        nextReviewId: 1
+      };
     }
 
     const rawData = readFileSync(dataPath, 'utf8');
@@ -190,12 +197,13 @@ class GitHubMockServer {
       pulls: new Map(data.pulls.map(pr => [pr.number, { ...pr }])),
       comments: new Map(data.comments.map(comment => [comment.id, { ...comment }])),
       reviews: new Map((data.reviews || []).map(review => [review.id, { ...review }])),
+      reviewThreads: new Map((data.reviewThreads || []).map(thread => [thread.id, { ...thread }])),
       nextCommentId: Math.max(...data.comments.map(c => c.id), 0) + 1,
       nextReviewId: Math.max(...(data.reviews || []).map(r => r.id), 0) + 1
     };
 
     this.repoDataCache.set(repoName, repoData);
-    this.log(`Loaded ${repoData.pulls.size} PRs, ${repoData.comments.size} comments, and ${repoData.reviews.size} reviews for ${repoName}`);
+    this.log(`Loaded ${repoData.pulls.size} PRs, ${repoData.comments.size} comments, ${repoData.reviews.size} reviews, and ${repoData.reviewThreads.size} review threads for ${repoName}`);
     return repoData;
   }
 
@@ -1199,6 +1207,78 @@ class GitHubMockServer {
               pullRequest: {
                 reviews: {
                   nodes: reviewNodes
+                }
+              }
+            }
+          }
+        });
+      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviewThreads')) {
+        // Handle pullRequest reviewThreads query
+        const { variables } = body;
+        if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Variables with owner, repo, and prNumber are required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const { owner, repo, prNumber } = variables;
+        
+        // Load repo data
+        const repoData = this.loadRepoData(repo);
+        const pull = repoData.pulls.get(parseInt(prNumber));
+        
+        if (!pull) {
+          return this.sendResponse(res, 200, {
+            data: {
+              repository: null
+            }
+          });
+        }
+        
+        // Get all review threads for this PR
+        const threads = Array.from(repoData.reviewThreads.values())
+          .filter(thread => thread.pull_number === parseInt(prNumber));
+        
+        // Build GraphQL response with review threads
+        const threadNodes = threads.map(thread => ({
+          id: thread.id,
+          isResolved: thread.isResolved,
+          isOutdated: thread.isOutdated,
+          isCollapsed: thread.isCollapsed,
+          path: thread.path,
+          originalLine: thread.originalLine,
+          line: thread.line,
+          comments: {
+            nodes: thread.comments.map(comment => ({
+              id: comment.id,
+              databaseId: comment.databaseId,
+              body: comment.body,
+              path: comment.path,
+              line: comment.line,
+              startLine: comment.startLine,
+              diffHunk: comment.diffHunk,
+              createdAt: comment.createdAt,
+              updatedAt: comment.updatedAt,
+              author: {
+                login: comment.author.login
+              },
+              pullRequestReview: {
+                id: comment.pullRequestReview.id,
+                state: comment.pullRequestReview.state
+              }
+            }))
+          }
+        }));
+        
+        this.sendResponse(res, 200, {
+          data: {
+            repository: {
+              pullRequest: {
+                reviewThreads: {
+                  nodes: threadNodes
                 }
               }
             }

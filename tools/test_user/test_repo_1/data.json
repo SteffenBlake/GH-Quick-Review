@@ -227,5 +227,127 @@
       "commit_id": "abc123def456",
       "author_association": "OWNER"
     }
+  ],
+  "reviewThreads": [
+    {
+      "pull_number": 1,
+      "id": "PRT_kwDOThread1001",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.js",
+      "originalLine": 15,
+      "line": 15,
+      "comments": [
+        {
+          "id": "PRRC_kwDO1001",
+          "databaseId": 1001,
+          "body": "Good improvement! Consider also validating the token format before attempting to verify it.",
+          "path": "example.js",
+          "line": 15,
+          "startLine": null,
+          "diffHunk": "@@ -10,7 +10,12 @@ export const authenticate = async (req, res, next) => {\n   const token = req.headers.authorization;\n-  if (!token) {\n-    return res.status(401).json({ error: 'No token provided' });\n+  if (!token || !token.startsWith('Bearer ')) {\n+    return res.status(401).json({ \n+      error: 'No token provided',\n+      message: 'Authorization header must include Bearer token'\n+    });",
+          "createdAt": "2024-01-15T11:00:00Z",
+          "updatedAt": "2024-01-15T11:00:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6002",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 1,
+      "id": "PRT_kwDOThread1002",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.cs",
+      "originalLine": 32,
+      "line": 32,
+      "comments": [
+        {
+          "id": "PRRC_kwDO1002",
+          "databaseId": 1002,
+          "body": "Is `authTime` being used anywhere? If not, consider removing it to keep the middleware lean.",
+          "path": "example.cs",
+          "line": 32,
+          "startLine": 31,
+          "diffHunk": "@@ -25,6 +30,8 @@ export const authenticate = async (req, res, next) => {\n   try {\n     const decoded = jwt.verify(token, process.env.JWT_SECRET);\n     req.user = decoded;\n+    req.authenticated = true;\n+    req.authTime = Date.now();",
+          "createdAt": "2024-01-15T12:30:00Z",
+          "updatedAt": "2024-01-15T12:30:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6002",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 1,
+      "id": "PRT_kwDOThread4001",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.js",
+      "originalLine": 4,
+      "line": 4,
+      "comments": [
+        {
+          "id": "PRRC_kwDO4001",
+          "databaseId": 4001,
+          "body": "Pending comment on app.js",
+          "path": "example.js",
+          "line": 4,
+          "startLine": null,
+          "diffHunk": "@@ -1,5 +1,8 @@\n function hello() {\n   console.log(\"Hello, world!\");\n+  console.log(\"This is a test\");\n }",
+          "createdAt": "2024-01-15T12:00:00Z",
+          "updatedAt": "2024-01-15T12:00:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6001",
+            "state": "PENDING"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 2,
+      "id": "PRT_kwDOThread2001",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.cs",
+      "originalLine": 52,
+      "line": 52,
+      "comments": [
+        {
+          "id": "PRRC_kwDO2001",
+          "databaseId": 2001,
+          "body": "This looks good, but we should add a transaction here to ensure atomicity. What if two requests check at the same time?",
+          "path": "example.cs",
+          "line": 52,
+          "startLine": 48,
+          "diffHunk": "@@ -45,10 +45,15 @@ async function processPayment(userId, amount) {\n-  const payment = await Payment.create({\n-    userId,\n-    amount,\n-    status: 'pending'\n-  });\n+  const existingPayment = await Payment.findOne({\n+    where: { userId, amount, status: 'pending' }\n+  });\n+  \n+  if (existingPayment) {\n+    return existingPayment;\n+  }\n+  \n+  const payment = await Payment.create({ userId, amount, status: 'pending' });",
+          "createdAt": "2024-01-16T10:15:00Z",
+          "updatedAt": "2024-01-16T10:15:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6003",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    }
   ]
 }
