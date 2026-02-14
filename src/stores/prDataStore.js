@@ -29,10 +29,9 @@ export function usePrData() {
         }
 
         // Fetch all PR data in parallel
-        const [pullDetails, files, comments, reviews] = await Promise.all([
+        const [pullDetails, files, reviews] = await Promise.all([
           githubClient.getPull(repo, prNumber),
           githubClient.listPullFiles(repo, prNumber),
-          githubClient.listPullComments(repo, prNumber),
           githubClient.listPullReviews(repo, prNumber)
         ]);
 
@@ -44,11 +43,10 @@ export function usePrData() {
           review => review.state === 'PENDING' && review.user.login === currentUser.login
         );
         
-        // Return raw data object
+        // Return raw data object (comments are now managed by commentsStore separately)
         return {
           pull: pullDetails,
           files,
-          comments,
           reviews,
           existingReview
         };
