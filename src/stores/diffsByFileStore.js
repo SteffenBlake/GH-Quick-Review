@@ -310,8 +310,10 @@ export function useDiffsByFile() {
 
   const diffsByFile = useMemo(() => {
     if (!prData || !tree) return [];
+    // CRITICAL: Wait for comments to load before processing
+    if (commentsLoading) return [];
     return processDiffsByFile(prData, tree, mergedComments || []);
-  }, [prData, tree, mergedComments]);
+  }, [prData, tree, mergedComments, commentsLoading]); // Add commentsLoading to deps!
 
   return {
     diffsByFile,
