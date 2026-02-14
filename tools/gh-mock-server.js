@@ -904,6 +904,17 @@ class GitHubMockServer {
       }
       comment.updated_at = new Date().toISOString();
       
+      // ALSO update the comment in reviewThreads if it exists there
+      // (Comments are now fetched via GraphQL reviewThreads, not REST)
+      for (const [threadId, thread] of foundRepoData.reviewThreads.entries()) {
+        const threadComment = thread.comments.find(c => c.databaseId === parseInt(commentId));
+        if (threadComment && body.body !== undefined) {
+          threadComment.body = body.body;
+          threadComment.updatedAt = new Date().toISOString();
+          break;
+        }
+      }
+      
       this.sendResponse(res, 200, comment);
     });
   }
