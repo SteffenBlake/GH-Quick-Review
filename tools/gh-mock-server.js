@@ -1300,11 +1300,11 @@ class GitHubMockServer {
         let pullNumber = null;
         let foundPr = null;
         
-        for (const repoName of this.repos) {
-          const repoData = this.loadRepoData(repoName);
+        for (const repoObj of this.repos) {
+          const repoData = this.loadRepoData(repoObj.name);
           for (const [num, pr] of repoData.pulls.entries()) {
             if (pr.node_id === pullRequestId) {
-              repo = repoName;
+              repo = repoObj.name;
               pullNumber = num;
               foundPr = pr;
               break;
