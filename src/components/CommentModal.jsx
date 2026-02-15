@@ -114,6 +114,14 @@ export function CommentModal() {
         ? selectedCommentLocation.value.lineNumber 
         : selectedCommentChain.value.lineNumber;
       
+      console.log('[CommentModal] Submitting comment:', {
+        isNewComment,
+        filename,
+        lineNumber,
+        commentText: commentText.substring(0, 50),
+        hasActiveReview: !!activeReview
+      });
+      
       // Check if we have an active review
       if (activeReview) {
         // Add comment to existing review
@@ -125,14 +133,18 @@ export function CommentModal() {
           side: 'RIGHT',
         };
         
+        console.log('[CommentModal] Calling addReviewComment.mutateAsync with:', commentData);
         await addReviewComment.mutateAsync(commentData);
+        console.log('[CommentModal] addReviewComment completed successfully');
       } else {
         // No active review - create one first, then add comment
+        console.log('[CommentModal] Creating new review first');
         const newReview = await createReview.mutateAsync({
           commitId: commitSha,
           body: '',
           event: 'PENDING',
         });
+        console.log('[CommentModal] New review created:', newReview.node_id);
         
         // Now add comment to the newly created review
         const commentData = {
@@ -143,12 +155,16 @@ export function CommentModal() {
           side: 'RIGHT',
         };
         
+        console.log('[CommentModal] Calling addReviewComment.mutateAsync with:', commentData);
         await addReviewComment.mutateAsync(commentData);
+        console.log('[CommentModal] addReviewComment completed successfully');
       }
       
+      console.log('[CommentModal] Starting manual refetch');
       // Manually refetch comments to ensure new comment appears immediately in the UI
       // Query invalidation happens in onSuccess callback, but we need to wait for the refetch
       await refetchComments();
+      console.log('[CommentModal] Manual refetch completed, allComments.length:', allComments.length);
       
       // After creating the first comment on a new line, transition from "new comment" mode to
       // "existing thread" mode so the modal shows the thread instead of the empty comment form
