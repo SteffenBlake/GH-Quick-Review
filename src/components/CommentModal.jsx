@@ -80,6 +80,13 @@ export function CommentModal() {
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
+    
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    // The submit button might lose focus when the form re-renders, which would break :focus-within
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     if (!commentText.trim() || !prData?.pull) return;
 
     try {
@@ -126,10 +133,6 @@ export function CommentModal() {
       }
       
       setCommentText('');
-      // Refocus modal after clearing text to maintain visibility
-      if (modalRef.current) {
-        modalRef.current.focus();
-      }
     } catch (error) {
       console.error('Failed to submit comment:', error);
       alert('Failed to submit comment. Please try again.');
@@ -158,6 +161,11 @@ export function CommentModal() {
   };
 
   const handleSubmitEdit = async (commentId) => {
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     if (!editText.trim()) return;
 
     try {
@@ -171,6 +179,11 @@ export function CommentModal() {
   };
 
   const handleDeleteComment = async (commentId) => {
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     if (!confirm('Are you sure you want to delete this comment?')) return;
 
     try {
