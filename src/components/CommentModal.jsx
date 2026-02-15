@@ -62,13 +62,13 @@ export function CommentModal() {
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
 
-  // Auto-focus the modal whenever the signals change (even if setting the same value again)
+  // Auto-focus the modal when it first opens
   // The CSS :focus-within handles visibility - focused = visible, not focused = hidden
   useEffect(() => {
     if ((hasCommentChain || isNewComment) && modalRef.current) {
       modalRef.current.focus();
     }
-  }, [selectedCommentChain.value, selectedCommentLocation.value]);
+  }, [hasCommentChain, isNewComment]);
 
   // Update selectedCommentChain when allComments changes (after mutations)
   // This keeps the modal in sync with fresh comment data
@@ -89,15 +89,6 @@ export function CommentModal() {
           lineNumber,
           comments: updatedChain
         };
-        
-        // Ensure modal stays focused after data refresh
-        // Use setTimeout to ensure focus is applied after any re-renders from the data update
-        // Small delay (50ms) to ensure all re-renders complete in busy test environments
-        setTimeout(() => {
-          if (modalRef.current) {
-            modalRef.current.focus();
-          }
-        }, 50);
       }
     }
   }, [allComments, hasCommentChain]);
@@ -150,7 +141,7 @@ export function CommentModal() {
       }
       
       setCommentText('');
-      hideCommentModal();
+      // Don't blur the modal - let user continue working
     } catch (error) {
       console.error('Failed to submit comment:', error);
       alert('Failed to submit comment. Please try again.');
@@ -160,16 +151,15 @@ export function CommentModal() {
   const handleCancel = () => {
     setCommentText('');
     hideCommentModal();
-    // Blur to hide modal (same pattern as directory browser)
-    if (document.activeElement) {
-      document.activeElement.blur();
+    // Blur the modal to hide it via CSS :focus-within
+    if (modalRef.current) {
+      modalRef.current.blur();
     }
   };
 
   const handleResolve = async () => {
     // TODO: Implement resolve via GitHub API (requires review API)
     console.log('Resolve comment thread');
-    hideCommentModal();
   };
 
   const handleEditComment = (commentId, currentBody) => {
@@ -218,7 +208,7 @@ export function CommentModal() {
         event: 'REQUEST_CHANGES',
       });
       
-      hideCommentModal();
+      // Don't blur the modal - let user continue working
     } catch (error) {
       console.error('Failed to submit review:', error);
       alert('Failed to submit review. Please try again.');
@@ -239,17 +229,6 @@ export function CommentModal() {
       ref={modalRef}
       className="comment-modal"
       tabIndex={-1}
-      onBlur={(e) => {
-        // If the modal is losing focus but a comment chain or new comment is active,
-        // refocus the modal after a brief delay to prevent focus loss during data refetches
-        if (hasCommentChain || isNewComment) {
-          setTimeout(() => {
-            if (modalRef.current && (hasCommentChain || isNewComment)) {
-              modalRef.current.focus();
-            }
-          }, 100);
-        }
-      }}
     >
         {/* Header with Resolve button */}
         <div className="comment-modal-header">
