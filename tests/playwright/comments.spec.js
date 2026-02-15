@@ -417,14 +417,19 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       
       // Submit the comment
       // For new comments without an active review, the button says "Add Comment and start review"
-      await page.getByRole('button', { name: /Add comment/i }).click();
+      const submitButton = page.getByRole('button', { name: /Add comment/i });
+      await expect(submitButton).toBeVisible();
+      await expect(submitButton).toBeEnabled(); // Wait for button to be enabled after typing
+      await submitButton.click();
       
       // The modal should transition from "New Comment" to "Comment Thread"
-      await expect(page.locator('.comment-modal h2')).toContainText('Comment Thread', { timeout: 2000 });
+      // Make sure we're checking the FOCUSED modal, not some other modal on the page
+      const modal = page.locator('.comment-modal:focus');
+      await expect(modal.locator('h2')).toContainText('Comment Thread', { timeout: 2000 });
       
       // The comment should appear immediately in the modal
-      await expect(page.locator('.comment-item')).toHaveCount(1);
-      await expect(page.locator('.comment-item-body')).toContainText('First comment in new thread');
+      await expect(modal.locator('.comment-item')).toHaveCount(1);
+      await expect(modal.locator('.comment-item-body')).toContainText('First comment in new thread');
       
     } finally {
       await mockServer.reset();

@@ -1123,9 +1123,6 @@ class GitHubMockServer {
     this.readBody(req, (body) => {
       const { query, variables } = body;
       
-      console.log('[GraphQL] Request received, query type:', query ? query.substring(0, 50) + '...' : 'NONE');
-      console.log('[GraphQL] Variables:', JSON.stringify(variables, null, 2));
-      
       if (!query) {
         return this.sendResponse(res, 400, {
           errors: [{
