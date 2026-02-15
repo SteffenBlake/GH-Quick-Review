@@ -161,14 +161,14 @@ export function DiffLine({ line, lineNumber, index, filename, isSelected, hasCom
           >
             {ICON_MESSAGE_ALERT}
           </button>
-        ) : (
+        ) : lineNumber !== null ? (
           <button 
             className="diff-line-message-btn add-message"
             onClick={handleMessageClick}
           >
             {ICON_MESSAGE_PLUS}
           </button>
-        )}
+        ) : null}
       </span>
       
       {/* Git icon */}

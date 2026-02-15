@@ -122,6 +122,29 @@ export class MockServerManager {
     }
   }
 
+  /**
+   * Get logged errors from the mock server
+   * @returns {Promise<Array>} Array of error messages
+   */
+  async getErrors() {
+    if (!this.port) {
+      throw new Error('Mock server not available - no port');
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:${this.port}/error-messages`);
+      
+      if (!response.ok) {
+        throw new Error(`Get errors failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.errors || [];
+    } catch (error) {
+      throw new Error(`Mock server get errors failed: ${error.message}`);
+    }
+  }
+
   getPort() {
     return this.port;
   }

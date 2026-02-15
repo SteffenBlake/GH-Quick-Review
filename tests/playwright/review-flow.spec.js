@@ -33,11 +33,11 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
       
       // Hover over a line to reveal the message button
-      const diffLine = page.locator('.diff-line').first();
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
       
       // Click on a message button to open comment modal
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear and be focused
@@ -67,8 +67,16 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
       
       // Now add another comment - should show active review UI
-      await diffLine.hover();
-      await messageButton.click();
+      // Find a DIFFERENT line that doesn't have comments yet
+      // The first line now has a comment, so find the second line with a number
+      const allLinesWithNumbers = page.locator('.diff-line:has(.diff-line-number:not(:empty))');
+      const diffLine2 = allLinesWithNumbers.nth(1); // Get second line instead of first
+      await diffLine2.hover();
+      
+      // This line shouldn't have comments yet, so add-message button should appear
+      const messageButton2 = diffLine2.locator('.diff-line-message-btn');
+      await expect(messageButton2).toBeVisible({ timeout: 1000 });
+      await messageButton2.click();
       
       // Modal should appear
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
@@ -117,11 +125,11 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
       
       // Hover over a line to reveal the message button
-      const diffLine = page.locator('.diff-line').first();
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
       
       // Click on a message button to open comment modal
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear and be focused
@@ -178,9 +186,9 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
       
       // Hover over a line and open comment modal
-      const diffLine = page.locator('.diff-line').first();
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear
