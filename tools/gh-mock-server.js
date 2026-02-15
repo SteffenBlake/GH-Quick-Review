@@ -1059,24 +1059,12 @@ class GitHubMockServer {
   }
 
   handleGraphQL(req, res, match) {
-    process.stderr.write(`[GRAPHQL] handleGraphQL called for ${req.method} ${req.url}\n`);
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
-    let callbackCount = 0;
     this.readBody(req, (body) => {
-      callbackCount++;
-      process.stderr.write(`[GRAPHQL] readBody callback invoked (count: ${callbackCount})\n`);
-      if (callbackCount > 1) {
-        process.stderr.write(`[GRAPHQL] ERROR: readBody callback invoked ${callbackCount} times! Stack trace:\n${new Error().stack}\n`);
-        return; // Don't process duplicate callbacks
-      }
-      
-      process.stderr.write(`[GRAPHQL] body: ${JSON.stringify(body).substring(0, 200)}\n`);
-      
-      const { query } = body;
+      const { query, variables } = body;
       
       if (!query) {
-        process.stderr.write(`[GRAPHQL] ERROR: Query is missing!\n`);
         return this.sendResponse(res, 400, {
           errors: [{
             message: 'Query is required',
@@ -1085,11 +1073,12 @@ class GitHubMockServer {
         });
       }
       
-      process.stderr.write(`[GRAPHQL] Processing query type: ${query.includes('mutation') ? 'MUTATION' : 'QUERY'}\n`);
+      // Build response data piecewise
+      const responseData = {};
+      let handled = false;
       
-      // Parse the mutation to determine action
+      // Handle resolveReviewThread mutation
       if (query.includes('resolveReviewThread')) {
-        // Extract thread ID from mutation
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
           return this.sendResponse(res, 400, {
@@ -1100,21 +1089,17 @@ class GitHubMockServer {
           });
         }
         
-        const threadId = threadIdMatch[1];
-        
-        // Return success response for resolve
-        this.sendResponse(res, 200, {
-          data: {
-            resolveReviewThread: {
-              thread: {
-                id: threadId,
-                isResolved: true
-              }
-            }
+        responseData.resolveReviewThread = {
+          thread: {
+            id: threadIdMatch[1],
+            isResolved: true
           }
-        });
-      } else if (query.includes('unresolveReviewThread')) {
-        // Extract thread ID from mutation
+        };
+        handled = true;
+      }
+      
+      // Handle unresolveReviewThread mutation
+      if (query.includes('unresolveReviewThread')) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
           return this.sendResponse(res, 400, {
@@ -1125,20 +1110,17 @@ class GitHubMockServer {
           });
         }
         
-        const threadId = threadIdMatch[1];
-        
-        // Return success response for unresolve
-        this.sendResponse(res, 200, {
-          data: {
-            unresolveReviewThread: {
-              thread: {
-                id: threadId,
-                isResolved: false
-              }
-            }
+        responseData.unresolveReviewThread = {
+          thread: {
+            id: threadIdMatch[1],
+            isResolved: false
           }
-        });
-      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviews')) {
+        };
+        handled = true;
+      }
+      
+      // Handle reviews query
+      if (query.includes('reviews')) {
         // Handle pullRequest reviews query
         const { variables } = body;
         if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
@@ -1210,7 +1192,7 @@ class GitHubMockServer {
             }
           }
         });
-      } else if (!query.includes('mutation') && query.includes('repository') && query.includes('pullRequest') && query.includes('reviewThreads')) {
+      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviewThreads')) {
         // Handle pullRequest reviewThreads query
         const { variables } = body;
         if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
@@ -1374,14 +1356,12 @@ class GitHubMockServer {
         
         repoData.comments.set(newComment.id, newComment);
         
-        process.stderr.write(`[GRAPHQL] Adding comment ${newComment.id} to reviewThreads\n`);
         // ALSO update reviewThreads so the new comment appears in GraphQL queries
         // Find existing thread for this file and line
         let thread = null;
         for (const [threadId, t] of repoData.reviewThreads.entries()) {
           if (t.path === path && t.line === line && t.pull_number === pullNumber) {
             thread = t;
-            process.stderr.write(`[GRAPHQL] Found existing thread: ${threadId}\n`);
             break;
           }
         }
@@ -1401,7 +1381,6 @@ class GitHubMockServer {
             comments: []
           };
           repoData.reviewThreads.set(threadId, thread);
-          process.stderr.write(`[GRAPHQL] Created new thread: ${threadId}\n`);
         }
         
         // Add comment to the thread
@@ -1423,8 +1402,6 @@ class GitHubMockServer {
             state: foundReview.state
           }
         });
-        
-        process.stderr.write(`[GRAPHQL] Thread now has ${thread.comments.length} comments\n`);
         
         // Return GraphQL response
         this.sendResponse(res, 200, {
@@ -1466,25 +1443,22 @@ class GitHubMockServer {
     let body = '';
     let callbackInvoked = false;
     
-    const invokeCallback = (data) => {
-      if (callbackInvoked) {
-        process.stderr.write('[WARN] readBody callback already invoked for this request, skipping duplicate\n');
-        return;
-      }
-      callbackInvoked = true;
-      callback(data);
-    };
-    
     req.on('data', chunk => {
       body += chunk.toString();
     });
     
     req.on('end', () => {
+      if (callbackInvoked) {
+        console.warn('[WARN] readBody callback already invoked, skipping duplicate call');
+        return;
+      }
+      callbackInvoked = true;
+      
       try {
         const parsed = body ? JSON.parse(body) : {};
-        invokeCallback(parsed);
+        callback(parsed);
       } catch (error) {
-        invokeCallback({});
+        callback({});
       }
     });
   }
