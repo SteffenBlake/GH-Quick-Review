@@ -116,8 +116,8 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Modify the comment
       await editTextarea.fill('This is an updated comment');
       
-      // Click Save (use .first() since there might be other Save buttons on the page)
-      await page.getByRole('button', { name: 'Save' }).first().click();
+      // Click Save button (now in the comment header)
+      await page.locator('.comment-edit-submit-btn').first().click();
       
       // Edit form should close
       await expect(editTextarea).not.toBeVisible({ timeout: 1000 });
