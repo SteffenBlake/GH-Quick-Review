@@ -1242,6 +1242,26 @@ body {
   border-color: #f87171;
 }
 
+.comment-edit-cancel-btn {
+  color: #9ca3af;
+  border-color: #9ca3af;
+}
+
+.comment-edit-cancel-btn:hover {
+  background-color: rgba(156, 163, 175, 0.1);
+  border-color: #9ca3af;
+}
+
+.comment-edit-submit-btn {
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.comment-edit-submit-btn:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
 .comment-item-body {
   color: var(--text-primary);
   line-height: 1.6;

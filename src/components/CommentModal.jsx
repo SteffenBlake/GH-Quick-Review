@@ -32,6 +32,7 @@ import { settings } from '../stores/settingsStore';
 // Icon constants
 const ICON_PENCIL = '\udb81\ude4f';
 const ICON_X = '\uf467';
+const ICON_SAVE = '\udb80\udd93';
 
 /**
  * Modal for displaying and managing comment chains on PR lines
@@ -290,46 +291,51 @@ export function CommentModal() {
                   )}
                   {comment.isCurrentUser && (
                     <div className="comment-item-actions">
-                      <button
-                        className="comment-action-btn comment-edit-btn"
-                        onClick={() => handleEditComment(comment.id, comment.body)}
-                        title="Edit comment"
-                      >
-                        {ICON_PENCIL}
-                      </button>
-                      <button
-                        className="comment-action-btn comment-delete-btn"
-                        onClick={() => handleDeleteComment(comment.id)}
-                        title="Delete comment"
-                      >
-                        {ICON_X}
-                      </button>
+                      {editingCommentId === comment.id ? (
+                        <>
+                          <button
+                            className="comment-action-btn comment-edit-cancel-btn"
+                            onClick={handleCancelEdit}
+                            title="Cancel editing"
+                          >
+                            {ICON_X}
+                          </button>
+                          <button
+                            className="comment-action-btn comment-edit-submit-btn"
+                            onClick={() => handleSubmitEdit(comment.id)}
+                            title="Save changes"
+                          >
+                            {ICON_SAVE}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="comment-action-btn comment-edit-btn"
+                            onClick={() => handleEditComment(comment.id, comment.body)}
+                            title="Edit comment"
+                          >
+                            {ICON_PENCIL}
+                          </button>
+                          <button
+                            className="comment-action-btn comment-delete-btn"
+                            onClick={() => handleDeleteComment(comment.id)}
+                            title="Delete comment"
+                          >
+                            {ICON_X}
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
                 {editingCommentId === comment.id ? (
-                  <div className="comment-edit-form">
-                    <textarea
-                      className="comment-edit-textarea"
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      rows={4}
-                    />
-                    <div className="comment-edit-actions">
-                      <button
-                        className="comment-edit-cancel-btn"
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="comment-edit-submit-btn"
-                        onClick={() => handleSubmitEdit(comment.id)}
-                      >
-                        Save
-                      </button>
-                    </div>
-                  </div>
+                  <textarea
+                    className="comment-edit-textarea"
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    rows={4}
+                  />
                 ) : (
                   <div className="comment-item-body">{comment.body}</div>
                 )}

@@ -33,6 +33,7 @@ This document lists the Nerd Font icons used in the GH-Quick-Review application.
 - Gears: \uf085
 - Empty Checkbox: \ue640
 - Checked Checkbox: \udb83\udc52
+- Save: \udb80\udd93
 
 ## Usage
 
