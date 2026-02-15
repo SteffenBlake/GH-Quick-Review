@@ -500,16 +500,17 @@ class GitHubMockServer {
   }
 
   async handleRequest(req, res) {
-    const { method, url } = req;
-    
-    // Parse URL and extract path
-    const urlParts = url.split('?');
-    const path = urlParts[0];
-    
-    this.log(`${method} ${path}`);
-    
-    // Route matching
-    const routes = [
+    try {
+      const { method, url } = req;
+      
+      // Parse URL and extract path
+      const urlParts = url.split('?');
+      const path = urlParts[0];
+      
+      this.log(`${method} ${path}`);
+      
+      // Route matching
+      const routes = [
       {
         // Heartbeat: GET /heartbeat - quick health check
         pattern: /^\/heartbeat$/,
@@ -676,6 +677,17 @@ class GitHubMockServer {
       message: 'Not Found',
       documentation_url: 'https://docs.github.com/rest'
     });
+    } catch (error) {
+      // Log unexpected errors during request handling
+      this.logError(`handleRequest ${req.method} ${req.url}`, error);
+      // Try to send error response if headers not sent
+      if (!res.headersSent) {
+        this.sendResponse(res, 500, {
+          message: 'Internal Server Error',
+          error: error.message
+        });
+      }
+    }
   }
 
   listUserRepos(req, res, match) {
