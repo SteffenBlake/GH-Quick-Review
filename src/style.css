@@ -1077,6 +1077,30 @@ body {
 }
 
 /* Comment Modal - Just the content box, no full-screen backdrop */
+/* ============================================================================
+   COMMENT MODAL VISIBILITY CONTROL
+   ============================================================================
+   
+   ⚠️  CRITICAL: DO NOT MODIFY THIS :focus-within APPROACH ⚠️
+   
+   This modal uses :focus-within CSS pseudo-class to control visibility.
+   This is the CORRECT architectural pattern and must NEVER be changed to
+   use JavaScript state management for visibility.
+   
+   The :focus-within approach provides:
+   - Pure CSS solution (performant, no JS overhead)
+   - Automatic accessibility (modal is only visible when focused)
+   - Clean separation of concerns (CSS handles presentation)
+   
+   DO NOT attempt to replace this with:
+   - JavaScript visibility state
+   - React state management
+   - display: none toggling
+   - Any other approach
+   
+   This design is intentional and must be preserved.
+   ============================================================================ */
+
 .comment-modal {
   position: fixed;
   top: 50%;
