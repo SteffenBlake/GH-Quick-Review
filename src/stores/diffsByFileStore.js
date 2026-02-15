@@ -118,7 +118,6 @@ function groupCommentsIntoChains(comments) {
  * @returns {boolean} - True if unresolved
  */
 function isChainUnresolved(chain) {
-  // TODO: In real implementation, check if chain has a resolution marker
   // For now, assume all chains are unresolved
   return true;
 }

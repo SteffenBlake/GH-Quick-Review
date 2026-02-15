@@ -4,11 +4,12 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useRef, useState, useEffect } from 'preact/hooks';
+import { useRef, useState, useEffect, useMemo } from 'preact/hooks';
 import { 
   selectedCommentChain,
   selectedCommentLocation,
-  hideCommentModal 
+  hideCommentModal,
+  registerModalRef
 } from '../stores/commentModalStore';
 import {
   useComments,
@@ -62,48 +63,33 @@ export function CommentModal() {
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
 
-  // Auto-focus the modal whenever the signals change (even if setting the same value again)
-  // The CSS :focus-within handles visibility - focused = visible, not focused = hidden
+  // Register this modal's ref so the store can focus it directly when button is clicked
   useEffect(() => {
-    if ((hasCommentChain || isNewComment) && modalRef.current) {
-      modalRef.current.focus();
-    }
-  }, [selectedCommentChain.value, selectedCommentLocation.value]);
+    registerModalRef(modalRef);
+  }, []);
 
-  // Update selectedCommentChain when allComments changes (after mutations)
-  // This keeps the modal in sync with fresh comment data
-  useEffect(() => {
-    if (hasCommentChain && allComments.length > 0) {
-      const { filename, lineNumber } = selectedCommentChain.value;
-      
-      // Find updated comments for this file/line
-      const updatedChain = allComments.filter(comment => 
-        comment.path === filename && 
-        (comment.line === lineNumber || comment.start_line === lineNumber)
-      );
-      
-      if (updatedChain.length > 0) {
-        // Update with fresh data
-        selectedCommentChain.value = {
-          filename,
-          lineNumber,
-          comments: updatedChain
-        };
-        
-        // Ensure modal stays focused after data refresh
-        // Use setTimeout to ensure focus is applied after any re-renders from the data update
-        // Small delay (50ms) to ensure all re-renders complete in busy test environments
-        setTimeout(() => {
-          if (modalRef.current) {
-            modalRef.current.focus();
-          }
-        }, 50);
-      }
-    }
-  }, [allComments, hasCommentChain]);
+  // Get comments for the current thread directly from allComments
+  // This prevents unnecessary signal updates that cause focus loss
+  // Memoized to avoid recalculating on every render
+  const threadComments = useMemo(() => {
+    if (!hasCommentChain) return [];
+    
+    return allComments.filter(comment => 
+      comment.path === selectedCommentChain.value.filename && 
+      (comment.line === selectedCommentChain.value.lineNumber || 
+       comment.start_line === selectedCommentChain.value.lineNumber)
+    );
+  }, [allComments, hasCommentChain, selectedCommentChain.value?.filename, selectedCommentChain.value?.lineNumber]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
+    
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    // The submit button might lose focus when the form re-renders, which would break :focus-within
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     if (!commentText.trim() || !prData?.pull) return;
 
     try {
@@ -150,7 +136,6 @@ export function CommentModal() {
       }
       
       setCommentText('');
-      hideCommentModal();
     } catch (error) {
       console.error('Failed to submit comment:', error);
       alert('Failed to submit comment. Please try again.');
@@ -159,17 +144,13 @@ export function CommentModal() {
 
   const handleCancel = () => {
     setCommentText('');
-    hideCommentModal();
-    // Blur to hide modal (same pattern as directory browser)
-    if (document.activeElement) {
-      document.activeElement.blur();
+    if (modalRef.current) {
+      modalRef.current.blur();
     }
   };
 
   const handleResolve = async () => {
-    // TODO: Implement resolve via GitHub API (requires review API)
     console.log('Resolve comment thread');
-    hideCommentModal();
   };
 
   const handleEditComment = (commentId, currentBody) => {
@@ -183,6 +164,11 @@ export function CommentModal() {
   };
 
   const handleSubmitEdit = async (commentId) => {
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     if (!editText.trim()) return;
 
     try {
@@ -196,6 +182,11 @@ export function CommentModal() {
   };
 
   const handleDeleteComment = async (commentId) => {
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     if (!confirm('Are you sure you want to delete this comment?')) return;
 
     try {
@@ -218,16 +209,13 @@ export function CommentModal() {
         event: 'REQUEST_CHANGES',
       });
       
-      hideCommentModal();
+      // Don't blur the modal - let user continue working
     } catch (error) {
       console.error('Failed to submit review:', error);
       alert('Failed to submit review. Please try again.');
     }
   };
 
-  // Get comments for the current thread
-  const threadComments = hasCommentChain ? (selectedCommentChain.value?.comments || []) : [];
-  
   // Map comments to add isCurrentUser flag
   const commentsWithUserFlag = threadComments.map(comment => ({
     ...comment,
@@ -239,17 +227,6 @@ export function CommentModal() {
       ref={modalRef}
       className="comment-modal"
       tabIndex={-1}
-      onBlur={(e) => {
-        // If the modal is losing focus but a comment chain or new comment is active,
-        // refocus the modal after a brief delay to prevent focus loss during data refetches
-        if (hasCommentChain || isNewComment) {
-          setTimeout(() => {
-            if (modalRef.current && (hasCommentChain || isNewComment)) {
-              modalRef.current.focus();
-            }
-          }, 100);
-        }
-      }}
     >
         {/* Header with Resolve button */}
         <div className="comment-modal-header">

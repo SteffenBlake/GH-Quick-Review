@@ -50,8 +50,8 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Submit the comment
       await page.getByRole('button', { name: 'Comment' }).click();
       
-      // Modal should close (lose focus)
-      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+      // Modal should STAY open (not blur) after submitting
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
       // Success! No error should be shown
       // If we got this far without an alert dialog, the comment was created successfully
@@ -186,8 +186,8 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Submit the reply
       await page.getByRole('button', { name: 'Add comment' }).click();
       
-      // Modal should close
-      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+      // Modal should STAY open (not blur) after submitting
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
       // Success! No error should be shown
     } finally {
