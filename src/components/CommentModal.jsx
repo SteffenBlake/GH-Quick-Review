@@ -4,7 +4,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useRef, useState, useEffect } from 'preact/hooks';
+import { useRef, useState, useEffect, useMemo } from 'preact/hooks';
 import { 
   selectedCommentChain,
   selectedCommentLocation,
@@ -70,13 +70,16 @@ export function CommentModal() {
 
   // Get comments for the current thread directly from allComments
   // This prevents unnecessary signal updates that cause focus loss
-  const threadComments = hasCommentChain 
-    ? allComments.filter(comment => 
-        comment.path === selectedCommentChain.value.filename && 
-        (comment.line === selectedCommentChain.value.lineNumber || 
-         comment.start_line === selectedCommentChain.value.lineNumber)
-      )
-    : [];
+  // Memoized to avoid recalculating on every render
+  const threadComments = useMemo(() => {
+    if (!hasCommentChain) return [];
+    
+    return allComments.filter(comment => 
+      comment.path === selectedCommentChain.value.filename && 
+      (comment.line === selectedCommentChain.value.lineNumber || 
+       comment.start_line === selectedCommentChain.value.lineNumber)
+    );
+  }, [allComments, hasCommentChain, selectedCommentChain.value?.filename, selectedCommentChain.value?.lineNumber]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
