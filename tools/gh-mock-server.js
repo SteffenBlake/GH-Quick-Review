@@ -879,14 +879,11 @@ class GitHubMockServer {
   }
 
   addComment(req, res, match) {
-    console.log('[addComment] addComment called');
     if (this.checkConfiguredError('addComment', res)) return;
     
     const [, owner, repo, pullNumber] = match;
     
-    console.log('[addComment] About to call readBody');
     this.readBody(req, (body) => {
-      console.log('[addComment] Received body:', JSON.stringify(body).substring(0, 200));
       const repoData = this.loadRepoData(repo);
       const pull = repoData.pulls.get(parseInt(pullNumber));
       
@@ -1121,16 +1118,12 @@ class GitHubMockServer {
   }
 
   handleGraphQL(req, res, match) {
-    console.log('[GraphQL] handleGraphQL called');
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
-    console.log('[GraphQL] About to call readBody');
     this.readBody(req, (body) => {
-      console.log('[GraphQL] Callback invoked, body:', JSON.stringify(body).substring(0, 200));
       const { query, variables } = body;
       
       if (!query) {
-        console.log('[GraphQL] ERROR: Query is missing! Body:', JSON.stringify(body));
         return this.sendResponse(res, 400, {
           errors: [{
             message: 'Query is required',
@@ -1513,26 +1506,16 @@ class GitHubMockServer {
     });
   }
   readBody(req, callback) {
-    const callId = Math.random().toString(36).substring(7);
-    console.log(`[readBody-${callId}] readBody called, callback:`, typeof callback);
     let body = '';
     let callbackInvoked = false;
-    let dataEventCount = 0;
-    let endEventCount = 0;
     
     req.on('data', chunk => {
-      dataEventCount++;
-      console.log(`[readBody-${callId}] data event #${dataEventCount}, chunk length: ${chunk.length}`);
       body += chunk.toString();
     });
     
     req.on('end', () => {
-      endEventCount++;
-      console.log(`[readBody-${callId}] end event #${endEventCount}, body length: ${body.length}, already invoked: ${callbackInvoked}`);
-      
       if (callbackInvoked) {
-        console.warn(`[WARN-${callId}] readBody callback already invoked, skipping duplicate call`);
-        return;
+        return; // Duplicate end event, skip
       }
       callbackInvoked = true;
       
@@ -1540,14 +1523,11 @@ class GitHubMockServer {
       let parsed;
       try {
         parsed = body ? JSON.parse(body) : {};
-        console.log(`[readBody-${callId}] Successfully parsed body`);
       } catch (error) {
-        console.log(`[readBody-${callId}] Parse error:`, error.message);
         parsed = {};
       }
       
       // Invoke callback outside of try/catch to avoid catching errors from the callback itself
-      console.log(`[readBody-${callId}] About to invoke callback`);
       callback(parsed);
     });
   }
