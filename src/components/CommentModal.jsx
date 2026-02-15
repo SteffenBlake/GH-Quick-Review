@@ -68,28 +68,15 @@ export function CommentModal() {
     registerModalRef(modalRef);
   }, []);
 
-  // Update selectedCommentChain when allComments changes (after mutations)
-  // This keeps the modal in sync with fresh comment data
-  useEffect(() => {
-    if (hasCommentChain && allComments.length > 0) {
-      const { filename, lineNumber } = selectedCommentChain.value;
-      
-      // Find updated comments for this file/line
-      const updatedChain = allComments.filter(comment => 
-        comment.path === filename && 
-        (comment.line === lineNumber || comment.start_line === lineNumber)
-      );
-      
-      if (updatedChain.length > 0) {
-        // Update with fresh data
-        selectedCommentChain.value = {
-          filename,
-          lineNumber,
-          comments: updatedChain
-        };
-      }
-    }
-  }, [allComments, hasCommentChain]);
+  // Get comments for the current thread directly from allComments
+  // This prevents unnecessary signal updates that cause focus loss
+  const threadComments = hasCommentChain 
+    ? allComments.filter(comment => 
+        comment.path === selectedCommentChain.value.filename && 
+        (comment.line === selectedCommentChain.value.lineNumber || 
+         comment.start_line === selectedCommentChain.value.lineNumber)
+      )
+    : [];
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -139,7 +126,10 @@ export function CommentModal() {
       }
       
       setCommentText('');
-      // Don't blur the modal - let user continue working
+      // Refocus modal after clearing text to maintain visibility
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
     } catch (error) {
       console.error('Failed to submit comment:', error);
       alert('Failed to submit comment. Please try again.');
@@ -210,9 +200,6 @@ export function CommentModal() {
     }
   };
 
-  // Get comments for the current thread
-  const threadComments = hasCommentChain ? (selectedCommentChain.value?.comments || []) : [];
-  
   // Map comments to add isCurrentUser flag
   const commentsWithUserFlag = threadComments.map(comment => ({
     ...comment,

@@ -25,10 +25,13 @@ export function registerModalRef(ref) {
 
 /**
  * Show the comment modal with a specific comment chain
- * @param {Object} commentChain - The comment chain to display
+ * @param {Object} commentChain - Object with {filename, lineNumber}
  */
 export function showCommentModal(commentChain) {
-  selectedCommentChain.value = commentChain;
+  selectedCommentChain.value = {
+    filename: commentChain.filename,
+    lineNumber: commentChain.lineNumber
+  };
   selectedCommentLocation.value = null;
   
   // Directly focus the modal
