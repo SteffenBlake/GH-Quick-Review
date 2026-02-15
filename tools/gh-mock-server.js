@@ -1424,16 +1424,16 @@ class GitHubMockServer {
               isResolved: thread.isResolved,
               isOutdated: thread.isOutdated,
               comments: {
-                nodes: [{
-                  id: `PRRC_${newComment.id}`,
-                  body: newComment.body,
-                  path: newComment.path,
-                  line: newComment.line,
-                  createdAt: newComment.created_at,
+                nodes: thread.comments.map(c => ({
+                  id: c.id,
+                  body: c.body,
+                  path: c.path,
+                  line: c.line,
+                  createdAt: c.createdAt,
                   author: {
-                    login: newComment.user.login
+                    login: c.author.login
                   }
-                }]
+                }))
               }
             }
           }
