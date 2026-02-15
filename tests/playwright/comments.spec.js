@@ -260,7 +260,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     }
   });
 
-  test('BUG 1: should scroll to new comment when replying to existing thread', async ({ page }) => {
+  test('should scroll to new comment when replying to existing thread', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     
@@ -345,7 +345,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     }
   });
 
-  test('BUG 2: should display new comment immediately when starting a new thread', async ({ page }) => {
+  test('should display new comment immediately when starting a new thread', async ({ page }) => {
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     
