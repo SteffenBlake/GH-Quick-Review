@@ -231,12 +231,12 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Click on diff viewer to unfocus directory browser
       await page.locator('.diff-viewer').click();
       
-      // Hover over a line to reveal the message button
-      const diffLine = page.locator('.diff-line').first();
+      // Find a line with a line number (not hunk header, not empty line)
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
       
       // Step 1: Click "Add comment" button → modal should open
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
