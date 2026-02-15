@@ -92,6 +92,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
       await page.locator('.diff-viewer').click();
       
+      // BEFORE clicking: Modal should be hidden (opacity: 0)
+      await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0');
+      
       // Click on a message button with existing comments to open thread
       const messageButton = page.locator('.diff-line-message-btn.has-message').first();
       await messageButton.click();
@@ -126,7 +129,8 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       
       // Close the modal by clicking the Cancel button in the comment form
       await page.locator('.comment-modal-cancel-btn').click();
-      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+      // Modal should fade out (opacity: 0)
+      await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 1000 });
       
       // BUG #2: Modal should be able to RE-OPEN after editing
       await messageButton.click();
@@ -237,7 +241,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       
       // Step 2: Click off the modal (on the diff viewer) → modal should close via blur
       await page.locator('.diff-viewer').click();
-      await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+      await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 1000 });
       
       // Step 3: Hover again to make the message button visible, then click it → modal SHOULD re-open
       await diffLine.hover();

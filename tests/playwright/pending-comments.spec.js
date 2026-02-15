@@ -69,7 +69,7 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
         } else {
           // Close the modal and try the next button
           await page.locator('.comment-modal-cancel-btn').click();
-          await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+          await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 1000 });
         }
       }
       
@@ -147,7 +147,7 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
           break;
         } else {
           await page.locator('.comment-modal-cancel-btn').click();
-          await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
+          await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 1000 });
         }
       }
       

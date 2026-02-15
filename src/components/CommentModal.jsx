@@ -8,7 +8,7 @@ import { useRef, useState, useEffect, useMemo } from 'preact/hooks';
 import { 
   selectedCommentChain,
   selectedCommentLocation,
-  hideCommentModal,
+  clearCommentModal,
   registerModalRef
 } from '../stores/commentModalStore';
 import {
@@ -144,7 +144,13 @@ export function CommentModal() {
 
   const handleCancel = () => {
     setCommentText('');
+    clearCommentModal();
+    // Blur all focusable elements inside the modal
     if (modalRef.current) {
+      const focusedElement = modalRef.current.querySelector(':focus');
+      if (focusedElement) {
+        focusedElement.blur();
+      }
       modalRef.current.blur();
     }
   };

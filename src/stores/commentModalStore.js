@@ -56,9 +56,9 @@ export function showNewCommentModal(filename, lineNumber) {
 }
 
 /**
- * Hide the comment modal and clear state
+ * Clear the comment modal state
  */
-export function hideCommentModal() {
+export function clearCommentModal() {
   selectedCommentChain.value = null;
   selectedCommentLocation.value = null;
 }
