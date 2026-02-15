@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve, join, relative } from 'path';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
+import { parse, visit } from 'graphql';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1073,12 +1074,36 @@ class GitHubMockServer {
         });
       }
       
+      // Parse the GraphQL query properly
+      let ast;
+      try {
+        ast = parse(query);
+      } catch (error) {
+        return this.sendResponse(res, 400, {
+          errors: [{
+            message: `GraphQL parse error: ${error.message}`,
+            extensions: { code: 'GRAPHQL_PARSE_ERROR' }
+          }]
+        });
+      }
+      
+      // Extract operation type and field selections
+      const operation = ast.definitions[0];
+      const operationType = operation.operation; // 'query' or 'mutation'
+      const selections = {};
+      
+      // Walk the AST to find what fields are being requested
+      visit(ast, {
+        Field(node) {
+          selections[node.name.value] = true;
+        }
+      });
+      
       // Build response data piecewise
-      const responseData = {};
-      let handled = false;
+      let responseData = null;
       
-      // Handle resolveReviewThread mutation
-      if (query.includes('resolveReviewThread')) {
+      // Handle mutations
+      if (selections.resolveReviewThread) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
           return this.sendResponse(res, 400, {
@@ -1089,17 +1114,17 @@ class GitHubMockServer {
           });
         }
         
-        responseData.resolveReviewThread = {
-          thread: {
-            id: threadIdMatch[1],
-            isResolved: true
+        responseData = {
+          resolveReviewThread: {
+            thread: {
+              id: threadIdMatch[1],
+              isResolved: true
+            }
           }
         };
-        handled = true;
       }
       
-      // Handle unresolveReviewThread mutation
-      if (query.includes('unresolveReviewThread')) {
+      if (selections.unresolveReviewThread) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
           return this.sendResponse(res, 400, {
@@ -1110,19 +1135,17 @@ class GitHubMockServer {
           });
         }
         
-        responseData.unresolveReviewThread = {
-          thread: {
-            id: threadIdMatch[1],
-            isResolved: false
+        responseData = {
+          unresolveReviewThread: {
+            thread: {
+              id: threadIdMatch[1],
+              isResolved: false
+            }
           }
         };
-        handled = true;
       }
       
-      // Handle reviews query
-      if (query.includes('reviews')) {
-        // Handle pullRequest reviews query
-        const { variables } = body;
+      if (selections.reviewThreads) {
         if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
           return this.sendResponse(res, 400, {
             errors: [{
@@ -1133,8 +1156,6 @@ class GitHubMockServer {
         }
         
         const { owner, repo, prNumber } = variables;
-        
-        // Load repo data
         const repoData = this.loadRepoData(repo);
         const pull = repoData.pulls.get(parseInt(prNumber));
         
@@ -1146,83 +1167,9 @@ class GitHubMockServer {
           });
         }
         
-        // Get all reviews for this PR
-        const reviews = Array.from(repoData.reviews.values())
-          .filter(review => review.pull_number === parseInt(prNumber));
-        
-        // Build GraphQL response with reviews and their comments
-        const reviewNodes = reviews.map(review => {
-          // Get all comments for this review
-          const reviewComments = Array.from(repoData.comments.values())
-            .filter(comment => comment.pull_request_review_id === review.id);
-          
-          return {
-            id: review.node_id,
-            state: review.state,
-            comments: {
-              nodes: reviewComments.map(comment => ({
-                id: `PRRC_${comment.id}`,
-                body: comment.body,
-                path: comment.path,
-                line: comment.line,
-                startLine: comment.start_line,
-                createdAt: comment.created_at,
-                updatedAt: comment.updated_at,
-                diffHunk: comment.diff_hunk,
-                pullRequestReview: {
-                  id: review.node_id,
-                  state: review.state
-                },
-                author: {
-                  login: comment.user.login
-                }
-              }))
-            }
-          };
-        });
-        
-        this.sendResponse(res, 200, {
-          data: {
-            repository: {
-              pullRequest: {
-                reviews: {
-                  nodes: reviewNodes
-                }
-              }
-            }
-          }
-        });
-      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviewThreads')) {
-        // Handle pullRequest reviewThreads query
-        const { variables } = body;
-        if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
-          return this.sendResponse(res, 400, {
-            errors: [{
-              message: 'Variables with owner, repo, and prNumber are required',
-              extensions: { code: 'BAD_USER_INPUT' }
-            }]
-          });
-        }
-        
-        const { owner, repo, prNumber } = variables;
-        
-        // Load repo data
-        const repoData = this.loadRepoData(repo);
-        const pull = repoData.pulls.get(parseInt(prNumber));
-        
-        if (!pull) {
-          return this.sendResponse(res, 200, {
-            data: {
-              repository: null
-            }
-          });
-        }
-        
-        // Get all review threads for this PR
         const threads = Array.from(repoData.reviewThreads.values())
           .filter(thread => thread.pull_number === parseInt(prNumber));
         
-        // Build GraphQL response with review threads
         const threadNodes = threads.map(thread => ({
           id: thread.id,
           isResolved: thread.isResolved,
@@ -1253,20 +1200,83 @@ class GitHubMockServer {
           }
         }));
         
-        this.sendResponse(res, 200, {
-          data: {
-            repository: {
-              pullRequest: {
-                reviewThreads: {
-                  nodes: threadNodes
-                }
+        responseData = {
+          repository: {
+            pullRequest: {
+              reviewThreads: {
+                nodes: threadNodes
               }
             }
           }
+        };
+      }
+      
+      if (selections.reviews) {
+        if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Variables with owner, repo, and prNumber are required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const { owner, repo, prNumber } = variables;
+        const repoData = this.loadRepoData(repo);
+        const pull = repoData.pulls.get(parseInt(prNumber));
+        
+        if (!pull) {
+          return this.sendResponse(res, 200, {
+            data: {
+              repository: null
+            }
+          });
+        }
+        
+        const reviews = Array.from(repoData.reviews.values())
+          .filter(review => review.pull_number === parseInt(prNumber));
+        
+        const reviewNodes = reviews.map(review => {
+          const reviewComments = Array.from(repoData.comments.values())
+            .filter(comment => comment.pull_request_review_id === review.id);
+          
+          return {
+            id: review.node_id,
+            state: review.state,
+            comments: {
+              nodes: reviewComments.map(comment => ({
+                id: `PRRC_${comment.id}`,
+                body: comment.body,
+                path: comment.path,
+                line: comment.line,
+                startLine: comment.start_line,
+                createdAt: comment.created_at,
+                updatedAt: comment.updated_at,
+                diffHunk: comment.diff_hunk,
+                pullRequestReview: {
+                  id: review.node_id,
+                  state: review.state
+                },
+                author: {
+                  login: comment.user.login
+                }
+              }))
+            }
+          };
         });
-      } else if (query.includes('addPullRequestReviewThread')) {
-        // Handle addPullRequestReviewThread mutation
-        const { variables } = body;
+        
+        responseData = {
+          repository: {
+            pullRequest: {
+              reviews: {
+                nodes: reviewNodes
+              }
+            }
+          }
+        };
+      }
+      
+      if (selections.addPullRequestReviewThread) {
         if (!variables || !variables.input) {
           return this.sendResponse(res, 400, {
             errors: [{
@@ -1356,8 +1366,7 @@ class GitHubMockServer {
         
         repoData.comments.set(newComment.id, newComment);
         
-        // ALSO update reviewThreads so the new comment appears in GraphQL queries
-        // Find existing thread for this file and line
+        // Update reviewThreads so the new comment appears in GraphQL queries
         let thread = null;
         for (const [threadId, t] of repoData.reviewThreads.entries()) {
           if (t.path === path && t.line === line && t.pull_number === pullNumber) {
@@ -1367,7 +1376,6 @@ class GitHubMockServer {
         }
         
         if (!thread) {
-          // Create new thread
           const threadId = `PRT_kwDOThread${newComment.id}`;
           thread = {
             id: threadId,
@@ -1383,7 +1391,6 @@ class GitHubMockServer {
           repoData.reviewThreads.set(threadId, thread);
         }
         
-        // Add comment to the thread
         thread.comments.push({
           id: `PRRC_${newComment.id}`,
           databaseId: newComment.id,
@@ -1403,42 +1410,43 @@ class GitHubMockServer {
           }
         });
         
-        // Return GraphQL response
-        this.sendResponse(res, 200, {
-          data: {
-            addPullRequestReviewThread: {
-              thread: {
-                id: thread.id,
-                isResolved: thread.isResolved,
-                isOutdated: thread.isOutdated,
-                comments: {
-                  nodes: [{
-                    id: `PRRC_${newComment.id}`,
-                    body: newComment.body,
-                    path: newComment.path,
-                    line: newComment.line,
-                    createdAt: newComment.created_at,
-                    author: {
-                      login: newComment.user.login
-                    }
-                  }]
-                }
+        responseData = {
+          addPullRequestReviewThread: {
+            thread: {
+              id: thread.id,
+              isResolved: thread.isResolved,
+              isOutdated: thread.isOutdated,
+              comments: {
+                nodes: [{
+                  id: `PRRC_${newComment.id}`,
+                  body: newComment.body,
+                  path: newComment.path,
+                  line: newComment.line,
+                  createdAt: newComment.created_at,
+                  author: {
+                    login: newComment.user.login
+                  }
+                }]
               }
             }
           }
-        });
-      } else {
-        // Unknown GraphQL operation
-        this.sendResponse(res, 400, {
-          errors: [{
-            message: 'Unknown GraphQL operation',
-            extensions: { code: 'GRAPHQL_VALIDATION_FAILED' }
-          }]
-        });
+        };
       }
+      
+      // Send response
+      if (responseData) {
+        return this.sendResponse(res, 200, { data: responseData });
+      }
+      
+      // Unknown GraphQL operation
+      return this.sendResponse(res, 400, {
+        errors: [{
+          message: 'Unknown GraphQL operation',
+          extensions: { code: 'GRAPHQL_VALIDATION_FAILED' }
+        }]
+      });
     });
   }
-
   readBody(req, callback) {
     let body = '';
     let callbackInvoked = false;
