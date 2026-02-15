@@ -1060,12 +1060,16 @@ class GitHubMockServer {
   }
 
   handleGraphQL(req, res, match) {
+    console.log('[GraphQL] handleGraphQL called');
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
+    console.log('[GraphQL] About to call readBody');
     this.readBody(req, (body) => {
+      console.log('[GraphQL] Received body:', JSON.stringify(body).substring(0, 200));
       const { query, variables } = body;
       
       if (!query) {
+        console.log('[GraphQL] ERROR: Query is missing! Body:', JSON.stringify(body));
         return this.sendResponse(res, 400, {
           errors: [{
             message: 'Query is required',
