@@ -416,7 +416,8 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await textarea.fill('First comment in new thread');
       
       // Submit the comment
-      await page.getByRole('button', { name: /^Add comment$/i }).click();
+      // For new comments without an active review, the button says "Add Comment and start review"
+      await page.getByRole('button', { name: /Add comment/i }).click();
       
       // The modal should transition from "New Comment" to "Comment Thread"
       await expect(page.locator('.comment-modal h2')).toContainText('Comment Thread', { timeout: 2000 });
