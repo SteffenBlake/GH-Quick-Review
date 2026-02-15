@@ -83,7 +83,8 @@ export function CommentModal() {
     );
   }, [allComments, hasCommentChain, selectedCommentChain.value?.filename, selectedCommentChain.value?.lineNumber]);
 
-  // BUG 1 FIX: Auto-scroll to the last comment when new comments are added
+  // Auto-scroll to the last comment in the thread when new comments are added
+  // This ensures users can see their newly added comment without manual scrolling
   useEffect(() => {
     if (threadComments.length > 0 && threadContainerRef.current) {
       // Scroll to the bottom of the thread container
@@ -145,13 +146,12 @@ export function CommentModal() {
         await addReviewComment.mutateAsync(commentData);
       }
       
-      // Manually refetch comments to ensure new comment appears immediately
-      // The query invalidation in onSuccess happens, but we need to wait for the refetch
+      // Manually refetch comments to ensure new comment appears immediately in the UI
+      // Query invalidation happens in onSuccess callback, but we need to wait for the refetch
       await refetchComments();
       
-      // BUG 2 FIX: If this was a new comment (not a reply to existing thread),
-      // transition to "existing thread" mode by updating the signals directly
-      // This makes the modal show the thread instead of the "new comment" form
+      // After creating the first comment on a new line, transition from "new comment" mode to
+      // "existing thread" mode so the modal shows the thread instead of the empty comment form
       if (isNewComment) {
         selectedCommentChain.value = { filename, lineNumber };
         selectedCommentLocation.value = null;

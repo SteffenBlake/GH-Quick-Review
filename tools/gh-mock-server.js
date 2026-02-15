@@ -1064,6 +1064,8 @@ class GitHubMockServer {
     this.readBody(req, (body) => {
       const { query } = body;
       
+      console.log(`[GRAPHQL] Received query: ${query?.substring(0, 100)}...`);
+      
       if (!query) {
         return this.sendResponse(res, 400, {
           errors: [{
