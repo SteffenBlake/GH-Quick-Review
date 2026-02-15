@@ -32,12 +32,13 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Click on diff viewer to unfocus directory browser (which auto-focuses on PR selection)
       await page.locator('.diff-viewer').click();
       
-      // Hover over a line to reveal the message button
-      const diffLine = page.locator('.diff-line').first();
-      await diffLine.hover();
+      // Find a line with a line number (not hunk header, not empty line)
+      // Look for a line that has .diff-line-number visible
+      const lineWithNumber = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
+      await lineWithNumber.hover();
       
-      // Click on a message button to open comment modal
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      // Click on the message button that appears on hover
+      const messageButton = lineWithNumber.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear and be focused
