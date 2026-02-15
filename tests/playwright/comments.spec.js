@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 import { MockServerManager } from './mock-server-manager.js';
 
 test.describe('Comment Management', { tag: '@serial' }, () => {
