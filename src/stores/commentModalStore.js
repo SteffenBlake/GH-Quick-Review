@@ -12,6 +12,17 @@ export const selectedCommentChain = signal(null);
 // Selected file and line for new comment
 export const selectedCommentLocation = signal(null);
 
+// Ref to the modal element for direct focus control
+let modalRef = null;
+
+/**
+ * Register the modal ref so we can focus it directly
+ * @param {Object} ref - The modal element ref
+ */
+export function registerModalRef(ref) {
+  modalRef = ref;
+}
+
 /**
  * Show the comment modal with a specific comment chain
  * @param {Object} commentChain - The comment chain to display
@@ -19,6 +30,11 @@ export const selectedCommentLocation = signal(null);
 export function showCommentModal(commentChain) {
   selectedCommentChain.value = commentChain;
   selectedCommentLocation.value = null;
+  
+  // Directly focus the modal
+  if (modalRef && modalRef.current) {
+    modalRef.current.focus();
+  }
 }
 
 /**
@@ -29,6 +45,11 @@ export function showCommentModal(commentChain) {
 export function showNewCommentModal(filename, lineNumber) {
   selectedCommentLocation.value = { filename, lineNumber };
   selectedCommentChain.value = null;
+  
+  // Directly focus the modal
+  if (modalRef && modalRef.current) {
+    modalRef.current.focus();
+  }
 }
 
 /**

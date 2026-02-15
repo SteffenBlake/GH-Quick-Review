@@ -8,7 +8,8 @@ import { useRef, useState, useEffect } from 'preact/hooks';
 import { 
   selectedCommentChain,
   selectedCommentLocation,
-  hideCommentModal 
+  hideCommentModal,
+  registerModalRef
 } from '../stores/commentModalStore';
 import {
   useComments,
@@ -62,13 +63,10 @@ export function CommentModal() {
   const hasCommentChain = selectedCommentChain.value !== null;
   const isNewComment = selectedCommentLocation.value !== null;
 
-  // Auto-focus the modal when it first opens
-  // The CSS :focus-within handles visibility - focused = visible, not focused = hidden
+  // Register this modal's ref so the store can focus it directly when button is clicked
   useEffect(() => {
-    if ((hasCommentChain || isNewComment) && modalRef.current) {
-      modalRef.current.focus();
-    }
-  }, [hasCommentChain, isNewComment]);
+    registerModalRef(modalRef);
+  }, []);
 
   // Update selectedCommentChain when allComments changes (after mutations)
   // This keeps the modal in sync with fresh comment data
@@ -150,15 +148,12 @@ export function CommentModal() {
 
   const handleCancel = () => {
     setCommentText('');
-    hideCommentModal();
-    // Blur the modal to hide it via CSS :focus-within
     if (modalRef.current) {
       modalRef.current.blur();
     }
   };
 
   const handleResolve = async () => {
-    // TODO: Implement resolve via GitHub API (requires review API)
     console.log('Resolve comment thread');
   };
 
