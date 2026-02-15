@@ -22,6 +22,7 @@ class GitHubMockServer {
     this.config = config;
     this.latency = config.latency || 0; // Artificial delay in ms
     this.silent = config.silent || false; // Suppress console output
+    this.errorMessages = []; // Track unexpected errors (not configured error codes)
     this.loadUserData();
   }
 
@@ -29,6 +30,38 @@ class GitHubMockServer {
     if (!this.silent) {
       console.log(...args);
     }
+  }
+
+  /**
+   * Log an unexpected error (not a configured error response)
+   * This helps with test debugging by capturing real errors
+   * @param {string} context - Where the error occurred
+   * @param {Error|string} error - The error object or message
+   */
+  logError(context, error) {
+    const errorMessage = {
+      timestamp: new Date().toISOString(),
+      context,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    this.errorMessages.push(errorMessage);
+    this.log(`[ERROR] ${context}:`, error);
+  }
+
+  /**
+   * Get all logged errors
+   */
+  getErrors() {
+    return this.errorMessages;
+  }
+
+  /**
+   * Clear all logged errors
+   */
+  clearErrors() {
+    this.errorMessages = [];
   }
 
   loadUserData() {
@@ -491,7 +524,7 @@ class GitHubMockServer {
           try {
             this.loadUserData();
             this.repoDataCache.clear();
-            // Also clear error configurations
+            // Clear error configurations
             const preserveOptions = { silent: this.silent };
             Object.keys(this.config).forEach(key => {
               if (key !== 'silent' && key !== 'latency') {
@@ -499,7 +532,9 @@ class GitHubMockServer {
               }
             });
             this.latency = 0;
-            this.sendResponse(res, 200, { status: 'ok', message: 'Test data and config reloaded' });
+            // Clear error messages log
+            this.clearErrors();
+            this.sendResponse(res, 200, { status: 'ok', message: 'Test data, config, and errors cleared' });
           } catch (error) {
             this.sendResponse(res, 500, { error: 'Failed to reset', message: error.message });
           }
@@ -535,6 +570,17 @@ class GitHubMockServer {
           } catch (error) {
             this.sendResponse(res, 400, { error: 'Invalid config', message: error.message });
           }
+        }
+      },
+      {
+        // Get error messages: GET /error-messages - retrieve logged errors for debugging
+        pattern: /^\/error-messages$/,
+        method: 'GET',
+        handler: (req, res) => {
+          this.sendResponse(res, 200, { 
+            errors: this.getErrors(),
+            count: this.errorMessages.length
+          });
         }
       },
       {
