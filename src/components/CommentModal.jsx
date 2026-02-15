@@ -97,9 +97,6 @@ export function CommentModal() {
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     
-    alert('[handleSubmitComment] Called!');
-    console.log('[handleSubmitComment] Called!', { commentText: commentText.substring(0, 20), hasPrData: !!prData?.pull });
-    
     // IMMEDIATELY focus the modal to prevent focus loss during re-renders
     // The submit button might lose focus when the form re-renders, which would break :focus-within
     if (modalRef.current) {
@@ -107,7 +104,6 @@ export function CommentModal() {
     }
     
     if (!commentText.trim() || !prData?.pull) {
-      console.log('[handleSubmitComment] Early return - missing data');
       return;
     }
 
@@ -121,14 +117,6 @@ export function CommentModal() {
       const lineNumber = isNewComment 
         ? selectedCommentLocation.value.lineNumber 
         : selectedCommentChain.value.lineNumber;
-      
-      console.log('[CommentModal] Submitting comment:', {
-        isNewComment,
-        filename,
-        lineNumber,
-        commentText: commentText.substring(0, 50),
-        hasActiveReview: !!activeReview
-      });
       
       // Check if we have an active review
       if (activeReview) {
