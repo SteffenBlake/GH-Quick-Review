@@ -33,11 +33,11 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
       
       // Hover over a line to reveal the message button
-      const diffLine = page.locator('.diff-line').first();
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
       
       // Click on a message button to open comment modal
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear and be focused
@@ -117,11 +117,11 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
       
       // Hover over a line to reveal the message button
-      const diffLine = page.locator('.diff-line').first();
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
       
       // Click on a message button to open comment modal
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear and be focused
@@ -178,9 +178,9 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
       
       // Hover over a line and open comment modal
-      const diffLine = page.locator('.diff-line').first();
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
       await diffLine.hover();
-      const messageButton = page.locator('.diff-line-message-btn.add-message').first();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
       await messageButton.click();
       
       // Modal should appear
