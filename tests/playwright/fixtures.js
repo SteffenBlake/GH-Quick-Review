@@ -3,20 +3,27 @@
  */
 
 import { test as base, expect } from '@playwright/test';
-import { MockServerManager } from './mock-server-manager.js';
+
+const MOCK_SERVER_PORT = 3000;
 
 export const test = base.extend({
   // Automatic error checking fixture
   // This runs after each test and checks if the mock server logged any unexpected errors
   autoCheckErrors: [async ({}, use, testInfo) => {
-    const mockServer = new MockServerManager();
-    
     // Run the test
     await use();
     
     // After test completes, check for mock server errors
     try {
-      const errors = await mockServer.getErrors();
+      const response = await fetch(`http://localhost:${MOCK_SERVER_PORT}/error-messages`);
+      
+      if (!response.ok) {
+        console.warn('Warning: Could not check mock server errors - endpoint returned', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      const errors = data.errors || [];
       
       if (errors.length > 0) {
         console.error('\n' + '='.repeat(80));

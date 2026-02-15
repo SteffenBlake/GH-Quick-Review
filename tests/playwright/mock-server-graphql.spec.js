@@ -3,7 +3,7 @@
  * Tests the mock server directly without UI
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 const MOCK_SERVER_URL = 'http://localhost:3000';
 
