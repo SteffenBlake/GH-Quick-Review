@@ -1064,7 +1064,6 @@ class GitHubMockServer {
 
   handleGraphQL(req, res, match) {
     console.log('[GraphQL] handleGraphQL called');
-    console.log('[GraphQL] Stack trace:', new Error().stack.split('\n').slice(1, 4).join('\n'));
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
     console.log('[GraphQL] About to call readBody');
@@ -1479,14 +1478,19 @@ class GitHubMockServer {
       }
       callbackInvoked = true;
       
+      // Parse the body BEFORE invoking callback, so try/catch only catches parse errors
+      let parsed;
       try {
-        const parsed = body ? JSON.parse(body) : {};
-        console.log(`[readBody-${callId}] About to invoke callback with parsed body`);
-        callback(parsed);
+        parsed = body ? JSON.parse(body) : {};
+        console.log(`[readBody-${callId}] Successfully parsed body`);
       } catch (error) {
-        console.log(`[readBody-${callId}] Parse error, invoking callback with empty object`);
-        callback({});
+        console.log(`[readBody-${callId}] Parse error:`, error.message);
+        parsed = {};
       }
+      
+      // Invoke callback outside of try/catch to avoid catching errors from the callback itself
+      console.log(`[readBody-${callId}] About to invoke callback`);
+      callback(parsed);
     });
   }
 
