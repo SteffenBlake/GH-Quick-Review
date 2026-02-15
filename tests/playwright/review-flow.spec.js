@@ -67,10 +67,15 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
       
       // Now add another comment - should show active review UI
-      // Re-find the line and button since we closed the modal
-      const diffLine2 = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
+      // Find a DIFFERENT line that doesn't have comments yet
+      // The first line now has a comment, so find the second line with a number
+      const allLinesWithNumbers = page.locator('.diff-line:has(.diff-line-number:not(:empty))');
+      const diffLine2 = allLinesWithNumbers.nth(1); // Get second line instead of first
       await diffLine2.hover();
-      const messageButton2 = diffLine2.locator('.diff-line-message-btn.add-message');
+      
+      // This line shouldn't have comments yet, so add-message button should appear
+      const messageButton2 = diffLine2.locator('.diff-line-message-btn');
+      await expect(messageButton2).toBeVisible({ timeout: 1000 });
       await messageButton2.click();
       
       // Modal should appear
