@@ -1360,6 +1360,53 @@ class GitHubMockServer {
         
         repoData.comments.set(newComment.id, newComment);
         
+        // ALSO add to reviewThreads for GraphQL query consistency
+        // Find existing thread for this file/line
+        let thread = null;
+        for (const [threadId, t] of repoData.reviewThreads.entries()) {
+          if (t.path === path && t.line === line) {
+            thread = t;
+            break;
+          }
+        }
+        
+        if (!thread) {
+          // Create new thread with unique ID
+          const threadId = `PRT_kwDOThread${repoData.nextCommentId}`;
+          thread = {
+            id: threadId,
+            pull_number: pullNumber,
+            isResolved: false,
+            isOutdated: false,
+            isCollapsed: false,
+            path: path,
+            line: line,
+            originalLine: line,
+            comments: []
+          };
+          repoData.reviewThreads.set(threadId, thread);
+        }
+        
+        // Add comment to thread
+        thread.comments.push({
+          id: `PRRC_${newComment.id}`,
+          databaseId: newComment.id,
+          body: newComment.body,
+          path: newComment.path,
+          line: newComment.line,
+          startLine: newComment.start_line,
+          diffHunk: '',
+          createdAt: newComment.created_at,
+          updatedAt: newComment.updated_at,
+          author: {
+            login: newComment.user.login
+          },
+          pullRequestReview: {
+            id: `PRR_${reviewId}`,
+            state: foundReview.state
+          }
+        });
+        
         // Return GraphQL response
         this.sendResponse(res, 200, {
           data: {

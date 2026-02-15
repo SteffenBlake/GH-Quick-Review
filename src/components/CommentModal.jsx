@@ -9,7 +9,8 @@ import {
   selectedCommentChain,
   selectedCommentLocation,
   clearCommentModal,
-  registerModalRef
+  registerModalRef,
+  showCommentModal
 } from '../stores/commentModalStore';
 import {
   useComments,
@@ -36,6 +37,7 @@ const ICON_X = '\uf467';
  */
 export function CommentModal() {
   const modalRef = useRef(null);
+  const threadContainerRef = useRef(null);
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState('');
@@ -81,6 +83,14 @@ export function CommentModal() {
     );
   }, [allComments, hasCommentChain, selectedCommentChain.value?.filename, selectedCommentChain.value?.lineNumber]);
 
+  // BUG 1 FIX: Auto-scroll to the last comment when new comments are added
+  useEffect(() => {
+    if (threadComments.length > 0 && threadContainerRef.current) {
+      // Scroll to the bottom of the thread container
+      threadContainerRef.current.scrollTop = threadContainerRef.current.scrollHeight;
+    }
+  }, [threadComments.length]);
+
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     
@@ -95,18 +105,22 @@ export function CommentModal() {
     try {
       const commitSha = prData.pull.head.sha;
       
+      // Store the location info for transitioning to thread mode
+      const filename = isNewComment 
+        ? selectedCommentLocation.value.filename 
+        : selectedCommentChain.value.filename;
+      const lineNumber = isNewComment 
+        ? selectedCommentLocation.value.lineNumber 
+        : selectedCommentChain.value.lineNumber;
+      
       // Check if we have an active review
       if (activeReview) {
         // Add comment to existing review
         const commentData = {
           reviewNodeId: activeReview.node_id,
           body: commentText,
-          path: isNewComment 
-            ? selectedCommentLocation.value.filename 
-            : selectedCommentChain.value.filename,
-          line: isNewComment 
-            ? selectedCommentLocation.value.lineNumber 
-            : selectedCommentChain.value.lineNumber,
+          path: filename,
+          line: lineNumber,
           side: 'RIGHT',
         };
         
@@ -123,16 +137,18 @@ export function CommentModal() {
         const commentData = {
           reviewNodeId: newReview.node_id,
           body: commentText,
-          path: isNewComment 
-            ? selectedCommentLocation.value.filename 
-            : selectedCommentChain.value.filename,
-          line: isNewComment 
-            ? selectedCommentLocation.value.lineNumber 
-            : selectedCommentChain.value.lineNumber,
+          path: filename,
+          line: lineNumber,
           side: 'RIGHT',
         };
         
         await addReviewComment.mutateAsync(commentData);
+      }
+      
+      // BUG 2 FIX: If this was a new comment, transition to "existing thread" mode
+      // so the comment appears in the modal immediately
+      if (isNewComment) {
+        showCommentModal({ filename, lineNumber });
       }
       
       setCommentText('');
@@ -251,7 +267,7 @@ export function CommentModal() {
 
         {/* Comment chain (scrollable) */}
         {hasCommentChain && commentsWithUserFlag.length > 0 && (
-          <div className="comment-modal-thread">
+          <div ref={threadContainerRef} className="comment-modal-thread">
             {commentsWithUserFlag.map((comment) => (
               <div key={comment.id} className="comment-item">
                 <div className="comment-item-header">
