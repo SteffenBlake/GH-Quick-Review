@@ -5,11 +5,13 @@
  */
 
 import { useRef, useState, useEffect, useMemo } from 'preact/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   selectedCommentChain,
   selectedCommentLocation,
   clearCommentModal,
-  registerModalRef
+  registerModalRef,
+  showCommentModal
 } from '../stores/commentModalStore';
 import {
   useComments,
@@ -36,12 +38,14 @@ const ICON_X = '\uf467';
  */
 export function CommentModal() {
   const modalRef = useRef(null);
+  const threadContainerRef = useRef(null);
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState('');
 
   // Fetch all comments for the PR
-  const { data: allComments = [] } = useComments();
+  const { data: allComments = [], refetch: refetchComments } = useComments();
+  const queryClient = useQueryClient();
   
   // Fetch PR data to get head SHA
   const { data: prData } = usePrData();
@@ -81,8 +85,20 @@ export function CommentModal() {
     );
   }, [allComments, hasCommentChain, selectedCommentChain.value?.filename, selectedCommentChain.value?.lineNumber]);
 
+  // Auto-scroll to the last comment in the thread when new comments are added
+  // This ensures users can see their newly added comment without manual scrolling
+  useEffect(() => {
+    if (threadComments.length > 0 && threadContainerRef.current) {
+      // Scroll to the bottom of the thread container
+      threadContainerRef.current.scrollTop = threadContainerRef.current.scrollHeight;
+    }
+  }, [threadComments.length]);
+
   const handleSubmitComment = async (e) => {
     e.preventDefault();
+    
+    alert('[handleSubmitComment] Called!');
+    console.log('[handleSubmitComment] Called!', { commentText: commentText.substring(0, 20), hasPrData: !!prData?.pull });
     
     // IMMEDIATELY focus the modal to prevent focus loss during re-renders
     // The submit button might lose focus when the form re-renders, which would break :focus-within
@@ -90,10 +106,29 @@ export function CommentModal() {
       modalRef.current.focus();
     }
     
-    if (!commentText.trim() || !prData?.pull) return;
+    if (!commentText.trim() || !prData?.pull) {
+      console.log('[handleSubmitComment] Early return - missing data');
+      return;
+    }
 
     try {
       const commitSha = prData.pull.head.sha;
+      
+      // Store the location info for transitioning to thread mode
+      const filename = isNewComment 
+        ? selectedCommentLocation.value.filename 
+        : selectedCommentChain.value.filename;
+      const lineNumber = isNewComment 
+        ? selectedCommentLocation.value.lineNumber 
+        : selectedCommentChain.value.lineNumber;
+      
+      console.log('[CommentModal] Submitting comment:', {
+        isNewComment,
+        filename,
+        lineNumber,
+        commentText: commentText.substring(0, 50),
+        hasActiveReview: !!activeReview
+      });
       
       // Check if we have an active review
       if (activeReview) {
@@ -101,12 +136,8 @@ export function CommentModal() {
         const commentData = {
           reviewNodeId: activeReview.node_id,
           body: commentText,
-          path: isNewComment 
-            ? selectedCommentLocation.value.filename 
-            : selectedCommentChain.value.filename,
-          line: isNewComment 
-            ? selectedCommentLocation.value.lineNumber 
-            : selectedCommentChain.value.lineNumber,
+          path: filename,
+          line: lineNumber,
           side: 'RIGHT',
         };
         
@@ -123,16 +154,23 @@ export function CommentModal() {
         const commentData = {
           reviewNodeId: newReview.node_id,
           body: commentText,
-          path: isNewComment 
-            ? selectedCommentLocation.value.filename 
-            : selectedCommentChain.value.filename,
-          line: isNewComment 
-            ? selectedCommentLocation.value.lineNumber 
-            : selectedCommentChain.value.lineNumber,
+          path: filename,
+          line: lineNumber,
           side: 'RIGHT',
         };
         
         await addReviewComment.mutateAsync(commentData);
+      }
+      
+      // Manually refetch comments to ensure new comment appears immediately in the UI
+      // Query invalidation happens in onSuccess callback, but we need to wait for the refetch
+      await refetchComments();
+      
+      // After creating the first comment on a new line, transition from "new comment" mode to
+      // "existing thread" mode so the modal shows the thread instead of the empty comment form
+      if (isNewComment) {
+        selectedCommentChain.value = { filename, lineNumber };
+        selectedCommentLocation.value = null;
       }
       
       setCommentText('');
@@ -251,7 +289,7 @@ export function CommentModal() {
 
         {/* Comment chain (scrollable) */}
         {hasCommentChain && commentsWithUserFlag.length > 0 && (
-          <div className="comment-modal-thread">
+          <div ref={threadContainerRef} className="comment-modal-thread">
             {commentsWithUserFlag.map((comment) => (
               <div key={comment.id} className="comment-item">
                 <div className="comment-item-header">

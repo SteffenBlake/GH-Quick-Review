@@ -248,6 +248,32 @@ When you end a session prematurely:
 - Keep comments up-to-date with code changes
 - Use JSDoc for public APIs and complex functions
 
+### Naming Conventions
+**CRITICAL: Names must be descriptive and meaningful, NOT cryptic references.**
+- **NEVER** use names like "BUG 1", "BUG 2", "Test 1", "Test 2"
+- **NEVER** use numbered labels like "Issue A", "Feature X", "Case 3"
+- **ALWAYS** use names that describe WHAT the thing is or does
+- Test names should describe the behavior being tested
+- Variable and function names should describe their purpose
+- Comments should explain WHY, not WHAT (code shows what)
+
+**Examples:**
+```javascript
+// WRONG - Meaningless names
+test('BUG 1', ...)
+test('BUG 2', ...)
+const temp1 = ...;
+const data2 = ...;
+
+// CORRECT - Descriptive names  
+test('should auto-scroll when replying to comment thread', ...)
+test('should display new comment immediately when starting thread', ...)
+const userPreferences = ...;
+const filteredComments = ...;
+```
+
+**Why this matters**: Code is read far more than it's written. Future developers (including you!) need to understand what things are without having to trace back through history or documentation to figure out what "BUG 2" refers to.
+
 ## Continuous Improvement
 
 ### Self-Correction Protocol

@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve, join, relative } from 'path';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
+import { parse, visit } from 'graphql';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,6 +22,7 @@ class GitHubMockServer {
     this.config = config;
     this.latency = config.latency || 0; // Artificial delay in ms
     this.silent = config.silent || false; // Suppress console output
+    this.errorMessages = []; // Track unexpected errors (not configured error codes)
     this.loadUserData();
   }
 
@@ -28,6 +30,38 @@ class GitHubMockServer {
     if (!this.silent) {
       console.log(...args);
     }
+  }
+
+  /**
+   * Log an unexpected error (not a configured error response)
+   * This helps with test debugging by capturing real errors
+   * @param {string} context - Where the error occurred
+   * @param {Error|string} error - The error object or message
+   */
+  logError(context, error) {
+    const errorMessage = {
+      timestamp: new Date().toISOString(),
+      context,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    this.errorMessages.push(errorMessage);
+    this.log(`[ERROR] ${context}:`, error);
+  }
+
+  /**
+   * Get all logged errors
+   */
+  getErrors() {
+    return this.errorMessages;
+  }
+
+  /**
+   * Clear all logged errors
+   */
+  clearErrors() {
+    this.errorMessages = [];
   }
 
   loadUserData() {
@@ -466,16 +500,17 @@ class GitHubMockServer {
   }
 
   async handleRequest(req, res) {
-    const { method, url } = req;
-    
-    // Parse URL and extract path
-    const urlParts = url.split('?');
-    const path = urlParts[0];
-    
-    this.log(`${method} ${path}`);
-    
-    // Route matching
-    const routes = [
+    try {
+      const { method, url } = req;
+      
+      // Parse URL and extract path
+      const urlParts = url.split('?');
+      const path = urlParts[0];
+      
+      this.log(`${method} ${path}`);
+      
+      // Route matching
+      const routes = [
       {
         // Heartbeat: GET /heartbeat - quick health check
         pattern: /^\/heartbeat$/,
@@ -490,7 +525,7 @@ class GitHubMockServer {
           try {
             this.loadUserData();
             this.repoDataCache.clear();
-            // Also clear error configurations
+            // Clear error configurations
             const preserveOptions = { silent: this.silent };
             Object.keys(this.config).forEach(key => {
               if (key !== 'silent' && key !== 'latency') {
@@ -498,7 +533,9 @@ class GitHubMockServer {
               }
             });
             this.latency = 0;
-            this.sendResponse(res, 200, { status: 'ok', message: 'Test data and config reloaded' });
+            // Clear error messages log
+            this.clearErrors();
+            this.sendResponse(res, 200, { status: 'ok', message: 'Test data, config, and errors cleared' });
           } catch (error) {
             this.sendResponse(res, 500, { error: 'Failed to reset', message: error.message });
           }
@@ -534,6 +571,17 @@ class GitHubMockServer {
           } catch (error) {
             this.sendResponse(res, 400, { error: 'Invalid config', message: error.message });
           }
+        }
+      },
+      {
+        // Get error messages: GET /error-messages - retrieve logged errors for debugging
+        pattern: /^\/error-messages$/,
+        method: 'GET',
+        handler: (req, res) => {
+          this.sendResponse(res, 200, { 
+            errors: this.getErrors(),
+            count: this.errorMessages.length
+          });
         }
       },
       {
@@ -629,6 +677,17 @@ class GitHubMockServer {
       message: 'Not Found',
       documentation_url: 'https://docs.github.com/rest'
     });
+    } catch (error) {
+      // Log unexpected errors during request handling
+      this.logError(`handleRequest ${req.method} ${req.url}`, error);
+      // Try to send error response if headers not sent
+      if (!res.headersSent) {
+        this.sendResponse(res, 500, {
+          message: 'Internal Server Error',
+          error: error.message
+        });
+      }
+    }
   }
 
   listUserRepos(req, res, match) {
@@ -1062,7 +1121,7 @@ class GitHubMockServer {
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
     this.readBody(req, (body) => {
-      const { query } = body;
+      const { query, variables } = body;
       
       if (!query) {
         return this.sendResponse(res, 400, {
@@ -1073,9 +1132,36 @@ class GitHubMockServer {
         });
       }
       
-      // Parse the mutation to determine action
-      if (query.includes('resolveReviewThread')) {
-        // Extract thread ID from mutation
+      // Parse the GraphQL query properly
+      let ast;
+      try {
+        ast = parse(query);
+      } catch (error) {
+        return this.sendResponse(res, 400, {
+          errors: [{
+            message: `GraphQL parse error: ${error.message}`,
+            extensions: { code: 'GRAPHQL_PARSE_ERROR' }
+          }]
+        });
+      }
+      
+      // Extract operation type and field selections
+      const operation = ast.definitions[0];
+      const operationType = operation.operation; // 'query' or 'mutation'
+      const selections = {};
+      
+      // Walk the AST to find what fields are being requested
+      visit(ast, {
+        Field(node) {
+          selections[node.name.value] = true;
+        }
+      });
+      
+      // Build response data piecewise
+      let responseData = null;
+      
+      // Handle mutations
+      if (selections.resolveReviewThread) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
           return this.sendResponse(res, 400, {
@@ -1086,21 +1172,17 @@ class GitHubMockServer {
           });
         }
         
-        const threadId = threadIdMatch[1];
-        
-        // Return success response for resolve
-        this.sendResponse(res, 200, {
-          data: {
-            resolveReviewThread: {
-              thread: {
-                id: threadId,
-                isResolved: true
-              }
+        responseData = {
+          resolveReviewThread: {
+            thread: {
+              id: threadIdMatch[1],
+              isResolved: true
             }
           }
-        });
-      } else if (query.includes('unresolveReviewThread')) {
-        // Extract thread ID from mutation
+        };
+      }
+      
+      if (selections.unresolveReviewThread) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
           return this.sendResponse(res, 400, {
@@ -1111,22 +1193,17 @@ class GitHubMockServer {
           });
         }
         
-        const threadId = threadIdMatch[1];
-        
-        // Return success response for unresolve
-        this.sendResponse(res, 200, {
-          data: {
-            unresolveReviewThread: {
-              thread: {
-                id: threadId,
-                isResolved: false
-              }
+        responseData = {
+          unresolveReviewThread: {
+            thread: {
+              id: threadIdMatch[1],
+              isResolved: false
             }
           }
-        });
-      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviews')) {
-        // Handle pullRequest reviews query
-        const { variables } = body;
+        };
+      }
+      
+      if (selections.reviewThreads) {
         if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
           return this.sendResponse(res, 400, {
             errors: [{
@@ -1137,8 +1214,6 @@ class GitHubMockServer {
         }
         
         const { owner, repo, prNumber } = variables;
-        
-        // Load repo data
         const repoData = this.loadRepoData(repo);
         const pull = repoData.pulls.get(parseInt(prNumber));
         
@@ -1150,83 +1225,9 @@ class GitHubMockServer {
           });
         }
         
-        // Get all reviews for this PR
-        const reviews = Array.from(repoData.reviews.values())
-          .filter(review => review.pull_number === parseInt(prNumber));
-        
-        // Build GraphQL response with reviews and their comments
-        const reviewNodes = reviews.map(review => {
-          // Get all comments for this review
-          const reviewComments = Array.from(repoData.comments.values())
-            .filter(comment => comment.pull_request_review_id === review.id);
-          
-          return {
-            id: review.node_id,
-            state: review.state,
-            comments: {
-              nodes: reviewComments.map(comment => ({
-                id: `PRRC_${comment.id}`,
-                body: comment.body,
-                path: comment.path,
-                line: comment.line,
-                startLine: comment.start_line,
-                createdAt: comment.created_at,
-                updatedAt: comment.updated_at,
-                diffHunk: comment.diff_hunk,
-                pullRequestReview: {
-                  id: review.node_id,
-                  state: review.state
-                },
-                author: {
-                  login: comment.user.login
-                }
-              }))
-            }
-          };
-        });
-        
-        this.sendResponse(res, 200, {
-          data: {
-            repository: {
-              pullRequest: {
-                reviews: {
-                  nodes: reviewNodes
-                }
-              }
-            }
-          }
-        });
-      } else if (query.includes('repository') && query.includes('pullRequest') && query.includes('reviewThreads')) {
-        // Handle pullRequest reviewThreads query
-        const { variables } = body;
-        if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
-          return this.sendResponse(res, 400, {
-            errors: [{
-              message: 'Variables with owner, repo, and prNumber are required',
-              extensions: { code: 'BAD_USER_INPUT' }
-            }]
-          });
-        }
-        
-        const { owner, repo, prNumber } = variables;
-        
-        // Load repo data
-        const repoData = this.loadRepoData(repo);
-        const pull = repoData.pulls.get(parseInt(prNumber));
-        
-        if (!pull) {
-          return this.sendResponse(res, 200, {
-            data: {
-              repository: null
-            }
-          });
-        }
-        
-        // Get all review threads for this PR
         const threads = Array.from(repoData.reviewThreads.values())
           .filter(thread => thread.pull_number === parseInt(prNumber));
         
-        // Build GraphQL response with review threads
         const threadNodes = threads.map(thread => ({
           id: thread.id,
           isResolved: thread.isResolved,
@@ -1257,20 +1258,83 @@ class GitHubMockServer {
           }
         }));
         
-        this.sendResponse(res, 200, {
-          data: {
-            repository: {
-              pullRequest: {
-                reviewThreads: {
-                  nodes: threadNodes
-                }
+        responseData = {
+          repository: {
+            pullRequest: {
+              reviewThreads: {
+                nodes: threadNodes
               }
             }
           }
+        };
+      }
+      
+      if (selections.reviews) {
+        if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Variables with owner, repo, and prNumber are required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const { owner, repo, prNumber } = variables;
+        const repoData = this.loadRepoData(repo);
+        const pull = repoData.pulls.get(parseInt(prNumber));
+        
+        if (!pull) {
+          return this.sendResponse(res, 200, {
+            data: {
+              repository: null
+            }
+          });
+        }
+        
+        const reviews = Array.from(repoData.reviews.values())
+          .filter(review => review.pull_number === parseInt(prNumber));
+        
+        const reviewNodes = reviews.map(review => {
+          const reviewComments = Array.from(repoData.comments.values())
+            .filter(comment => comment.pull_request_review_id === review.id);
+          
+          return {
+            id: review.node_id,
+            state: review.state,
+            comments: {
+              nodes: reviewComments.map(comment => ({
+                id: `PRRC_${comment.id}`,
+                body: comment.body,
+                path: comment.path,
+                line: comment.line,
+                startLine: comment.start_line,
+                createdAt: comment.created_at,
+                updatedAt: comment.updated_at,
+                diffHunk: comment.diff_hunk,
+                pullRequestReview: {
+                  id: review.node_id,
+                  state: review.state
+                },
+                author: {
+                  login: comment.user.login
+                }
+              }))
+            }
+          };
         });
-      } else if (query.includes('addPullRequestReviewThread')) {
-        // Handle addPullRequestReviewThread mutation
-        const { variables } = body;
+        
+        responseData = {
+          repository: {
+            pullRequest: {
+              reviews: {
+                nodes: reviewNodes
+              }
+            }
+          }
+        };
+      }
+      
+      if (selections.addPullRequestReviewThread) {
         if (!variables || !variables.input) {
           return this.sendResponse(res, 400, {
             errors: [{
@@ -1287,11 +1351,11 @@ class GitHubMockServer {
         let pullNumber = null;
         let foundPr = null;
         
-        for (const repoName of this.repos) {
-          const repoData = this.loadRepoData(repoName);
+        for (const repoObj of this.repos) {
+          const repoData = this.loadRepoData(repoObj.name);
           for (const [num, pr] of repoData.pulls.entries()) {
             if (pr.node_id === pullRequestId) {
-              repo = repoName;
+              repo = repoObj.name;
               pullNumber = num;
               foundPr = pr;
               break;
@@ -1360,54 +1424,111 @@ class GitHubMockServer {
         
         repoData.comments.set(newComment.id, newComment);
         
-        // Return GraphQL response
-        this.sendResponse(res, 200, {
-          data: {
-            addPullRequestReviewThread: {
-              thread: {
-                id: `PRRT_${repoData.nextCommentId - 1}`,
-                isResolved: false,
-                isOutdated: false,
-                comments: {
-                  nodes: [{
-                    id: `PRRC_${newComment.id}`,
-                    body: newComment.body,
-                    path: newComment.path,
-                    line: newComment.line,
-                    createdAt: newComment.created_at,
-                    author: {
-                      login: newComment.user.login
-                    }
-                  }]
-                }
+        // Update reviewThreads so the new comment appears in GraphQL queries
+        let thread = null;
+        for (const [threadId, t] of repoData.reviewThreads.entries()) {
+          if (t.path === path && t.line === line && t.pull_number === pullNumber) {
+            thread = t;
+            break;
+          }
+        }
+        
+        if (!thread) {
+          const threadId = `PRT_kwDOThread${newComment.id}`;
+          thread = {
+            id: threadId,
+            pull_number: pullNumber,
+            isResolved: false,
+            isOutdated: false,
+            isCollapsed: false,
+            path: path,
+            line: line,
+            originalLine: line,
+            comments: []
+          };
+          repoData.reviewThreads.set(threadId, thread);
+        }
+        
+        thread.comments.push({
+          id: `PRRC_${newComment.id}`,
+          databaseId: newComment.id,
+          body: newComment.body,
+          path: newComment.path,
+          line: newComment.line,
+          startLine: newComment.start_line,
+          diffHunk: newComment.diff_hunk,
+          createdAt: newComment.created_at,
+          updatedAt: newComment.updated_at,
+          author: {
+            login: newComment.user.login
+          },
+          pullRequestReview: {
+            id: `PRR_${reviewId}`,
+            state: foundReview.state
+          }
+        });
+        
+        responseData = {
+          addPullRequestReviewThread: {
+            thread: {
+              id: thread.id,
+              isResolved: thread.isResolved,
+              isOutdated: thread.isOutdated,
+              comments: {
+                nodes: thread.comments.map(c => ({
+                  id: c.id,
+                  body: c.body,
+                  path: c.path,
+                  line: c.line,
+                  createdAt: c.createdAt,
+                  author: {
+                    login: c.author.login
+                  }
+                }))
               }
             }
           }
-        });
-      } else {
-        // Unknown GraphQL operation
-        this.sendResponse(res, 400, {
-          errors: [{
-            message: 'Unknown GraphQL operation',
-            extensions: { code: 'GRAPHQL_VALIDATION_FAILED' }
-          }]
-        });
+        };
       }
+      
+      // Send response
+      if (responseData) {
+        return this.sendResponse(res, 200, { data: responseData });
+      }
+      
+      // Unknown GraphQL operation
+      return this.sendResponse(res, 400, {
+        errors: [{
+          message: 'Unknown GraphQL operation',
+          extensions: { code: 'GRAPHQL_VALIDATION_FAILED' }
+        }]
+      });
     });
   }
-
   readBody(req, callback) {
     let body = '';
+    let callbackInvoked = false;
+    
     req.on('data', chunk => {
       body += chunk.toString();
     });
+    
     req.on('end', () => {
-      try {
-        const parsed = body ? JSON.parse(body) : {};
-        callback(parsed);
-      } catch (error) {
-        callback({});
+      if (callbackInvoked) {
+        return; // Duplicate end event, skip
       }
+      callbackInvoked = true;
+      
+      // Parse the body BEFORE invoking callback, so try/catch only catches parse errors
+      let parsed;
+      try {
+        parsed = body ? JSON.parse(body) : {};
+      } catch (error) {
+        parsed = {};
+      }
+      
+      // Invoke callback outside of try/catch to avoid catching errors from the callback itself
+      callback(parsed);
     });
   }
 
