@@ -821,11 +821,14 @@ class GitHubMockServer {
   }
 
   addComment(req, res, match) {
+    console.log('[addComment] addComment called');
     if (this.checkConfiguredError('addComment', res)) return;
     
     const [, owner, repo, pullNumber] = match;
     
+    console.log('[addComment] About to call readBody');
     this.readBody(req, (body) => {
+      console.log('[addComment] Received body:', JSON.stringify(body).substring(0, 200));
       const repoData = this.loadRepoData(repo);
       const pull = repoData.pulls.get(parseInt(pullNumber));
       
@@ -1061,11 +1064,12 @@ class GitHubMockServer {
 
   handleGraphQL(req, res, match) {
     console.log('[GraphQL] handleGraphQL called');
+    console.log('[GraphQL] Stack trace:', new Error().stack.split('\n').slice(1, 4).join('\n'));
     if (this.checkConfiguredError('handleGraphQL', res)) return;
     
     console.log('[GraphQL] About to call readBody');
     this.readBody(req, (body) => {
-      console.log('[GraphQL] Received body:', JSON.stringify(body).substring(0, 200));
+      console.log('[GraphQL] Callback invoked, body:', JSON.stringify(body).substring(0, 200));
       const { query, variables } = body;
       
       if (!query) {
@@ -1452,24 +1456,35 @@ class GitHubMockServer {
     });
   }
   readBody(req, callback) {
+    const callId = Math.random().toString(36).substring(7);
+    console.log(`[readBody-${callId}] readBody called, callback:`, typeof callback);
     let body = '';
     let callbackInvoked = false;
+    let dataEventCount = 0;
+    let endEventCount = 0;
     
     req.on('data', chunk => {
+      dataEventCount++;
+      console.log(`[readBody-${callId}] data event #${dataEventCount}, chunk length: ${chunk.length}`);
       body += chunk.toString();
     });
     
     req.on('end', () => {
+      endEventCount++;
+      console.log(`[readBody-${callId}] end event #${endEventCount}, body length: ${body.length}, already invoked: ${callbackInvoked}`);
+      
       if (callbackInvoked) {
-        console.warn('[WARN] readBody callback already invoked, skipping duplicate call');
+        console.warn(`[WARN-${callId}] readBody callback already invoked, skipping duplicate call`);
         return;
       }
       callbackInvoked = true;
       
       try {
         const parsed = body ? JSON.parse(body) : {};
+        console.log(`[readBody-${callId}] About to invoke callback with parsed body`);
         callback(parsed);
       } catch (error) {
+        console.log(`[readBody-${callId}] Parse error, invoking callback with empty object`);
         callback({});
       }
     });

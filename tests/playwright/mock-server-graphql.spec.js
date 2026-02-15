@@ -241,4 +241,26 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     expect(result.errors).toBeUndefined();
     expect(result.data.repository.pullRequest.reviews.nodes).toBeInstanceOf(Array);
   });
+  
+  test('should add a REST comment (for comparison with GraphQL)', async ({ request }) => {
+    // This tests a working REST endpoint that uses readBody
+    // Compare its behavior with GraphQL endpoint to find the difference
+    const response = await request.post(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/comments`, {
+      data: {
+        body: 'Test REST comment',
+        path: 'empty-lines.txt',
+        line: 3,
+        side: 'RIGHT'
+      }
+    });
+    
+    const result = await response.json();
+    console.log('REST comment response:', JSON.stringify(result, null, 2));
+    
+    expect(response.status()).toBe(201);
+    expect(result.id).toBeTruthy();
+    expect(result.body).toBe('Test REST comment');
+    expect(result.path).toBe('empty-lines.txt');
+    expect(result.line).toBe(3);
+  });
 });
