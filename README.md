@@ -43,6 +43,7 @@ GH-Quick-Review fixes this with:
 - 🔐 **Secure token storage** - Client-side only, never sent to third parties
 - 🔒 **Strict CSP** - Content Security Policy prevents XSS and data leaks
 - ⚡ **Fast & lightweight** - Built with Preact and Vite
+- 🔍 **Fuzzy search** - Quick file and PR search with fuzzy matching
 
 ### WIP (Coming Soon)
 - 📂 **File tree navigation** - nvim-tree style directory browser
