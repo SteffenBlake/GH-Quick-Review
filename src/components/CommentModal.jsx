@@ -145,8 +145,8 @@ export function CommentModal() {
         await addReviewComment.mutateAsync(commentData);
       }
       
-      // BUG 2 FIX: If this was a new comment, transition to "existing thread" mode
-      // so the comment appears in the modal immediately
+      // BUG 2 FIX: If this was a new comment (not a reply to existing thread),
+      // transition to "existing thread" mode so the comment appears in the modal immediately
       if (isNewComment) {
         showCommentModal({ filename, lineNumber });
       }

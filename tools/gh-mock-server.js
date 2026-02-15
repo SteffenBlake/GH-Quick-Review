@@ -1412,9 +1412,9 @@ class GitHubMockServer {
           data: {
             addPullRequestReviewThread: {
               thread: {
-                id: `PRRT_${repoData.nextCommentId - 1}`,
-                isResolved: false,
-                isOutdated: false,
+                id: thread.id,
+                isResolved: thread.isResolved,
+                isOutdated: thread.isOutdated,
                 comments: {
                   nodes: [{
                     id: `PRRC_${newComment.id}`,
