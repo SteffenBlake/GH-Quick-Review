@@ -1362,16 +1362,20 @@ class GitHubMockServer {
         
         // ALSO add to reviewThreads for GraphQL query consistency
         // Find existing thread for this file/line
+        console.log(`[MUTATION] Searching for thread at path="${path}" line=${line}`);
         let thread = null;
         for (const [threadId, t] of repoData.reviewThreads.entries()) {
+          console.log(`[MUTATION] Checking thread ${threadId}: path="${t.path}" line=${t.line}`);
           if (t.path === path && t.line === line) {
             thread = t;
+            console.log(`[MUTATION] Found existing thread: ${threadId}`);
             break;
           }
         }
         
         if (!thread) {
           // Create new thread with unique ID
+          console.log(`[MUTATION] Creating new thread`);
           const threadId = `PRT_kwDOThread${repoData.nextCommentId}`;
           thread = {
             id: threadId,
@@ -1388,6 +1392,7 @@ class GitHubMockServer {
         }
         
         // Add comment to thread
+        console.log(`[MUTATION] Adding comment ${newComment.id} to thread ${thread.id}, thread now has ${thread.comments.length + 1} comments`);
         thread.comments.push({
           id: `PRRC_${newComment.id}`,
           databaseId: newComment.id,

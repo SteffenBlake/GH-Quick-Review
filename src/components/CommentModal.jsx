@@ -43,7 +43,7 @@ export function CommentModal() {
   const [editText, setEditText] = useState('');
 
   // Fetch all comments for the PR
-  const { data: allComments = [] } = useComments();
+  const { data: allComments = [], refetch: refetchComments } = useComments();
   
   // Fetch PR data to get head SHA
   const { data: prData } = usePrData();
@@ -145,10 +145,16 @@ export function CommentModal() {
         await addReviewComment.mutateAsync(commentData);
       }
       
+      // Manually refetch comments to ensure new comment appears immediately
+      // The query invalidation in onSuccess happens, but we need to wait for the refetch
+      await refetchComments();
+      
       // BUG 2 FIX: If this was a new comment (not a reply to existing thread),
-      // transition to "existing thread" mode so the comment appears in the modal immediately
+      // transition to "existing thread" mode by updating the signals directly
+      // This makes the modal show the thread instead of the "new comment" form
       if (isNewComment) {
-        showCommentModal({ filename, lineNumber });
+        selectedCommentChain.value = { filename, lineNumber };
+        selectedCommentLocation.value = null;
       }
       
       setCommentText('');
