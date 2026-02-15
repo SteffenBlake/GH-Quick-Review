@@ -416,15 +416,14 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await textarea.fill('First comment in new thread');
       
       // Submit the comment
-      await page.getByRole('button', { name: /comment/i }).click();
+      await page.getByRole('button', { name: /^Add comment$/i }).click();
       
-      // BUG: The comment should appear immediately in the modal
-      // The modal should transition from "New Comment" to showing the thread with the comment
-      await expect(page.locator('.comment-item')).toHaveCount(1, { timeout: 1000 });
+      // The modal should transition from "New Comment" to "Comment Thread"
+      await expect(page.locator('.comment-modal h2')).toContainText('Comment Thread', { timeout: 2000 });
+      
+      // The comment should appear immediately in the modal
+      await expect(page.locator('.comment-item')).toHaveCount(1);
       await expect(page.locator('.comment-item-body')).toContainText('First comment in new thread');
-      
-      // The header should still show "Comment Thread" now
-      await expect(page.locator('.comment-modal h2')).toContainText('Comment Thread');
       
     } finally {
       await mockServer.reset();
