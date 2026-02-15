@@ -97,13 +97,19 @@ export function CommentModal() {
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     
+    alert('[handleSubmitComment] Called!');
+    console.log('[handleSubmitComment] Called!', { commentText: commentText.substring(0, 20), hasPrData: !!prData?.pull });
+    
     // IMMEDIATELY focus the modal to prevent focus loss during re-renders
     // The submit button might lose focus when the form re-renders, which would break :focus-within
     if (modalRef.current) {
       modalRef.current.focus();
     }
     
-    if (!commentText.trim() || !prData?.pull) return;
+    if (!commentText.trim() || !prData?.pull) {
+      console.log('[handleSubmitComment] Early return - missing data');
+      return;
+    }
 
     try {
       const commitSha = prData.pull.head.sha;

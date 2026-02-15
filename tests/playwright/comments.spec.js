@@ -349,6 +349,10 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     
+    // Listen for console messages
+    page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text()));
+    page.on('pageerror', err => console.log('BROWSER ERROR:', err.message));
+    
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
