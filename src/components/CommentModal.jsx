@@ -5,6 +5,7 @@
  */
 
 import { useRef, useState, useEffect, useMemo } from 'preact/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   selectedCommentChain,
   selectedCommentLocation,
