@@ -1445,10 +1445,19 @@ class GitHubMockServer {
 
   readBody(req, callback) {
     let body = '';
+    let callbackInvoked = false;
+    
     req.on('data', chunk => {
       body += chunk.toString();
     });
+    
     req.on('end', () => {
+      if (callbackInvoked) {
+        console.warn('[WARN] readBody callback already invoked, skipping duplicate call');
+        return;
+      }
+      callbackInvoked = true;
+      
       try {
         const parsed = body ? JSON.parse(body) : {};
         callback(parsed);
