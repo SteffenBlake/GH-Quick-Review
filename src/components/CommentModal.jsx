@@ -44,6 +44,7 @@ export function CommentModal() {
 
   // Fetch all comments for the PR
   const { data: allComments = [], refetch: refetchComments } = useComments();
+  const queryClient = useQueryClient();
   
   // Fetch PR data to get head SHA
   const { data: prData } = usePrData();
