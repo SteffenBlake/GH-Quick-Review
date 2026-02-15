@@ -7,6 +7,7 @@
 import { computed } from '@preact/signals';
 import { useMemo } from 'preact/hooks';
 import { usePrData } from './prDataStore.js';
+import { useComments } from './commentsStore.js';
 
 /**
  * Build a nested directory tree from file changes
@@ -100,21 +101,22 @@ function buildDirectoryTree(files, comments) {
 
 /**
  * Hook to get the directory tree structure
- * Derived from PR data
+ * Derived from PR data and comments
  */
 export function useDirectoryTree() {
-  const { data: prData, isLoading, error } = usePrData();
+  const { data: prData, isLoading: prLoading, error: prError } = usePrData();
+  const { data: comments, isLoading: commentsLoading, error: commentsError } = useComments();
 
   const tree = useMemo(() => {
     if (!prData || !prData.files) {
       return {};
     }
-    return buildDirectoryTree(prData.files, prData.comments);
-  }, [prData]);
+    return buildDirectoryTree(prData.files, comments || []);
+  }, [prData, comments]);
 
   return {
     tree,
-    isLoading,
-    error
+    isLoading: prLoading || commentsLoading,
+    error: prError || commentsError
   };
 }

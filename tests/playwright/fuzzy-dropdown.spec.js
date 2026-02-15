@@ -245,12 +245,19 @@ test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
       
       const searchInput = reposDropdown.getByPlaceholder('Type to search...');
       await expect(searchInput).toBeVisible();
+      await expect(searchInput).toBeFocused();
+      
+      // Wait a moment for the dropdown to fully initialize before pressing Enter
+      await page.waitForTimeout(100);
       
       // First item should already be highlighted, just press Enter to select it
       await searchInput.press('Enter');
       
-      // Give it time to process the selection
-      await page.waitForTimeout(500);
+      // Wait for selection to be saved to localStorage (max 1s)
+      await page.waitForFunction(
+        () => localStorage.getItem('selected_repo') === 'test_user/test_repo_1',
+        { timeout: 1000 }
+      );
       
       // Should show selected repo text (check using the displayed text, not the dropdown state)
       await expect(reposDropdown).toContainText('test_repo_1');

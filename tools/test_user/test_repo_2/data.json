@@ -177,5 +177,67 @@
       "commit_id": "yaml456def789",
       "author_association": "OWNER"
     }
+  ],
+  "reviewThreads": [
+    {
+      "pull_number": 2,
+      "id": "PRT_kwDOThread3001",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "config.yaml",
+      "originalLine": 4,
+      "line": 4,
+      "comments": [
+        {
+          "id": "PRRC_kwDO3001",
+          "databaseId": 3001,
+          "body": "LGTM - Much cleaner than the old XML format!",
+          "path": "config.yaml",
+          "line": 4,
+          "startLine": 1,
+          "diffHunk": "@@ -1,8 +1,12 @@\n+# YAML Configuration\n+server:\n+  port: 8080\n+  host: localhost",
+          "createdAt": "2024-01-18T10:30:00Z",
+          "updatedAt": "2024-01-18T10:30:00Z",
+          "author": {
+            "login": "reviewer2"
+          },
+          "pullRequestReview": {
+            "id": "PRR_5002",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 2,
+      "id": "PRT_kwDOThread3002",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "styles/dark.css",
+      "originalLine": 3,
+      "line": 3,
+      "comments": [
+        {
+          "id": "PRRC_kwDO3002",
+          "databaseId": 3002,
+          "body": "This is a pending review comment",
+          "path": "styles/dark.css",
+          "line": 3,
+          "startLine": null,
+          "diffHunk": "@@ -0,0 +1,10 @@\n+/* Dark theme */",
+          "createdAt": "2024-01-18T11:00:00Z",
+          "updatedAt": "2024-01-18T11:00:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_5001",
+            "state": "PENDING"
+          }
+        }
+      ]
+    }
   ]
 }
