@@ -57,7 +57,13 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       // Submit the comment (should start review)
       await submitBtn.click();
       
-      // Modal should close
+      // Modal should STAY open (not close) after submitting
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+      
+      // Click cancel button in modal to close it
+      await page.locator('.comment-modal-cancel-btn').click();
+      
+      // Now modal should be closed
       await expect(page.locator('.comment-modal')).not.toBeFocused({ timeout: 1000 });
       
       // Now add another comment - should show active review UI
