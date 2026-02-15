@@ -1064,8 +1064,6 @@ class GitHubMockServer {
     this.readBody(req, (body) => {
       const { query } = body;
       
-      console.log(`[GRAPHQL] Received query: ${query?.substring(0, 100)}...`);
-      
       if (!query) {
         return this.sendResponse(res, 400, {
           errors: [{
@@ -1362,23 +1360,19 @@ class GitHubMockServer {
         
         repoData.comments.set(newComment.id, newComment);
         
-        // ALSO add to reviewThreads for GraphQL query consistency
-        // Find existing thread for this file/line
-        console.log(`[MUTATION] Searching for thread at path="${path}" line=${line}`);
+        // ALSO update reviewThreads so the new comment appears in GraphQL queries
+        // Find existing thread for this file and line
         let thread = null;
         for (const [threadId, t] of repoData.reviewThreads.entries()) {
-          console.log(`[MUTATION] Checking thread ${threadId}: path="${t.path}" line=${t.line}`);
-          if (t.path === path && t.line === line) {
+          if (t.path === path && t.line === line && t.pull_number === pullNumber) {
             thread = t;
-            console.log(`[MUTATION] Found existing thread: ${threadId}`);
             break;
           }
         }
         
         if (!thread) {
-          // Create new thread with unique ID
-          console.log(`[MUTATION] Creating new thread`);
-          const threadId = `PRT_kwDOThread${repoData.nextCommentId}`;
+          // Create new thread
+          const threadId = `PRT_kwDOThread${newComment.id}`;
           thread = {
             id: threadId,
             pull_number: pullNumber,
@@ -1393,8 +1387,7 @@ class GitHubMockServer {
           repoData.reviewThreads.set(threadId, thread);
         }
         
-        // Add comment to thread
-        console.log(`[MUTATION] Adding comment ${newComment.id} to thread ${thread.id}, thread now has ${thread.comments.length + 1} comments`);
+        // Add comment to the thread
         thread.comments.push({
           id: `PRRC_${newComment.id}`,
           databaseId: newComment.id,
@@ -1402,7 +1395,7 @@ class GitHubMockServer {
           path: newComment.path,
           line: newComment.line,
           startLine: newComment.start_line,
-          diffHunk: '',
+          diffHunk: newComment.diff_hunk,
           createdAt: newComment.created_at,
           updatedAt: newComment.updated_at,
           author: {
