@@ -156,8 +156,8 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
   });
 
   test('should submit review and show success toast, keep modal open, and remove submit button', async ({ page }) => {
-    // Increase timeout for this test due to 1s polling delay
-    test.setTimeout(5000);
+    // Increase timeout for this test due to 1s+2s polling delays
+    test.setTimeout(8000);
     
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
@@ -227,8 +227,8 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
   });
 
   test('should complete review submission with all UI feedback and state updates', async ({ page }) => {
-    // Increase timeout for this test due to 1s polling delay
-    test.setTimeout(5000);
+    // Increase timeout for this test due to 1s+2s polling delays
+    test.setTimeout(8000);
     
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();

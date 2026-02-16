@@ -532,6 +532,8 @@ class GitHubMockServer {
           try {
             this.loadUserData();
             this.repoDataCache.clear();
+            // Clear pending review updates from eventual consistency simulation
+            this.pendingReviewUpdates.clear();
             // Clear error configurations
             const preserveOptions = { silent: this.silent };
             Object.keys(this.config).forEach(key => {
