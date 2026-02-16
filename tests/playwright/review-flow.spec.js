@@ -156,7 +156,7 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
   });
 
   test('should submit review and show success toast, keep modal open, and remove submit button', async ({ page }) => {
-    // Increase timeout for this test due to 2s polling intervals
+    // Increase timeout for this test: 5s polling timeout + UI rendering = ~7s max
     test.setTimeout(10000);
     
     const mockServer = new MockServerManager();
