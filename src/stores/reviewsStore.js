@@ -198,7 +198,8 @@ export function useSubmitReview() {
       console.error('[ReviewStore] ✗ Polling timeout reached after 5s');
       throw new Error('GitHub API did not respond with updated review state within 5 seconds');
     },
-    onSuccess: () => {
+     onSuccess: () => {
+      console.log('[ReviewStore] onSuccess callback called');
       // Invalidate active review and comments queries to refetch
       queryClient.invalidateQueries({
         queryKey: ['activeReview', selectedRepo.value, selectedPr.value, currentUser?.login]
@@ -206,6 +207,9 @@ export function useSubmitReview() {
       queryClient.invalidateQueries({
         queryKey: ['comments', selectedRepo.value, selectedPr.value]
       });
+    },
+    onError: (error) => {
+      console.error('[ReviewStore] onError callback called:', error);
     },
   });
 }
