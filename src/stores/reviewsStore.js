@@ -47,15 +47,21 @@ export function useCreateReview() {
   const { data: currentUser } = useCurrentUser();
   
   return useMutation({
-    mutationFn: async ({ commitId, body = '', event = 'PENDING' }) => {
+    mutationFn: async ({ commitId, body = '', event }) => {
       if (!selectedRepo.value || !selectedPr.value) {
         throw new Error('No PR selected');
+      }
+      
+      // Build request body - omit event field to create PENDING review
+      const requestBody = { commit_id: commitId, body };
+      if (event) {
+        requestBody.event = event;
       }
       
       return await githubClient.createPullReview(
         selectedRepo.value,
         selectedPr.value,
-        { commit_id: commitId, body, event }
+        requestBody
       );
     },
     onSuccess: () => {

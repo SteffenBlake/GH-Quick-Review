@@ -134,10 +134,10 @@ export function CommentModal() {
         await addReviewComment.mutateAsync(commentData);
       } else {
         // No active review - create one first, then add comment
+        // Omit event field to create a PENDING review
         const newReview = await createReview.mutateAsync({
           commitId: commitSha,
           body: '',
-          event: 'PENDING',
         });
         
         // Now add comment to the newly created review

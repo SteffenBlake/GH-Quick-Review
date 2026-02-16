@@ -991,6 +991,26 @@ class GitHubMockServer {
         });
       }
       
+      // Validate event field - only APPROVE, REQUEST_CHANGES, COMMENT are valid
+      const validEvents = ['APPROVE', 'REQUEST_CHANGES', 'COMMENT'];
+      if (body.event !== undefined && !validEvents.includes(body.event)) {
+        return this.sendResponse(res, 422, {
+          message: 'Validation Failed',
+          errors: [
+            {
+              resource: 'PullRequestReview',
+              code: 'invalid',
+              field: 'event',
+              message: `event must be one of: ${validEvents.join(', ')}`
+            }
+          ],
+          documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-for-a-pull-request'
+        });
+      }
+      
+      // If event is omitted, the review is PENDING. Otherwise, use the event value.
+      const state = body.event || 'PENDING';
+      
       const newReview = {
         id: repoData.nextReviewId++,
         node_id: `PRR_${repoData.nextReviewId - 1}`,
@@ -1003,7 +1023,7 @@ class GitHubMockServer {
           type: 'User'
         },
         body: body.body || '',
-        state: body.event || 'PENDING',
+        state: state,
         html_url: `https://github.com/${owner}/${repo}/pull/${pullNumber}#pullrequestreview-${repoData.nextReviewId - 1}`,
         pull_request_url: `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
         _links: {
@@ -1016,7 +1036,7 @@ class GitHubMockServer {
         },
         commit_id: body.commit_id || pull.head.sha,
         author_association: 'OWNER',
-        submitted_at: body.event && body.event !== 'PENDING' ? new Date().toISOString() : undefined
+        submitted_at: state !== 'PENDING' ? new Date().toISOString() : undefined
       };
       
       repoData.reviews.set(newReview.id, newReview);
