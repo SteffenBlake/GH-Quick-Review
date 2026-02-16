@@ -242,23 +242,6 @@ class GitHubClient {
   }
 
   /**
-   * Update a review comment
-   * @param {string} repo - Full repository name (e.g., 'owner/repo')
-   * @param {number} commentId - Comment ID
-   * @param {Object} update - Update object with body field
-   * @returns {Promise<Object>} - Updated comment object
-   */
-  async updatePullComment(repo, commentId, update) {
-    if (!repo) {
-      throw new Error('Repository name is required');
-    }
-    if (!commentId) {
-      throw new Error('Comment ID is required');
-    }
-    return this.patch(`/repos/${repo}/pulls/comments/${commentId}`, update);
-  }
-
-  /**
    * Update a PR review comment using GraphQL mutation
    * @param {string} commentNodeId - GraphQL node ID of the comment (e.g., 'PRRC_...')
    * @param {string} body - New comment body text

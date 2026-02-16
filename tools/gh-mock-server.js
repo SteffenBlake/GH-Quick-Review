@@ -1596,9 +1596,12 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
       console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
       console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
       console.log(`  POST   /graphql`);
-      console.log(`    - Supports: resolveReviewThread, unresolveReviewThread`);
-      console.log(`    - Supports: reviewThreads, reviews, addPullRequestReviewThread`);
-      console.log(`    - Supports: updatePullRequestReviewComment (mutation)`);
+      console.log(`\n  GraphQL Queries:`);
+      console.log(`    - reviewThreads, reviews`);
+      console.log(`\n  GraphQL Mutations:`);
+      console.log(`    - resolveReviewThread, unresolveReviewThread`);
+      console.log(`    - addPullRequestReviewThread`);
+      console.log(`    - updatePullRequestReviewComment`);
       console.log(`\nPress Ctrl+C to stop\n`);
     }
   });
