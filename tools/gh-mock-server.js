@@ -1609,7 +1609,13 @@ class GitHubMockServer {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires');
+    
+    // Simulate real GitHub API cache-control headers
+    // GitHub returns: Cache-Control: private, max-age=60, s-maxage=60
+    // This causes browsers to cache responses for 60 seconds
+    res.setHeader('Cache-Control', 'private, max-age=60, s-maxage=60');
+    
     res.statusCode = statusCode;
     
     if (statusCode === 204) {
