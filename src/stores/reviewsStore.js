@@ -148,7 +148,8 @@ export function useSubmitReview() {
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
       
       // Wait initial interval before first poll to give API time to propagate
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      // Mock server simulates 750ms delay, real API is similar
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       while (Date.now() - pollStartTime < pollTimeout) {
         // Fetch current reviews with cache-busting to prevent browser cache issues
