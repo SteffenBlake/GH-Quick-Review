@@ -146,6 +146,10 @@ export function useSubmitReview() {
       const pollTimeout = 5000; // 5 second timeout as requested
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting as requested
       
+      // Wait 1s before first poll to allow for eventual consistency
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
       
       while (Date.now() - pollStartTime < pollTimeout) {
