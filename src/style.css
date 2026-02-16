@@ -1602,4 +1602,51 @@ body {
   background-color: #3abe70;
 }
 
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  cursor: pointer;
+  animation: toast-slide-in 0.3s ease-out;
+  max-width: 25rem;
+  word-wrap: break-word;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.toast-error {
+  background-color: #ef4444;
+  color: white;
+}
+
+.toast-info {
+  background-color: var(--accent);
+  color: white;
+}
+
+.toast:hover {
+  opacity: 0.9;
+}
+
 

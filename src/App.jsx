@@ -19,6 +19,7 @@ import { DiffViewer } from './components/DiffViewer';
 import { HighlightThemeLoader } from './components/HighlightThemeLoader';
 import { CommentModal } from './components/CommentModal';
 import { SettingsModal } from './components/SettingsModal';
+import { Toast } from './components/Toast';
 
 function MainContent() {
   // Check for any errors in the unified error store
@@ -75,6 +76,7 @@ export function App() {
         <DirectoryBrowser />
         <CommentModal />
         <SettingsModal />
+        <Toast />
         {!token.value ? (
           <LoginPage />
         ) : (
