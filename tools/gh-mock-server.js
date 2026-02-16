@@ -23,6 +23,13 @@ class GitHubMockServer {
     this.latency = config.latency || 0; // Artificial delay in ms
     this.silent = config.silent || false; // Suppress console output
     this.errorMessages = []; // Track unexpected errors (not configured error codes)
+    
+    // Simulate GitHub eventual consistency for review submissions
+    // After submitReview is called, there's a delay before listReviews returns the updated state
+    // This matches real GitHub API behavior where the API is eventually consistent
+    this.pendingReviewUpdates = new Map(); // reviewId -> { newState, timestamp }
+    this.reviewStateDelay = 750; // Delay in ms before review state is visible in listReviews
+    
     this.loadUserData();
   }
 
@@ -972,7 +979,27 @@ class GitHubMockServer {
     const reviews = Array.from(repoData.reviews.values())
       .filter(review => review.pull_number === parseInt(pullNumber));
     
-    this.sendResponse(res, 200, reviews);
+    // Simulate GitHub eventual consistency:
+    // If a review was recently submitted, return the old PENDING state until the delay has passed
+    // This matches real GitHub behavior where API reads lag behind writes
+    const now = Date.now();
+    const reviewsWithEventualConsistency = reviews.map(review => {
+      const pendingUpdate = this.pendingReviewUpdates.get(review.id);
+      
+      if (pendingUpdate && (now - pendingUpdate.timestamp) < this.reviewStateDelay) {
+        // Still within the eventual consistency window - return old PENDING state
+        return { ...review, state: 'PENDING', submitted_at: null };
+      }
+      
+      // Delay has passed, clean up the pending update
+      if (pendingUpdate) {
+        this.pendingReviewUpdates.delete(review.id);
+      }
+      
+      return review;
+    });
+    
+    this.sendResponse(res, 200, reviewsWithEventualConsistency);
   }
 
   createReview(req, res, match) {
@@ -1069,11 +1096,21 @@ class GitHubMockServer {
         });
       }
       
-      // Update review state and add submitted_at
-      review.state = body.event || 'REQUEST_CHANGES';
+      // Update review state and add submitted_at immediately
+      const newState = body.event || 'REQUEST_CHANGES';
+      review.state = newState;
       review.body = body.body || review.body;
       review.submitted_at = new Date().toISOString();
       
+      // Simulate GitHub eventual consistency:
+      // Track this review update so listReviews will return PENDING for a short delay
+      // This matches real GitHub API behavior where writes don't immediately appear in reads
+      this.pendingReviewUpdates.set(parseInt(reviewId), {
+        newState,
+        timestamp: Date.now()
+      });
+      
+      // Return the updated review immediately (GitHub does this too)
       this.sendResponse(res, 200, review);
     });
   }
