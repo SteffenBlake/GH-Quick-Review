@@ -132,6 +132,8 @@ export function useSubmitReview() {
         throw new Error('No PR selected');
       }
       
+      console.log('[ReviewStore] Submitting review:', { reviewId, event, body: body?.substring(0, 50) });
+      
       // Submit the review
       const submittedReview = await githubClient.submitReview(
         selectedRepo.value,
@@ -140,19 +142,32 @@ export function useSubmitReview() {
         { body, event }
       );
       
+      console.log('[ReviewStore] Review submitted successfully:', { 
+        id: submittedReview.id, 
+        state: submittedReview.state 
+      });
+      
       // Poll for eventual consistency:
       // GitHub API may return cached/stale "PENDING" state briefly after submission
       // Poll with cache-busting until state updates or timeout
       const pollTimeout = 5000; // 5 second timeout as requested
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting as requested
       
+      console.log('[ReviewStore] Waiting 1s before starting polling...');
+      
       // Wait 1s before first poll to allow for eventual consistency
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
+      console.log('[ReviewStore] Starting polling loop (timeout: 5s, interval: 2s)');
       
+      let pollCount = 0;
       while (Date.now() - pollStartTime < pollTimeout) {
+        pollCount++;
+        const elapsed = Date.now() - pollStartTime;
+        console.log(`[ReviewStore] Poll attempt #${pollCount} (elapsed: ${elapsed}ms)`);
+        
         // Fetch current reviews with cache-busting to prevent browser cache issues
         // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
         const reviews = await githubClient.listPullReviews(
@@ -161,18 +176,26 @@ export function useSubmitReview() {
           { bustCache: true }
         );
         
+        console.log(`[ReviewStore] Fetched ${reviews.length} reviews`);
+        
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
+        console.log(`[ReviewStore] Review ${reviewId} state:`, review ? review.state : 'NOT FOUND');
+        
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
+          console.log('[ReviewStore] ✓ Review state updated successfully!');
           return submittedReview;
         }
+        
+        console.log(`[ReviewStore] Still PENDING, waiting ${pollInterval}ms before next poll...`);
         
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
       
       // Timeout reached - throw error so UI can display error message
+      console.error('[ReviewStore] ✗ Polling timeout reached after 5s');
       throw new Error('GitHub API did not respond with updated review state within 5 seconds');
     },
     onSuccess: () => {
