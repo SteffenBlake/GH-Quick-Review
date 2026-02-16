@@ -627,12 +627,6 @@ class GitHubMockServer {
         handler: this.addComment.bind(this)
       },
       {
-        // Edit review comment: PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
-        method: 'PATCH',
-        handler: this.editComment.bind(this)
-      },
-      {
         // Delete review comment: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
         pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
         method: 'DELETE',
@@ -922,59 +916,6 @@ class GitHubMockServer {
       
       repoData.comments.set(newComment.id, newComment);
       this.sendResponse(res, 201, newComment);
-    });
-  }
-
-  editComment(req, res, match) {
-    if (this.checkConfiguredError('editComment', res)) return;
-    
-    const [, owner, repo, commentId] = match;
-    
-    this.readBody(req, (body) => {
-      // Find the comment across all repos
-      let comment = null;
-      let foundRepoData = null;
-      
-      for (const [repoName, repoData] of this.repoDataCache.entries()) {
-        comment = repoData.comments.get(parseInt(commentId));
-        if (comment) {
-          foundRepoData = repoData;
-          break;
-        }
-      }
-      
-      // If not in cache, try loading from the specific repo
-      if (!comment) {
-        const repoData = this.loadRepoData(repo);
-        comment = repoData.comments.get(parseInt(commentId));
-        foundRepoData = repoData;
-      }
-      
-      if (!comment) {
-        return this.sendResponse(res, 404, {
-          message: 'Not Found',
-          documentation_url: 'https://docs.github.com/rest/pulls/comments#update-a-review-comment-for-a-pull-request'
-        });
-      }
-      
-      // Update comment
-      if (body.body !== undefined) {
-        comment.body = body.body;
-      }
-      comment.updated_at = new Date().toISOString();
-      
-      // ALSO update the comment in reviewThreads if it exists there
-      // (Comments are now fetched via GraphQL reviewThreads, not REST)
-      for (const [threadId, thread] of foundRepoData.reviewThreads.entries()) {
-        const threadComment = thread.comments.find(c => c.databaseId === parseInt(commentId));
-        if (threadComment && body.body !== undefined) {
-          threadComment.body = body.body;
-          threadComment.updatedAt = new Date().toISOString();
-          break;
-        }
-      }
-      
-      this.sendResponse(res, 200, comment);
     });
   }
 
@@ -1491,6 +1432,67 @@ class GitHubMockServer {
         };
       }
       
+      if (selections.updatePullRequestReviewComment) {
+        if (!variables || !variables.commentId || !variables.body) {
+          return this.sendResponse(res, 400, {
+            errors: [{
+              message: 'Variables with commentId and body are required',
+              extensions: { code: 'BAD_USER_INPUT' }
+            }]
+          });
+        }
+        
+        const { commentId, body } = variables;
+        
+        // Find comment by GraphQL node ID across all repos
+        let comment = null;
+        let foundRepoData = null;
+        
+        for (const [repoName, repoData] of this.repoDataCache.entries()) {
+          // Search in reviewThreads
+          for (const [threadId, thread] of repoData.reviewThreads.entries()) {
+            const foundComment = thread.comments.find(c => c.id === commentId);
+            if (foundComment) {
+              comment = foundComment;
+              foundRepoData = repoData;
+              break;
+            }
+          }
+          if (comment) break;
+        }
+        
+        if (!comment) {
+          return this.sendResponse(res, 200, {
+            errors: [{
+              message: 'Comment not found',
+              extensions: { code: 'NOT_FOUND' }
+            }]
+          });
+        }
+        
+        // Update the comment
+        comment.body = body;
+        comment.updatedAt = new Date().toISOString();
+        
+        // Also update in the REST comments map if it exists
+        if (comment.databaseId && foundRepoData.comments.has(comment.databaseId)) {
+          const restComment = foundRepoData.comments.get(comment.databaseId);
+          restComment.body = body;
+          restComment.updated_at = comment.updatedAt;
+        }
+        
+        responseData = {
+          updatePullRequestReviewComment: {
+            pullRequestReviewComment: {
+              id: comment.id,
+              databaseId: comment.databaseId,
+              body: comment.body,
+              updatedAt: comment.updatedAt
+            }
+          }
+        };
+      }
+      
       // Send response
       if (responseData) {
         return this.sendResponse(res, 200, { data: responseData });
@@ -1592,9 +1594,11 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
       console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
       console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
       console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
-      console.log(`  PATCH  /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
       console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
       console.log(`  POST   /graphql`);
+      console.log(`    - Supports: resolveReviewThread, unresolveReviewThread`);
+      console.log(`    - Supports: reviewThreads, reviews, addPullRequestReviewThread`);
+      console.log(`    - Supports: updatePullRequestReviewComment (mutation)`);
       console.log(`\nPress Ctrl+C to stop\n`);
     }
   });
