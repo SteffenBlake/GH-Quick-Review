@@ -242,20 +242,36 @@ class GitHubClient {
   }
 
   /**
-   * Update a review comment
-   * @param {string} repo - Full repository name (e.g., 'owner/repo')
-   * @param {number} commentId - Comment ID
-   * @param {Object} update - Update object with body field
-   * @returns {Promise<Object>} - Updated comment object
+   * Update a PR review comment using GraphQL mutation
+   * @param {string} commentNodeId - GraphQL node ID of the comment (e.g., 'PRRC_...')
+   * @param {string} body - New comment body text
+   * @returns {Promise<Object>} - GraphQL response with updated comment
    */
-  async updatePullComment(repo, commentId, update) {
-    if (!repo) {
-      throw new Error('Repository name is required');
+  async updatePullRequestReviewComment(commentNodeId, body) {
+    if (!commentNodeId) {
+      throw new Error('Comment node ID is required');
     }
-    if (!commentId) {
-      throw new Error('Comment ID is required');
+    if (!body) {
+      throw new Error('Comment body is required');
     }
-    return this.patch(`/repos/${repo}/pulls/comments/${commentId}`, update);
+
+    const mutation = `
+      mutation($commentId: ID!, $body: String!) {
+        updatePullRequestReviewComment(input: {
+          pullRequestReviewCommentId: $commentId
+          body: $body
+        }) {
+          pullRequestReviewComment {
+            id
+            databaseId
+            body
+            updatedAt
+          }
+        }
+      }
+    `;
+
+    return this.graphql(mutation, { commentId: commentNodeId, body });
   }
 
   /**

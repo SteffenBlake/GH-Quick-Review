@@ -196,7 +196,7 @@ export function CommentModal() {
     setEditText('');
   };
 
-  const handleSubmitEdit = async (commentId) => {
+  const handleSubmitEdit = async (comment) => {
     // IMMEDIATELY focus the modal to prevent focus loss during re-renders
     if (modalRef.current) {
       modalRef.current.focus();
@@ -205,7 +205,7 @@ export function CommentModal() {
     if (!editText.trim()) return;
 
     try {
-      await updateComment.mutateAsync({ commentId, body: editText });
+      await updateComment.mutateAsync({ comment, body: editText });
       setEditingCommentId(null);
       setEditText('');
     } catch (error) {
@@ -302,7 +302,7 @@ export function CommentModal() {
                           </button>
                           <button
                             className="comment-action-btn comment-edit-submit-btn"
-                            onClick={() => handleSubmitEdit(comment.id)}
+                            onClick={() => handleSubmitEdit(comment)}
                             title="Save changes"
                           >
                             {ICON_SAVE}

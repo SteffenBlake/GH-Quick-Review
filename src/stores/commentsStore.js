@@ -88,7 +88,9 @@ export function useComments() {
               _isResolved: thread.isResolved,
               _isOutdated: thread.isOutdated,
               _isPending: comment.pullRequestReview?.state === 'PENDING',
-              _reviewState: comment.pullRequestReview?.state
+              _reviewState: comment.pullRequestReview?.state,
+              // Store GraphQL node ID for mutations
+              _graphqlId: comment.id
             }));
             
             allComments.push(...transformedComments);
@@ -133,21 +135,23 @@ export function useCreateComment() {
 }
 
 /**
- * Hook to update an existing comment
+ * Hook to update an existing comment via GraphQL mutation
  */
 export function useUpdateComment() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ commentId, body }) => {
-      if (!selectedRepo.value) {
-        throw new Error('No repo selected');
+    mutationFn: async ({ comment, body }) => {
+      if (!comment) {
+        throw new Error('Comment object is required');
+      }
+      if (!comment._graphqlId) {
+        throw new Error('Comment must have _graphqlId for GraphQL mutation');
       }
       
-      return await githubClient.updatePullComment(
-        selectedRepo.value,
-        commentId,
-        { body }
+      return await githubClient.updatePullRequestReviewComment(
+        comment._graphqlId,
+        body
       );
     },
     onSuccess: () => {
