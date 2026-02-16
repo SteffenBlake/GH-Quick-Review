@@ -366,7 +366,7 @@ export function CommentModal() {
             rows={6}
           />
           <div className="comment-modal-actions">
-            {activeReview && (
+            {activeReview && !submitReview.isPending && (
               <button
                 type="button"
                 className="comment-modal-submit-review-btn"
@@ -374,6 +374,12 @@ export function CommentModal() {
               >
                 Submit Review: Request Changes
               </button>
+            )}
+            {activeReview && submitReview.isPending && (
+              <div className="comment-modal-submit-review-loading">
+                <span className="spinner"></span>
+                <span>Requesting changes...</span>
+              </div>
             )}
             <button
               type="button"

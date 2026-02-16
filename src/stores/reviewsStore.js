@@ -114,7 +114,13 @@ export function useAddReviewComment() {
 }
 
 /**
- * Hook to submit a review
+ * Hook to submit a review with polling for eventual consistency
+ * 
+ * GitHub's API is eventually consistent. After submitting a review,
+ * the review state may still appear as "PENDING" in listReviews for
+ * several hundred milliseconds. This hook polls until the review
+ * state is updated to prevent UI issues where the submit button
+ * remains visible after submission.
  */
 export function useSubmitReview() {
   const queryClient = useQueryClient();
@@ -126,12 +132,43 @@ export function useSubmitReview() {
         throw new Error('No PR selected');
       }
       
-      return await githubClient.submitReview(
+      // Submit the review
+      const submittedReview = await githubClient.submitReview(
         selectedRepo.value,
         selectedPr.value,
         reviewId,
         { body, event }
       );
+      
+      // Poll for eventual consistency:
+      // GitHub API may return old "PENDING" state for ~750ms after submission
+      // Keep polling until the review state is updated or timeout
+      const pollStartTime = Date.now();
+      const pollTimeout = 2000; // 2 second timeout
+      const pollInterval = 100; // Poll every 100ms
+      
+      while (Date.now() - pollStartTime < pollTimeout) {
+        // Fetch current reviews
+        const reviews = await githubClient.listPullReviews(
+          selectedRepo.value,
+          selectedPr.value
+        );
+        
+        // Check if the review is no longer PENDING
+        const review = reviews.find(r => r.id === reviewId);
+        if (!review || review.state !== 'PENDING') {
+          // Review state has been updated - success!
+          return submittedReview;
+        }
+        
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      }
+      
+      // Timeout reached - return anyway, let the UI handle it
+      // This shouldn't happen in normal circumstances
+      console.warn('Review state polling timed out after 2s');
+      return submittedReview;
     },
     onSuccess: () => {
       // Invalidate active review and comments queries to refetch
