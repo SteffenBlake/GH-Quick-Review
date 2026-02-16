@@ -28,6 +28,7 @@ import {
 import { useCurrentUser } from '../stores/userStore';
 import { usePrData } from '../stores/prDataStore';
 import { settings } from '../stores/settingsStore';
+import { showToast } from '../stores/toastStore';
 
 // Icon constants
 const ICON_PENCIL = '\udb81\ude4f';
@@ -233,6 +234,11 @@ export function CommentModal() {
   const handleSubmitReview = async () => {
     if (!activeReview) return;
     
+    // IMMEDIATELY focus the modal to prevent focus loss during re-renders
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     try {
       const reviewBody = settings.value.reviewSubmissionComment || '';
       
@@ -242,10 +248,16 @@ export function CommentModal() {
         event: 'REQUEST_CHANGES',
       });
       
-      // Don't blur the modal - let user continue working
+      // Show success toast notification
+      showToast('Review submitted successfully!', 'success');
+      
+      // Modal stays open and focused - user can continue working
+      // The query invalidation in submitReview will refresh the UI:
+      // - activeReview will become null (button will disappear)
+      // - comments will refresh (pending badges will be removed)
     } catch (error) {
       console.error('Failed to submit review:', error);
-      alert('Failed to submit review. Please try again.');
+      showToast('Failed to submit review. Please try again.', 'error');
     }
   };
 
