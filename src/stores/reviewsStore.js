@@ -144,14 +144,19 @@ export function useSubmitReview() {
       // GitHub API may return old "PENDING" state for ~750ms after submission
       // Keep polling until the review state is updated or timeout
       const pollStartTime = Date.now();
-      const pollTimeout = 2000; // 2 second timeout
-      const pollInterval = 100; // Poll every 100ms
+      const pollTimeout = 5000; // 5 second timeout to avoid rate limiting
+      const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
+      
+      // Wait initial interval before first poll to give API time to propagate
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
       
       while (Date.now() - pollStartTime < pollTimeout) {
-        // Fetch current reviews
+        // Fetch current reviews with cache-busting to prevent browser cache issues
+        // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
         const reviews = await githubClient.listPullReviews(
           selectedRepo.value,
-          selectedPr.value
+          selectedPr.value,
+          { bustCache: true }
         );
         
         // Check if the review is no longer PENDING
@@ -165,10 +170,8 @@ export function useSubmitReview() {
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
       
-      // Timeout reached - return anyway, let the UI handle it
-      // This shouldn't happen in normal circumstances
-      console.warn('Review state polling timed out after 2s');
-      return submittedReview;
+      // Timeout reached - throw error so UI can display error message
+      throw new Error('GitHub API did not respond with updated review state within 5 seconds');
     },
     onSuccess: () => {
       // Invalidate active review and comments queries to refetch

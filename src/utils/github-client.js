@@ -27,7 +27,7 @@ class GitHubClient {
    * @returns {Promise<any>} - Response data
    * @throws {Error} - If request fails
    */
-  async request(method, endpoint, body = null, token = null) {
+  async request(method, endpoint, body = null, token = null, options = {}) {
     const authToken = token || getToken();
     if (!authToken) {
       throw new Error('No authentication token provided');
@@ -35,7 +35,13 @@ class GitHubClient {
 
     const baseUrl = this.getBaseUrl();
     const url = new URL(endpoint, baseUrl);
-    const options = {
+    
+    // Add cache-busting timestamp if requested
+    if (options.bustCache) {
+      url.searchParams.set('_', Date.now().toString());
+    }
+    
+    const fetchOptions = {
       method,
       headers: {
         'Accept': 'application/vnd.github+json',
@@ -43,13 +49,20 @@ class GitHubClient {
         'X-GitHub-Api-Version': '2022-11-28',
       },
     };
-
-    if (body && (method === 'POST' || method === 'PATCH')) {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
+    
+    // Add cache-busting headers if requested
+    if (options.bustCache) {
+      fetchOptions.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      fetchOptions.headers['Pragma'] = 'no-cache';
+      fetchOptions.headers['Expires'] = '0';
     }
 
-    const response = await fetch(url, options);
+    if (body && (method === 'POST' || method === 'PATCH')) {
+      fetchOptions.headers['Content-Type'] = 'application/json';
+      fetchOptions.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
       const error = new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
@@ -70,11 +83,13 @@ class GitHubClient {
    * Make a GET request to the GitHub API
    * @param {string} endpoint - API endpoint (e.g., '/user/repos')
    * @param {string} token - Optional token override (uses stored token if not provided)
+   * @param {Object} options - Optional request options
+   * @param {boolean} options.bustCache - If true, adds cache-busting headers
    * @returns {Promise<any>} - Response data
    * @throws {Error} - If request fails
    */
-  async get(endpoint, token = null) {
-    return this.request('GET', endpoint, null, token);
+  async get(endpoint, token = null, options = {}) {
+    return this.request('GET', endpoint, null, token, options);
   }
 
   /**
@@ -320,14 +335,14 @@ class GitHubClient {
    * @param {number} pullNumber - Pull request number
    * @returns {Promise<Array>} - Array of review objects
    */
-  async listPullReviews(repo, pullNumber) {
+  async listPullReviews(repo, pullNumber, options = {}) {
     if (!repo) {
       throw new Error('Repository name is required');
     }
     if (!pullNumber) {
       throw new Error('Pull request number is required');
     }
-    return this.get(`/repos/${repo}/pulls/${pullNumber}/reviews`);
+    return this.get(`/repos/${repo}/pulls/${pullNumber}/reviews`, null, options);
   }
 
   /**
