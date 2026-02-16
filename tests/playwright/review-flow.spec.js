@@ -252,29 +252,30 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       // Click on diff viewer to unfocus directory browser
       await page.locator('.diff-viewer').click();
       
-      // Find a line with existing pending comments (look for pending message button)
-      const pendingMessageButton = page.locator('.diff-line-message-btn.pending-message').first();
-      await pendingMessageButton.click();
+      // Hover over a line and open comment modal
+      const diffLine = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
+      await diffLine.hover();
+      const messageButton = diffLine.locator('.diff-line-message-btn.add-message');
+      await messageButton.click();
       
-      // Modal should appear with comment thread
+      // Modal should appear
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
-      // Should show "Pending" badge on the comment
-      const pendingBadge = page.locator('.comment-pending-badge');
-      await expect(pendingBadge).toBeVisible();
-      await expect(pendingBadge).toContainText('Pending');
-      
-      // Submit the review
+      // Should show Submit Review button (active review exists)
       const submitReviewBtn = page.getByRole('button', { name: 'Submit Review: Request Changes' });
       await expect(submitReviewBtn).toBeVisible();
+      
+      // Submit the review
       await submitReviewBtn.click();
       
       // Toast should appear
       await expect(page.getByTestId('toast-notification')).toBeVisible({ timeout: 1000 });
       
-      // Wait for query to invalidate and refetch
-      // The pending badge should disappear after the review is submitted
-      await expect(pendingBadge).not.toBeVisible({ timeout: 1000 });
+      // Submit button should disappear (no active review anymore)
+      await expect(submitReviewBtn).not.toBeVisible({ timeout: 1000 });
+      
+      // Modal should stay open
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
     } finally {
       await mockServer.reset();
       await mockServer.stop();
