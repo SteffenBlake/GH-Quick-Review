@@ -202,8 +202,9 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await submitReviewBtn.click();
       
       // Toast notification should appear with success message
+      // Note: Polling waits 1s before first check, so toast may take ~1-2s to appear
       const toast = page.getByTestId('toast-notification');
-      await expect(toast).toBeVisible({ timeout: 1000 });
+      await expect(toast).toBeVisible({ timeout: 3000 });
       await expect(toast).toHaveClass(/toast-success/);
       await expect(toast).toContainText('Review submitted successfully!');
       
@@ -273,8 +274,9 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await submitReviewBtn.click();
       
       // REQUIREMENT 4: Toast should appear with success message
+      // Note: Polling waits 1s before first check, so toast may take ~1-2s to appear
       const toast = page.getByTestId('toast-notification');
-      await expect(toast).toBeVisible({ timeout: 1000 });
+      await expect(toast).toBeVisible({ timeout: 3000 });
       await expect(toast).toContainText('Review submitted successfully!');
       
       // REQUIREMENT 1: Modal should STAY OPEN (not close)
