@@ -140,11 +140,13 @@ export function useSubmitReview() {
         { body, event }
       );
       
+      console.log('[submitReview] Submitted review:', { reviewId, state: submittedReview.state });
+      
       // Poll for eventual consistency:
       // GitHub API may return cached/stale "PENDING" state briefly after submission
       // Poll with cache-busting until state updates or timeout
       const pollTimeout = 5000; // 5 second timeout as requested
-      const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting as requested
+      const pollInterval = 100; // TEMPORARILY: Poll very fast for debugging
       
       const pollStartTime = Date.now();
       
@@ -159,6 +161,7 @@ export function useSubmitReview() {
         
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
+        console.log('[submitReview] Poll result:', { reviewId, found: !!review, state: review?.state, reviewsCount: reviews.length });
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
           return submittedReview;

@@ -263,4 +263,109 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     expect(result.path).toBe('empty-lines.txt');
     expect(result.line).toBe(3);
   });
+  
+  test('should return Cache-Control headers on review responses', async ({ request }) => {
+    const response = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`, {
+      headers: {
+        'Authorization': 'Bearer test_token',
+        'Accept': 'application/vnd.github+json',
+      }
+    });
+    
+    expect(response.ok()).toBeTruthy();
+    
+    // Verify cache headers are set to match real GitHub API
+    const cacheControl = response.headers()['cache-control'];
+    const etag = response.headers()['etag'];
+    const vary = response.headers()['vary'];
+    
+    expect(cacheControl).toBe('private, max-age=60, s-maxage=60');
+    expect(etag).toBeTruthy();
+    expect(etag).toMatch(/^W\//); // Weak ETag format
+    expect(vary).toBeTruthy();
+  });
+  
+  test('should simulate eventual consistency for review state updates', async ({ request }) => {
+    // Get initial review state (should be PENDING)
+    const initialResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`);
+    const initialReviews = await initialResponse.json();
+    const review = initialReviews.find(r => r.pull_number === 2);
+    
+    expect(review).toBeTruthy();
+    expect(review.state).toBe('PENDING');
+    expect(review.id).toBe(5001);
+    
+    // Submit the review
+    const submitResponse = await request.post(
+      `${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews/${review.id}/events`,
+      {
+        data: {
+          body: 'Test review submission for cache test',
+          event: 'REQUEST_CHANGES'
+        },
+        headers: {
+          'Authorization': 'Bearer test_token',
+          'Accept': 'application/vnd.github+json',
+        }
+      }
+    );
+    
+    const submittedReview = await submitResponse.json();
+    expect(submittedReview.state).toBe('REQUEST_CHANGES');
+    
+    // Immediately fetch reviews - should see PENDING due to eventual consistency (750ms delay)
+    const immediateResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`);
+    const immediateReviews = await immediateResponse.json();
+    const immediateReview = immediateReviews.find(r => r.id === review.id);
+    
+    expect(immediateReview.state).toBe('PENDING'); // Still PENDING due to eventual consistency
+    
+    // Wait for eventual consistency delay (800ms > 750ms delay)
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Now fetch again - should see updated state
+    const delayedResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`);
+    const delayedReviews = await delayedResponse.json();
+    const delayedReview = delayedReviews.find(r => r.id === review.id);
+    
+    expect(delayedReview.state).toBe('REQUEST_CHANGES'); // Now updated
+  });
+  
+  test('should allow cache-busting with query parameters', async ({ request }) => {
+    // Submit a review first
+    const submitResponse = await request.post(
+      `${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews/5001/events`,
+      {
+        data: {
+          body: 'Cache-busting test',
+          event: 'APPROVE'
+        }
+      }
+    );
+    
+    await submitResponse.json();
+    
+    // Wait for eventual consistency
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Fetch with cache-busting query parameter
+    const cacheBustedResponse = await request.get(
+      `${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews?_=${Date.now()}`,
+      {
+        headers: {
+          'Authorization': 'Bearer test_token',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    );
+    
+    const reviews = await cacheBustedResponse.json();
+    const review = reviews.find(r => r.id === 5001);
+    
+    // Should get the updated state even if browser would have cached
+    expect(review.state).toBe('APPROVE');
+  });
 });
+
