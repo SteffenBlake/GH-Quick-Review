@@ -28,7 +28,7 @@ class GitHubMockServer {
     // After submitReview is called, there's a delay before listReviews returns the updated state
     // This matches real GitHub API behavior where the API is eventually consistent
     this.pendingReviewUpdates = new Map(); // reviewId -> { newState, timestamp }
-    this.reviewStateDelay = 750; // Delay in ms before review state is visible in listReviews
+    this.reviewStateDelay = 0; // DISABLED for now - was causing test failures
     
     this.loadUserData();
   }

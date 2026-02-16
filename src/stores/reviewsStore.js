@@ -141,17 +141,12 @@ export function useSubmitReview() {
       );
       
       // Poll for eventual consistency:
-      // GitHub API may return old "PENDING" state for ~750ms after submission
-      // Keep polling until the review state is updated or timeout
-      const pollTimeout = 5000; // 5 second timeout
-      const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
-      const initialWait = 1000; // Wait 1s initially (covers 750ms eventual consistency delay)
+      // GitHub API may return cached/stale "PENDING" state briefly after submission
+      // Poll with cache-busting until state updates or timeout
+      const pollTimeout = 5000; // 5 second timeout as requested
+      const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting as requested
       
-      // Wait initial interval before first poll to give API time to propagate
-      // Mock server simulates 750ms delay, real API is similar
-      await new Promise(resolve => setTimeout(resolve, initialWait));
-      
-      const pollStartTime = Date.now(); // Start timing AFTER initial wait
+      const pollStartTime = Date.now();
       
       while (Date.now() - pollStartTime < pollTimeout) {
         // Fetch current reviews with cache-busting to prevent browser cache issues
