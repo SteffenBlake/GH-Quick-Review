@@ -1178,24 +1178,33 @@ class GitHubMockServer {
           originalLine: thread.originalLine,
           line: thread.line,
           comments: {
-            nodes: thread.comments.map(comment => ({
-              id: comment.id,
-              databaseId: comment.databaseId,
-              body: comment.body,
-              path: comment.path,
-              line: comment.line,
-              startLine: comment.startLine,
-              diffHunk: comment.diffHunk,
-              createdAt: comment.createdAt,
-              updatedAt: comment.updatedAt,
-              author: {
-                login: comment.author.login
-              },
-              pullRequestReview: {
-                id: comment.pullRequestReview.id,
-                state: comment.pullRequestReview.state
-              }
-            }))
+            nodes: thread.comments.map(comment => {
+              // Look up current review state dynamically from repoData.reviews
+              // Extract review ID from comment.pullRequestReview.id (format: "PRR_5001" -> 5001)
+              const reviewIdStr = comment.pullRequestReview.id.replace(/^PRR_/, '');
+              const reviewId = parseInt(reviewIdStr);
+              const currentReview = repoData.reviews.get(reviewId);
+              const currentState = currentReview ? currentReview.state : comment.pullRequestReview.state;
+              
+              return {
+                id: comment.id,
+                databaseId: comment.databaseId,
+                body: comment.body,
+                path: comment.path,
+                line: comment.line,
+                startLine: comment.startLine,
+                diffHunk: comment.diffHunk,
+                createdAt: comment.createdAt,
+                updatedAt: comment.updatedAt,
+                author: {
+                  login: comment.author.login
+                },
+                pullRequestReview: {
+                  id: comment.pullRequestReview.id,
+                  state: currentState  // Use dynamically looked up state
+                }
+              };
+            })
           }
         }));
         
