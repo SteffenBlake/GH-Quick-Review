@@ -1606,15 +1606,25 @@ class GitHubMockServer {
       await new Promise(resolve => setTimeout(resolve, this.latency));
     }
     
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires, If-None-Match');
     
     // Simulate real GitHub API cache-control headers
     // GitHub returns: Cache-Control: private, max-age=60, s-maxage=60
     // This causes browsers to cache responses for 60 seconds
     res.setHeader('Cache-Control', 'private, max-age=60, s-maxage=60');
+    
+    // Add ETag for cache validation (browsers use this with If-None-Match)
+    // Generate a simple ETag based on response content
+    const content = JSON.stringify(data);
+    const etag = `W/"${crypto.createHash('sha256').update(content).digest('hex').substring(0, 32)}"`;
+    res.setHeader('ETag', etag);
+    
+    // Add Vary header to indicate which request headers affect caching
+    // GitHub varies on these headers
+    res.setHeader('Vary', 'Accept, Authorization, Cookie, X-GitHub-OTP, Accept-Encoding, Accept, X-Requested-With');
     
     res.statusCode = statusCode;
     
