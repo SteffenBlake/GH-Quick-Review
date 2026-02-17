@@ -1197,10 +1197,28 @@ class GitHubMockServer {
           });
         }
 
+        const threadId = threadIdMatch[1];
+        
+        // Find and update the thread in memory across all repos
+        let threadFound = false;
+        for (const [repoName, repoData] of this.repoDataCache.entries()) {
+          if (repoData.reviewThreads.has(threadId)) {
+            const thread = repoData.reviewThreads.get(threadId);
+            thread.isResolved = true;
+            threadFound = true;
+            this.log(`Resolved thread ${threadId} in repo ${repoName}`);
+            break;
+          }
+        }
+
+        if (!threadFound) {
+          this.log(`Warning: Thread ${threadId} not found in any loaded repo`);
+        }
+
         responseData = {
           resolveReviewThread: {
             thread: {
-              id: threadIdMatch[1],
+              id: threadId,
               isResolved: true
             }
           }
@@ -1218,10 +1236,28 @@ class GitHubMockServer {
           });
         }
 
+        const threadId = threadIdMatch[1];
+        
+        // Find and update the thread in memory across all repos
+        let threadFound = false;
+        for (const [repoName, repoData] of this.repoDataCache.entries()) {
+          if (repoData.reviewThreads.has(threadId)) {
+            const thread = repoData.reviewThreads.get(threadId);
+            thread.isResolved = false;
+            threadFound = true;
+            this.log(`Unresolved thread ${threadId} in repo ${repoName}`);
+            break;
+          }
+        }
+
+        if (!threadFound) {
+          this.log(`Warning: Thread ${threadId} not found in any loaded repo`);
+        }
+
         responseData = {
           unresolveReviewThread: {
             thread: {
-              id: threadIdMatch[1],
+              id: threadId,
               isResolved: false
             }
           }
