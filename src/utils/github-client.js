@@ -36,9 +36,12 @@ class GitHubClient {
     const baseUrl = this.getBaseUrl();
     const url = new URL(endpoint, baseUrl);
     
+    console.log(`[HTTP] Request: ${method} ${url.href}`);
+    
     // Add cache-busting timestamp if requested
     if (options.bustCache) {
       url.searchParams.set('_', Date.now().toString());
+      console.log(`[HTTP] Cache-busting: ${url.href}`);
     }
     
     const fetchOptions = {
