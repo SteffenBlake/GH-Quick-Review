@@ -6,12 +6,13 @@
  */
 
 import http from 'http';
-import { readFileSync, appendFileSync, existsSync, statSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve, join, relative } from 'path';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
 import { parse, visit } from 'graphql';
+import { debugLog } from './test-debug-logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -986,13 +987,13 @@ class GitHubMockServer {
     // If a review was recently submitted, return the old PENDING state until the delay has passed
     // This matches real GitHub behavior where API reads lag behind writes
     const now = Date.now();
-    appendFileSync('/tmp/mock-server-debug.log', `[${new Date().toISOString()}] listReviews: delay=${this.reviewStateDelay}ms, reviews=${reviews.length}\n`);
+    debugLog('listReviews', `Called with delay=${this.reviewStateDelay}ms, reviews=${reviews.length}`);
     const reviewsWithEventualConsistency = reviews.map(review => {
       const pendingUpdate = this.pendingReviewUpdates.get(review.id);
       
       if (pendingUpdate) {
         const elapsed = now - pendingUpdate.timestamp;
-        appendFileSync('/tmp/mock-server-debug.log', `[${new Date().toISOString()}] Review ${review.id}: elapsed=${elapsed}ms, will return ${elapsed < this.reviewStateDelay ? 'PENDING' : review.state}\n`);
+        debugLog('listReviews', `Review ${review.id}: elapsed=${elapsed}ms, will return ${elapsed < this.reviewStateDelay ? 'PENDING' : review.state}`);
       }
       
       if (pendingUpdate && (now - pendingUpdate.timestamp) < this.reviewStateDelay) {
@@ -1003,7 +1004,7 @@ class GitHubMockServer {
       // Delay has passed, clean up the pending update
       if (pendingUpdate) {
         this.pendingReviewUpdates.delete(review.id);
-        appendFileSync('/tmp/mock-server-debug.log', `[${new Date().toISOString()}] Review ${review.id}: cleaned up, returning state=${review.state}\n`);
+        debugLog('listReviews', `Review ${review.id}: cleaned up, returning state=${review.state}`);
       }
       
       return review;
@@ -1108,7 +1109,7 @@ class GitHubMockServer {
       
       // Update review state and add submitted_at immediately
       const newState = body.event || 'REQUEST_CHANGES';
-      appendFileSync('/tmp/mock-server-debug.log', `[${new Date().toISOString()}] submitReview: Updating review ${reviewId} from ${review.state} to ${newState}\n`);
+      debugLog('submitReview', `Updating review ${reviewId} from ${review.state} to ${newState}`);
       review.state = newState;
       review.body = body.body || review.body;
       review.submitted_at = new Date().toISOString();
@@ -1120,7 +1121,7 @@ class GitHubMockServer {
         newState,
         timestamp: Date.now()
       });
-      appendFileSync('/tmp/mock-server-debug.log', `[${new Date().toISOString()}] submitReview: Added to pendingUpdates. Delay=${this.reviewStateDelay}ms\n`);
+      debugLog('submitReview', `Added to pendingUpdates. Delay=${this.reviewStateDelay}ms`);
       
       // Return the updated review immediately (GitHub does this too)
       this.sendResponse(res, 200, review);
