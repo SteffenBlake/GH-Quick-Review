@@ -184,7 +184,7 @@ export function CommentModal() {
   };
 
   const handleResolve = async () => {
-    console.log('Resolve comment thread');
+    // TODO: Implement resolve thread functionality
   };
 
   const handleEditComment = (commentId, currentBody) => {
@@ -242,26 +242,20 @@ export function CommentModal() {
     try {
       const reviewBody = settings.value.reviewSubmissionComment || '';
       
-      console.log('[CommentModal] Calling submitReview.mutateAsync...');
       await submitReview.mutateAsync({
         reviewId: activeReview.id,
         body: reviewBody,
         event: 'REQUEST_CHANGES',
       });
       
-      console.log('[CommentModal] mutateAsync completed successfully!');
-      
       // Show success toast notification
       showToast('Review submitted successfully!', 'success');
-      
-      console.log('[CommentModal] Toast shown!');
       
       // Modal stays open and focused - user can continue working
       // The query invalidation in submitReview will refresh the UI:
       // - activeReview will become null (button will disappear)
       // - comments will refresh (pending badges will be removed)
     } catch (error) {
-      console.error('[CommentModal] ✗ Failed to submit review:', error);
       showToast('Failed to submit review. Please try again.', 'error');
     }
   };

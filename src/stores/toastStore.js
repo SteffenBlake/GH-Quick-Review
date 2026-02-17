@@ -24,8 +24,6 @@ let hideTimeout = null;
  * @param {string} type - Toast type: 'success', 'error', 'info' (default: 'info')
  */
 export function showToast(message, type = 'info') {
-  console.log(`[ToastStore] showToast called: "${message}" (${type})`);
-  
   // Clear any existing timeout
   if (hideTimeout) {
     clearTimeout(hideTimeout);
@@ -33,11 +31,9 @@ export function showToast(message, type = 'info') {
   
   // Set the toast
   currentToast.value = { message, type };
-  console.log(`[ToastStore] currentToast set:`, currentToast.value);
   
   // Auto-hide after duration
   hideTimeout = setTimeout(() => {
-    console.log(`[ToastStore] Auto-hiding toast after ${toastDuration}ms`);
     currentToast.value = null;
     hideTimeout = null;
   }, toastDuration);

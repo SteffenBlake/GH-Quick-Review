@@ -4,30 +4,39 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { useComputed } from '@preact/signals';
+import { useState, useEffect } from 'preact/hooks';
 import { currentToast, hideToast } from '../stores/toastStore';
 
 /**
- * Toast notification component - displays in bottom-right corner  
- * Uses useComputed to make component reactive to signal changes
+ * Toast notification component - displays in bottom-right corner
+ * Uses useState + useEffect to track signal changes
  */
 export function Toast() {
-  // useComputed makes this component reactive to signal changes
-  const toast = useComputed(() => currentToast.value);
+  const [toast, setToast] = useState(currentToast.value);
   
-  if (!toast.value) {
+  // Subscribe to signal changes
+  useEffect(() => {
+    // Update local state whenever signal changes
+    const unsubscribe = currentToast.subscribe(value => {
+      setToast(value);
+    });
+    
+    return unsubscribe;
+  }, []);
+  
+  if (!toast) {
     return null;
   }
   
   return (
     <div 
-      className={`toast toast-${toast.value.type}`}
+      className={`toast toast-${toast.type}`}
       data-testid="toast-notification"
       onClick={hideToast}
       role="status"
       aria-live="polite"
     >
-      {toast.value.message}
+      {toast.message}
     </div>
   );
 }
