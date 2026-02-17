@@ -1682,7 +1682,9 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires');
+      // Match real GitHub API CORS policy - does NOT allow Cache-Control, Pragma, or Expires headers
+      // Only standard headers are allowed: Content-Type, Authorization, Accept, X-GitHub-Api-Version
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
       res.statusCode = 204;
       res.end();
       return;

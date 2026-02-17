@@ -367,5 +367,35 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     // Should get the updated state even if browser would have cached
     expect(review.state).toBe('APPROVE');
   });
-});
 
+  test('should enforce CORS policy - reject Cache-Control request headers', async ({ request }) => {
+    // This test ensures the mock server matches real GitHub API CORS policy
+    // Real GitHub API does NOT allow Cache-Control headers in requests
+    // This was causing CORS errors in production
+    
+    // Make a preflight OPTIONS request with Cache-Control header
+    const preflightResponse = await request.fetch(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
+      method: 'OPTIONS',
+      headers: {
+        'Origin': 'http://localhost:5173',
+        'Access-Control-Request-Method': 'GET',
+        'Access-Control-Request-Headers': 'Content-Type, Authorization, Cache-Control'
+      }
+    });
+    
+    // Check CORS headers in preflight response
+    expect(preflightResponse.status()).toBe(204);
+    const allowedHeaders = preflightResponse.headers()['access-control-allow-headers'];
+    
+    // Verify Cache-Control is NOT in allowed headers (matches real GitHub API)
+    expect(allowedHeaders).toBeTruthy();
+    expect(allowedHeaders).not.toContain('Cache-Control');
+    expect(allowedHeaders).not.toContain('Pragma');
+    expect(allowedHeaders).not.toContain('Expires');
+    
+    // Verify standard headers ARE allowed
+    expect(allowedHeaders).toContain('Content-Type');
+    expect(allowedHeaders).toContain('Authorization');
+    expect(allowedHeaders).toContain('Accept');
+  });
+});
