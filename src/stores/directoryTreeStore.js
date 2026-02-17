@@ -4,7 +4,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { computed } from '@preact/signals';
 import { useMemo } from 'preact/hooks';
 import { usePrData } from './prDataStore.js';
 import { useComments } from './commentsStore.js';
@@ -87,7 +86,7 @@ function buildDirectoryTree(files, comments) {
     node.additions = totalAdditions;
     node.deletions = totalDeletions;
     node.changes = totalChanges;
-    
+
     return totalComments;
   }
 

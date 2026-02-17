@@ -12,19 +12,19 @@ export const test = base.extend({
   autoCheckErrors: [async ({}, use, testInfo) => {
     // Run the test
     await use();
-    
+
     // After test completes, check for mock server errors
     try {
       const response = await fetch(`http://localhost:${MOCK_SERVER_PORT}/error-messages`);
-      
+
       if (!response.ok) {
         console.warn('Warning: Could not check mock server errors - endpoint returned', response.status);
         return;
       }
-      
+
       const data = await response.json();
       const errors = data.errors || [];
-      
+
       if (errors.length > 0) {
         console.error('\n' + '='.repeat(80));
         console.error('🚨 MOCK SERVER ERRORS DETECTED:');
@@ -39,7 +39,7 @@ export const test = base.extend({
           }
         });
         console.error('='.repeat(80) + '\n');
-        
+
         // Fail the test if mock server had errors
         expect(errors, `Mock server logged ${errors.length} unexpected error(s)`).toHaveLength(0);
       }

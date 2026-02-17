@@ -110,7 +110,7 @@ export function setHighlightTheme(theme) {
     console.warn(`Invalid highlight theme: ${theme}`);
     return;
   }
-  
+
   highlightTheme.value = theme;
   localStorage.setItem('highlight_theme', theme);
 }

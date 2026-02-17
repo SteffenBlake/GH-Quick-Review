@@ -5,12 +5,12 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should not show pulls dropdown when not logged in', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Should NOT see PR dropdown
       await expect(page.locator('#pr-select')).not.toBeVisible();
     } finally {
@@ -21,26 +21,26 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should show greyed out dropdown when no repo is selected', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown
       await expect(page.locator('#repo-select')).toBeVisible();
-      
+
       // PR dropdown should be visible but disabled
       const prSelect = page.locator('#pr-select');
       await expect(prSelect).toBeVisible();
-      
+
       // Check that the control has disabled class
       await expect(prSelect.locator('.fuzzy-dropdown-control')).toHaveClass(/disabled/);
-      
+
       // Should show "Pull Request..." placeholder
       await expect(prSelect.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
     } finally {
@@ -51,32 +51,32 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should display PRs dropdown after successful fetch', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PRs dropdown to be enabled
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
-      
+
       // Should show "Pull Request..." placeholder when nothing selected
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
-      
+
       // Click to open dropdown
       await prDropdown.locator('.fuzzy-dropdown-control').click();
-      
+
       // Should have PR options with format "#{number} - {title}"
       const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
       expect(options.length).toBe(2); // test_pull_1 and test_pull_2
@@ -90,36 +90,36 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should allow selecting a PR from dropdown', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PR dropdown to be enabled
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
-      
+
       // Click to open PR dropdown
       await prDropdown.locator('.fuzzy-dropdown-control').click();
-      
+
       // Get available PRs
       const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
       expect(options.length).toBe(2); // test_pull_1 and test_pull_2
-      
+
       // Select PR #1
       await prDropdown.getByText('#1 -').click();
-      
+
       // Verify selection - dropdown should show the PR text
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
     } finally {
@@ -130,41 +130,41 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should persist selected PR across page reloads', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PR dropdown
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
-      
+
       // Select a PR
       await prDropdown.locator('.fuzzy-dropdown-control').click();
       await prDropdown.getByText('#1 -').click();
-      
+
       // Verify selection persisted to localStorage
       const storedPr = await page.evaluate(() => localStorage.getItem('selected_pr'));
       expect(storedPr).toBe('1');
-      
+
       // Reload the page
       await page.reload();
-      
+
       // Wait for dropdowns to appear again
       await expect(repoDropdown).toBeVisible();
       await expect(prDropdown).toBeVisible();
-      
+
       // Verify selection is still there
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
     } finally {
@@ -175,46 +175,46 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should clear selected PR when repo changes', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PR dropdown and select a PR
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       await prDropdown.locator('.fuzzy-dropdown-control').click();
       await prDropdown.getByText('#1 -').click();
-      
+
       // Verify PR selection
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
-      
+
       // Click on main content to unfocus directory browser (which auto-focuses on PR selection)
       await page.locator('main').click();
       // Wait for directory browser to slide out (transition is 0.3s)
       await page.waitForTimeout(400);
-      
+
       // Change repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_2').click();
-      
+
       // Wait for PR dropdown to reload - it should become disabled then re-enabled
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
-      
+
       // Verify PR dropdown is reset to placeholder (no selection)
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
-      
+
       // Verify selected PR was cleared from localStorage
       const storedPr = await page.evaluate(() => localStorage.getItem('selected_pr'));
       expect(storedPr).toBeNull();
@@ -226,49 +226,49 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should clear selected PR on logout and reset on login', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PR dropdown and select a PR
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       await prDropdown.locator('.fuzzy-dropdown-control').click();
       await prDropdown.getByText('#1 -').click();
-      
+
       // Verify PR selection
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toContainText('#1 -');
-      
+
       // Logout
       await page.getByRole('button', { name: /Logout/i }).click();
-      
+
       // Verify we're back at login page
       await expect(page.getByPlaceholder('Enter your GitHub PAT')).toBeVisible();
-      
+
       // Verify selected PR was cleared from localStorage
       const storedPr = await page.evaluate(() => localStorage.getItem('selected_pr'));
       expect(storedPr).toBeNull();
-      
+
       // Login again
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for dropdowns
       await expect(repoDropdown).toBeVisible();
       await expect(prDropdown).toBeVisible();
-      
+
       // Verify PR dropdown is reset to placeholder (no selection)
       await expect(prDropdown.locator('.fuzzy-dropdown-text')).toHaveText('Pull Request...');
     } finally {
@@ -279,29 +279,29 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should truncate long PR titles with CSS', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PR dropdown
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
-      
+
       // Click to open PR dropdown
       await prDropdown.locator('.fuzzy-dropdown-control').click();
-      
+
       // Check that fuzzy dropdown option elements have CSS for text truncation
       const optionStyle = await prDropdown.locator('.fuzzy-dropdown-option').first().evaluate((el) => {
         const computed = window.getComputedStyle(el);
@@ -311,7 +311,7 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
           textOverflow: computed.textOverflow
         };
       });
-      
+
       // Verify CSS truncation properties are set
       expect(optionStyle.whiteSpace).toBe('nowrap');
       expect(optionStyle.overflow).toBe('hidden');
@@ -324,34 +324,34 @@ test.describe('Pulls Dropdown', { tag: '@parallel' }, () => {
   test('should re-enable PR dropdown when repo is selected after being disabled', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
-      
+
       // PR dropdown should be disabled initially (has disabled class)
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control')).toHaveClass(/disabled/);
-      
+
       // Select a repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Wait for PRs to load - dropdown control should no longer be disabled
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
-      
+
       // Click to open PR dropdown
       await prDropdown.locator('.fuzzy-dropdown-control').click();
-      
+
       // Should have PR options
       const options = await prDropdown.locator('.fuzzy-dropdown-option').allTextContents();
       expect(options.length).toBe(2);
@@ -368,29 +368,29 @@ test.describe('Pulls Dropdown - Server Config Tests', { tag: '@serial' }, () => 
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ latency: 1000 });
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown to finish loading
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await expect(repoDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 3000 });
-      
+
       // Select a repo
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Should see loading spinner for PRs inside the PR dropdown
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.getByText(/Loading\.\.\./i)).toBeVisible({ timeout: 1000 });
-      
+
       // Wait for PRs to load - dropdown control should no longer be disabled
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible({ timeout: 3000 });
     } finally {
@@ -403,22 +403,22 @@ test.describe('Pulls Dropdown - Server Config Tests', { tag: '@serial' }, () => 
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ errors: { listPulls: 500 } });
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Should show error page
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
       await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();
@@ -432,22 +432,22 @@ test.describe('Pulls Dropdown - Server Config Tests', { tag: '@serial' }, () => 
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     await mockServer.setConfig({ errors: { listPulls: 401 } });
-    
+
     try {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
-      
+
       // Login
       await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
       await page.getByRole('button', { name: 'Login' }).click();
-      
+
       // Wait for repos dropdown and select a repo
       const repoDropdown = page.locator('#repo-select');
       await expect(repoDropdown).toBeVisible();
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
-      
+
       // Should show error page
       await expect(page.getByRole('heading', { name: /Error/i })).toBeVisible();
       await expect(page.getByText(/Please logout and log back in to try again/i)).toBeVisible();

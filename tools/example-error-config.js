@@ -2,7 +2,7 @@
 
 /**
  * Example test script demonstrating error configuration
- * 
+ *
  * This shows how to use the error configuration feature to test
  * negative cases and ensure your app handles failures gracefully.
  */
@@ -29,24 +29,24 @@ const server = startServer('./test-data.json', 3100, errorConfig);
 setTimeout(() => {
   console.log('\nClosing example server...\n');
   server.close();
-  
+
   // Example 2: Create custom server instance
   console.log('Example 2: Custom server instance with latency\n');
-  
+
   const mockServer = new GitHubMockServer('./test-data.json', {
     latency: 1000,    // Add 1 second delay to all responses
     getPull: 404      // Only this endpoint will error
   });
-  
+
   const customServer = http.createServer((req, res) => {
     mockServer.handleRequest(req, res);
   });
-  
+
   customServer.listen(3101, () => {
     console.log('Custom server running on port 3101');
     console.log('All responses delayed by 1000ms');
     console.log('Only getPull endpoint configured to return 404\n');
-    
+
     setTimeout(() => {
       customServer.close();
       console.log('Done!');

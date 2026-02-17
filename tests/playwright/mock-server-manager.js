@@ -15,19 +15,19 @@ export class MockServerManager {
     if (!this.port) {
       throw new Error('Mock server not started - no port available');
     }
-    
+
     const url = `http://localhost:${this.port}/heartbeat`;
     const maxAttempts = 20; // Retry for shared server
     const delayMs = 500;
-    
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 1000);
-        
+
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeout);
-        
+
         if (!response.ok) {
           if (attempt < maxAttempts - 1) {
             await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -35,12 +35,12 @@ export class MockServerManager {
           }
           throw new Error(`Heartbeat failed with status ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (data.status !== 'ok') {
           throw new Error(`Heartbeat returned unexpected status: ${data.status}`);
         }
-        
+
         return true;
       } catch (error) {
         if (attempt < maxAttempts - 1) {
@@ -66,21 +66,21 @@ export class MockServerManager {
     if (!this.port) {
       throw new Error('Mock server not available - no port');
     }
-    
+
     try {
       const response = await fetch(`http://localhost:${this.port}/reset`, {
         method: 'POST',
       });
-      
+
       if (!response.ok) {
         throw new Error(`Reset failed with status ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.status !== 'ok') {
         throw new Error(`Reset returned unexpected status: ${data.status}`);
       }
-      
+
       return true;
     } catch (error) {
       throw new Error(`Mock server reset failed: ${error.message}`);
@@ -97,7 +97,7 @@ export class MockServerManager {
     if (!this.port) {
       throw new Error('Mock server not available - no port');
     }
-    
+
     try {
       const response = await fetch(`http://localhost:${this.port}/config`, {
         method: 'POST',
@@ -106,16 +106,16 @@ export class MockServerManager {
         },
         body: JSON.stringify(config),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Config failed with status ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.status !== 'ok') {
         throw new Error(`Config returned unexpected status: ${data.status}`);
       }
-      
+
       return true;
     } catch (error) {
       throw new Error(`Mock server config failed: ${error.message}`);
@@ -130,14 +130,14 @@ export class MockServerManager {
     if (!this.port) {
       throw new Error('Mock server not available - no port');
     }
-    
+
     try {
       const response = await fetch(`http://localhost:${this.port}/error-messages`);
-      
+
       if (!response.ok) {
         throw new Error(`Get errors failed with status ${response.status}`);
       }
-      
+
       const data = await response.json();
       return data.errors || [];
     } catch (error) {

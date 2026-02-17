@@ -17,12 +17,12 @@ import { debugLogger } from '../utils/debug-logger.js';
  */
 export function useActiveReview() {
   const { data: currentUser } = useCurrentUser();
-  
+
   return useQuery({
     queryKey: ['activeReview', selectedRepo.value, selectedPr.value, currentUser?.login],
     queryFn: async () => {
-      if (!selectedRepo.value || !selectedPr.value || !currentUser?.login) return null;
-      
+      if (!selectedRepo.value || !selectedPr.value || !currentUser?.login) {return null;}
+
       // Fetch all reviews for the PR with cache-busting
       // CRITICAL: Always use cache-busting to avoid getting stale PENDING state
       // from browser cache or GitHub's eventual consistency window (750ms)
@@ -31,12 +31,12 @@ export function useActiveReview() {
         selectedPr.value,
         { bustCache: true } // ALWAYS bust cache to get fresh review state
       );
-      
+
       // Find a PENDING review by the current user
       const activeReview = reviews.find(
         review => review.user.login === currentUser.login && review.state === 'PENDING'
       );
-      
+
       return activeReview || null;
     },
     enabled: !!selectedRepo.value && !!selectedPr.value && !!currentUser?.login,
@@ -49,19 +49,19 @@ export function useActiveReview() {
 export function useCreateReview() {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
-  
+
   return useMutation({
     mutationFn: async ({ commitId, body = '', event }) => {
       if (!selectedRepo.value || !selectedPr.value) {
         throw new Error('No PR selected');
       }
-      
+
       // Build request body - omit event field to create PENDING review
       const requestBody = { commit_id: commitId, body };
       if (event) {
         requestBody.event = event;
       }
-      
+
       return await githubClient.createPullReview(
         selectedRepo.value,
         selectedPr.value,
@@ -83,22 +83,22 @@ export function useCreateReview() {
 export function useAddReviewComment() {
   const queryClient = useQueryClient();
   const { data: prData } = usePrData();
-  
+
   return useMutation({
     mutationFn: async ({ reviewNodeId, body, path, line, side }) => {
       if (!selectedRepo.value || !selectedPr.value) {
         throw new Error('No PR selected');
       }
-      
+
       // Get the PR node_id from prData
       if (!prData?.pull?.node_id) {
         throw new Error('Pull request node_id not available');
       }
-      
+
       if (!reviewNodeId) {
         throw new Error('Review node_id is required for GraphQL mutation');
       }
-      
+
       return await githubClient.addPullRequestReviewThread({
         pullRequestId: prData.pull.node_id,
         pullRequestReviewId: reviewNodeId,
@@ -119,7 +119,7 @@ export function useAddReviewComment() {
 
 /**
  * Hook to submit a review with polling for eventual consistency
- * 
+ *
  * GitHub's API is eventually consistent. After submitting a review,
  * the review state may still appear as "PENDING" in listReviews for
  * several hundred milliseconds. This hook polls until the review
@@ -128,17 +128,16 @@ export function useAddReviewComment() {
  */
 export function useSubmitReview() {
   const queryClient = useQueryClient();
-  const { data: currentUser } = useCurrentUser();
-  
+
   return useMutation({
     mutationFn: async ({ reviewId, body, event }) => {
       debugLogger.website.log('[MUTATION] START:', { reviewId, event });
-      
+
       if (!selectedRepo.value || !selectedPr.value) {
         debugLogger.website.error('[MUTATION] ERROR: No PR selected');
         throw new Error('No PR selected');
       }
-      
+
       debugLogger.website.log('[MUTATION] Calling submitReview API...');
       // Submit the review
       const submittedReview = await githubClient.submitReview(
@@ -148,25 +147,25 @@ export function useSubmitReview() {
         { body, event }
       );
       debugLogger.website.log('[MUTATION] submitReview returned:', submittedReview);
-      
+
       // Poll for eventual consistency:
       // GitHub API may return cached/stale "PENDING" state briefly after submission
       // Poll with cache-busting until state updates or timeout
       const pollTimeout = 5000; // 5 second timeout
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
-      
+
       debugLogger.website.log('[MUTATION] Waiting 1s before polling...');
       // Wait 1s before first poll to allow for eventual consistency
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       debugLogger.website.log('[MUTATION] Starting polling loop...');
       // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
-      
+
       while (Date.now() - pollStartTime < pollTimeout) {
         debugLogger.website.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
         debugLogger.website.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
-        
+
         // Fetch current reviews with cache-busting to prevent browser cache issues
         // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
         let reviews;
@@ -178,7 +177,7 @@ export function useSubmitReview() {
           );
           debugLogger.website.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
         } catch (err) {
-          debugLogger.website.error(`[MUTATION] listPullReviews ERROR:`, {
+          debugLogger.website.error('[MUTATION] listPullReviews ERROR:', {
             message: err?.message,
             name: err?.name,
             stack: err?.stack,
@@ -187,30 +186,30 @@ export function useSubmitReview() {
           });
           throw err; // Re-throw to maintain original behavior
         }
-        
+
         debugLogger.website.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
-        
+
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
-        
+
         debugLogger.website.log(
-          review 
+          review
             ? `[POLLING] Found review ${reviewId} with state: ${review.state}`
             : `[POLLING] Review ${reviewId} NOT FOUND in response!`
         );
-        
+
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
-          debugLogger.website.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
+          debugLogger.website.log('[POLLING] SUCCESS - Review is no longer PENDING');
           return submittedReview;
         }
-        
+
         debugLogger.website.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
-        
+
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
-      
+
       // Timeout reached - throw error with detailed debug info
       const debugInfo = {
         reviewId,

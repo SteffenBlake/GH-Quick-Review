@@ -10,7 +10,7 @@ import iconsByExtension from './icons-by-file-extension.js';
 /**
  * Get the icon for a file or directory
  * Priority: filename > extension > generic file/folder icon
- * 
+ *
  * @param {string} name - The file or directory name
  * @param {boolean} isFile - Whether this is a file (true) or directory (false)
  * @returns {Object} - Icon object with { icon: string, color: string }
@@ -54,26 +54,26 @@ export function getFileIcon(name, isFile = true) {
 
 /**
  * Get the git status icon and color
- * 
+ *
  * @param {string} status - The git status ('added', 'removed', 'modified', etc.)
  * @returns {Object|null} - Icon object with { icon: string, color: string } or null if no status
  */
 export function getGitStatusIcon(status) {
-  if (!status) return null;
+  if (!status) {return null;}
 
   const statusLower = status.toLowerCase();
-  
+
   if (statusLower === 'added') {
     return { icon: '+', color: '#4ade80' }; // green
   }
-  
+
   if (statusLower === 'removed') {
     return { icon: '-', color: '#f87171' }; // red
   }
-  
+
   if (statusLower === 'modified' || statusLower === 'changed') {
     return { icon: '~', color: '#fbbf24' }; // amber/yellow
   }
-  
+
   return null;
 }

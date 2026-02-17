@@ -13,8 +13,8 @@ import { clearSelectedPr } from './selectedPrStore';
  */
 
 // Initialize from localStorage
-const initialRepo = typeof window !== 'undefined' 
-  ? localStorage.getItem('selected_repo') 
+const initialRepo = typeof window !== 'undefined'
+  ? localStorage.getItem('selected_repo')
   : '';
 
 export const selectedRepo = signal(initialRepo || '');

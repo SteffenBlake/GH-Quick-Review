@@ -12,7 +12,7 @@ class UserManager {
       email: email,
       created: new Date()
     };
-    
+
     this.users.push(user);
     await this.db.save(user);
     return user;

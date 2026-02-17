@@ -14,14 +14,14 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     expect(prResponse.ok()).toBeTruthy();
     const pr = await prResponse.json();
     expect(pr.node_id).toBeTruthy();
-    
+
     const reviewsResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`);
     expect(reviewsResponse.ok()).toBeTruthy();
     const reviews = await reviewsResponse.json();
     const pendingReview = reviews.find(r => r.state === 'PENDING');
     expect(pendingReview).toBeTruthy();
     expect(pendingReview.node_id).toBeTruthy();
-    
+
     // Test the GraphQL mutation
     const response = await request.post(`${MOCK_SERVER_URL}/graphql`, {
       data: {
@@ -55,10 +55,10 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     });
-    
+
     const result = await response.json();
     console.log('Mutation response:', JSON.stringify(result, null, 2));
-    
+
     expect(response.status()).toBe(200);
     expect(result.errors).toBeUndefined();
     expect(result.data).toBeTruthy();
@@ -70,16 +70,16 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     expect(result.data.addPullRequestReviewThread.thread.comments.nodes[0].path).toBe('empty-lines.txt');
     expect(result.data.addPullRequestReviewThread.thread.comments.nodes[0].line).toBe(5);
   });
-  
+
   test('should add a comment to an existing thread via GraphQL mutation', async ({ request }) => {
     // Get PR and review data
     const prResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1`);
     const pr = await prResponse.json();
-    
+
     const reviewsResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`);
     const reviews = await reviewsResponse.json();
     const pendingReview = reviews.find(r => r.state === 'PENDING');
-    
+
     // Get existing review threads
     const threadsResponse = await request.post(`${MOCK_SERVER_URL}/graphql`, {
       data: {
@@ -110,13 +110,13 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     });
-    
+
     const threadsResult = await threadsResponse.json();
     expect(threadsResult.data.repository.pullRequest.reviewThreads.nodes.length).toBeGreaterThan(0);
-    
+
     const existingThread = threadsResult.data.repository.pullRequest.reviewThreads.nodes[0];
     const initialCommentCount = existingThread.comments.nodes.length;
-    
+
     // Add a comment to the same path/line
     const addResponse = await request.post(`${MOCK_SERVER_URL}/graphql`, {
       data: {
@@ -147,16 +147,16 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     });
-    
+
     const addResult = await addResponse.json();
     console.log('Add to existing thread response:', JSON.stringify(addResult, null, 2));
-    
+
     expect(addResponse.status()).toBe(200);
     expect(addResult.errors).toBeUndefined();
     expect(addResult.data.addPullRequestReviewThread.thread.comments.nodes.length).toBe(initialCommentCount + 1);
     expect(addResult.data.addPullRequestReviewThread.thread.comments.nodes.some(c => c.body === 'Reply to existing thread')).toBe(true);
   });
-  
+
   test('should return review threads via GraphQL query', async ({ request }) => {
     const response = await request.post(`${MOCK_SERVER_URL}/graphql`, {
       data: {
@@ -189,13 +189,13 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     });
-    
+
     const result = await response.json();
     expect(response.status()).toBe(200);
     expect(result.errors).toBeUndefined();
     expect(result.data.repository.pullRequest.reviewThreads.nodes).toBeInstanceOf(Array);
     expect(result.data.repository.pullRequest.reviewThreads.nodes.length).toBeGreaterThan(0);
-    
+
     // Verify structure
     const thread = result.data.repository.pullRequest.reviewThreads.nodes[0];
     expect(thread.id).toBeTruthy();
@@ -204,7 +204,7 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     expect(typeof thread.isResolved).toBe('boolean');
     expect(thread.comments.nodes).toBeInstanceOf(Array);
   });
-  
+
   test('should return reviews via GraphQL query', async ({ request }) => {
     const response = await request.post(`${MOCK_SERVER_URL}/graphql`, {
       data: {
@@ -235,13 +235,13 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     });
-    
+
     const result = await response.json();
     expect(response.status()).toBe(200);
     expect(result.errors).toBeUndefined();
     expect(result.data.repository.pullRequest.reviews.nodes).toBeInstanceOf(Array);
   });
-  
+
   test('should add a REST comment (for comparison with GraphQL)', async ({ request }) => {
     // This tests a working REST endpoint that uses readBody
     // Compare its behavior with GraphQL endpoint to find the difference
@@ -253,17 +253,17 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         side: 'RIGHT'
       }
     });
-    
+
     const result = await response.json();
     console.log('REST comment response:', JSON.stringify(result, null, 2));
-    
+
     expect(response.status()).toBe(201);
     expect(result.id).toBeTruthy();
     expect(result.body).toBe('Test REST comment');
     expect(result.path).toBe('empty-lines.txt');
     expect(result.line).toBe(3);
   });
-  
+
   test('should return Cache-Control headers on review responses', async ({ request }) => {
     const response = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`, {
       headers: {
@@ -271,30 +271,30 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         'Accept': 'application/vnd.github+json',
       }
     });
-    
+
     expect(response.ok()).toBeTruthy();
-    
+
     // Verify cache headers are set to match real GitHub API
     const cacheControl = response.headers()['cache-control'];
     const etag = response.headers()['etag'];
     const vary = response.headers()['vary'];
-    
+
     expect(cacheControl).toBe('private, max-age=60, s-maxage=60');
     expect(etag).toBeTruthy();
     expect(etag).toMatch(/^W\//); // Weak ETag format
     expect(vary).toBeTruthy();
   });
-  
+
   test('should simulate eventual consistency for review state updates', async ({ request }) => {
     // Get initial review state (should be PENDING)
     const initialResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`);
     const initialReviews = await initialResponse.json();
     const review = initialReviews.find(r => r.pull_number === 2);
-    
+
     expect(review).toBeTruthy();
     expect(review.state).toBe('PENDING');
     expect(review.id).toBe(5001);
-    
+
     // Submit the review
     const submitResponse = await request.post(
       `${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews/${review.id}/events`,
@@ -309,28 +309,28 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     );
-    
+
     const submittedReview = await submitResponse.json();
     expect(submittedReview.state).toBe('REQUEST_CHANGES');
-    
+
     // Immediately fetch reviews - should see PENDING due to eventual consistency (750ms delay)
     const immediateResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`);
     const immediateReviews = await immediateResponse.json();
     const immediateReview = immediateReviews.find(r => r.id === review.id);
-    
+
     expect(immediateReview.state).toBe('PENDING'); // Still PENDING due to eventual consistency
-    
+
     // Wait for eventual consistency delay (800ms > 750ms delay)
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     // Now fetch again - should see updated state
     const delayedResponse = await request.get(`${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews`);
     const delayedReviews = await delayedResponse.json();
     const delayedReview = delayedReviews.find(r => r.id === review.id);
-    
+
     expect(delayedReview.state).toBe('REQUEST_CHANGES'); // Now updated
   });
-  
+
   test('should allow cache-busting with query parameters', async ({ request }) => {
     // Submit a review first
     const submitResponse = await request.post(
@@ -342,12 +342,12 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     );
-    
+
     await submitResponse.json();
-    
+
     // Wait for eventual consistency
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     // Fetch with cache-busting query parameter
     const cacheBustedResponse = await request.get(
       `${MOCK_SERVER_URL}/repos/test_user/test_repo_2/pulls/2/reviews?_=${Date.now()}`,
@@ -360,10 +360,10 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         }
       }
     );
-    
+
     const reviews = await cacheBustedResponse.json();
     const review = reviews.find(r => r.id === 5001);
-    
+
     // Should get the updated state even if browser would have cached
     expect(review.state).toBe('APPROVE');
   });
@@ -372,7 +372,7 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
     // This test ensures the mock server matches real GitHub API CORS policy
     // Real GitHub API does NOT allow Cache-Control headers in requests
     // This was causing CORS errors in production
-    
+
     // Make a preflight OPTIONS request with Cache-Control header
     const preflightResponse = await request.fetch(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
       method: 'OPTIONS',
@@ -382,17 +382,17 @@ test.describe('Mock Server GraphQL API', { tag: '@serial' }, () => {
         'Access-Control-Request-Headers': 'Content-Type, Authorization, Cache-Control'
       }
     });
-    
+
     // Check CORS headers in preflight response
     expect(preflightResponse.status()).toBe(204);
     const allowedHeaders = preflightResponse.headers()['access-control-allow-headers'];
-    
+
     // Verify Cache-Control is NOT in allowed headers (matches real GitHub API)
     expect(allowedHeaders).toBeTruthy();
     expect(allowedHeaders).not.toContain('Cache-Control');
     expect(allowedHeaders).not.toContain('Pragma');
     expect(allowedHeaders).not.toContain('Expires');
-    
+
     // Verify standard headers ARE allowed
     expect(allowedHeaders).toContain('Content-Type');
     expect(allowedHeaders).toContain('Authorization');
