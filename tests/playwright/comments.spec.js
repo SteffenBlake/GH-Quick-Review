@@ -510,11 +510,14 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Modal should close after resolution completes
       await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 2000 });
       
-      // Wait for the comments to refresh after resolution
-      await page.waitForTimeout(500); // Give the query invalidation time to refresh
+      // Wait for the UI to update by checking that the comment count actually decreases
+      // This is more reliable than an arbitrary timeout
+      await expect(async () => {
+        const count = await page.locator('.diff-line-message-btn.has-message').count();
+        expect(count).toBe(hasMessageCountBefore - 1);
+      }).toPass({ timeout: 2000 });
       
-      // After resolving, the number of has-message buttons should decrease by 1
-      // (the resolved COMMENTED thread is no longer shown)
+      // Verify final state
       const hasMessageCountAfter = await page.locator('.diff-line-message-btn.has-message').count();
       expect(hasMessageCountAfter).toBe(hasMessageCountBefore - 1);
       
