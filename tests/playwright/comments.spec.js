@@ -550,6 +550,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
         }
       });
 
+      // CRITICAL: Clear localStorage BEFORE first navigation to avoid loading with old state
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -752,8 +753,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
 
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
 
-      // Click edit button on first comment
+      // Wait for edit button to be visible (needs current user to load)
       const editButton = page.locator('.comment-edit-btn').first();
+      await expect(editButton).toBeVisible({ timeout: 1000 });
       await editButton.click();
 
       // Edit the comment

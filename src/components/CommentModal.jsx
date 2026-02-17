@@ -6,7 +6,7 @@
 
 import { useRef, useState, useEffect, useMemo } from 'preact/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { 
+import {
   selectedCommentChain,
   selectedCommentLocation,
   clearCommentModal,
@@ -28,7 +28,7 @@ import {
 import { useCurrentUser } from '../stores/userStore';
 import { usePrData } from '../stores/prDataStore';
 import { settings } from '../stores/settingsStore';
-import { setError } from '../stores/errorStore';
+import { setError, errorMessage } from '../stores/errorStore';
 import { showToast } from '../stores/toastStore';
 import { githubClient } from '../utils/github-client';
 
@@ -250,7 +250,11 @@ export function CommentModal() {
       setEditText('');
     } catch (error) {
       console.error('Failed to update comment:', error);
-      alert('Failed to update comment. Please try again.');
+      // If a GraphQL FORBIDDEN error was set in the errorStore, don't show alert
+      // The error page will be displayed automatically
+      if (!errorMessage.value) {
+        alert('Failed to update comment. Please try again.');
+      }
     }
   };
 
