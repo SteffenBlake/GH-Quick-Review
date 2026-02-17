@@ -22,10 +22,13 @@ export function useActiveReview() {
     queryFn: async () => {
       if (!selectedRepo.value || !selectedPr.value || !currentUser?.login) return null;
       
-      // Fetch all reviews for the PR
+      // Fetch all reviews for the PR with cache-busting
+      // CRITICAL: Always use cache-busting to avoid getting stale PENDING state
+      // from browser cache or GitHub's eventual consistency window (750ms)
       const reviews = await githubClient.listPullReviews(
         selectedRepo.value,
-        selectedPr.value
+        selectedPr.value,
+        { bustCache: true } // ALWAYS bust cache to get fresh review state
       );
       
       // Find a PENDING review by the current user
@@ -128,10 +131,14 @@ export function useSubmitReview() {
   
   return useMutation({
     mutationFn: async ({ reviewId, body, event }) => {
+      console.log('[MUTATION] START:', { reviewId, event });
+      
       if (!selectedRepo.value || !selectedPr.value) {
+        console.error('[MUTATION] ERROR: No PR selected');
         throw new Error('No PR selected');
       }
       
+      console.log('[MUTATION] Calling submitReview API...');
       // Submit the review
       const submittedReview = await githubClient.submitReview(
         selectedRepo.value,
@@ -139,44 +146,94 @@ export function useSubmitReview() {
         reviewId,
         { body, event }
       );
+      console.log('[MUTATION] submitReview returned:', submittedReview);
       
       // Poll for eventual consistency:
-      // GitHub API may return old "PENDING" state for ~750ms after submission
-      // Keep polling until the review state is updated or timeout
+      // GitHub API may return cached/stale "PENDING" state briefly after submission
+      // Poll with cache-busting until state updates or timeout
+      const pollTimeout = 5000; // 5 second timeout
+      const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
+      
+      console.log('[MUTATION] Waiting 1s before polling...');
+      // Wait 1s before first poll to allow for eventual consistency
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('[MUTATION] Starting polling loop...');
+      // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
-      const pollTimeout = 2000; // 2 second timeout
-      const pollInterval = 100; // Poll every 100ms
       
       while (Date.now() - pollStartTime < pollTimeout) {
-        // Fetch current reviews
-        const reviews = await githubClient.listPullReviews(
-          selectedRepo.value,
-          selectedPr.value
-        );
+        console.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
+        console.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
+        
+        // Fetch current reviews with cache-busting to prevent browser cache issues
+        // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
+        let reviews;
+        try {
+          reviews = await githubClient.listPullReviews(
+            selectedRepo.value,
+            selectedPr.value,
+            { bustCache: true }
+          );
+          console.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
+        } catch (err) {
+          console.error(`[MUTATION] listPullReviews ERROR:`, {
+            message: err?.message,
+            name: err?.name,
+            stack: err?.stack,
+            toString: String(err),
+            err
+          });
+          throw err; // Re-throw to maintain original behavior
+        }
+        
+        console.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
         
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
+        
+        if (review) {
+          console.log(`[POLLING] Found review ${reviewId} with state: ${review.state}`);
+        } else {
+          console.log(`[POLLING] Review ${reviewId} NOT FOUND in response!`);
+        }
+        
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
+          console.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
           return submittedReview;
         }
+        
+        console.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
         
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
       
-      // Timeout reached - return anyway, let the UI handle it
-      // This shouldn't happen in normal circumstances
-      console.warn('Review state polling timed out after 2s');
-      return submittedReview;
+      // Timeout reached - throw error with detailed debug info
+      const debugInfo = {
+        reviewId,
+        pollTimeout,
+        pollInterval,
+        totalTime: Date.now() - pollStartTime,
+        message: 'GitHub API did not respond with updated review state within timeout'
+      };
+      console.error('[POLLING] TIMEOUT!', debugInfo);
+      throw new Error(`Polling timeout: ${JSON.stringify(debugInfo)}`);
     },
-    onSuccess: () => {
-      // Invalidate active review and comments queries to refetch
-      queryClient.invalidateQueries({
-        queryKey: ['activeReview', selectedRepo.value, selectedPr.value, currentUser?.login]
+     onSuccess: () => {
+      // Reset ALL queries to force fresh data
+      queryClient.resetQueries({
+        queryKey: ['activeReview'],
+        exact: false
       });
-      queryClient.invalidateQueries({
-        queryKey: ['comments', selectedRepo.value, selectedPr.value]
+      queryClient.resetQueries({
+        queryKey: ['comments'],
+        exact: false
+      });
+      queryClient.resetQueries({
+        queryKey: ['reviews'],
+        exact: false
       });
     },
   });

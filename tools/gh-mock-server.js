@@ -12,6 +12,7 @@ import { dirname, resolve, join, relative } from 'path';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
 import { parse, visit } from 'graphql';
+import { debugLog } from './test-debug-logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,8 +28,13 @@ class GitHubMockServer {
     // Simulate GitHub eventual consistency for review submissions
     // After submitReview is called, there's a delay before listReviews returns the updated state
     // This matches real GitHub API behavior where the API is eventually consistent
+    // ⚠️ CRITICAL: DO NOT DISABLE OR REMOVE THIS DELAY ⚠️
+    // This 750ms delay simulates GitHub's eventual consistency behavior where API reads lag behind writes.
+    // This is REQUIRED to test that the polling and cache-busting logic works correctly in production.
+    // Attempting to disable this delay is a waste of time - the real fix is to make the code work WITH it.
+    // DO NOT add environment variables or toggles to disable this. Just fix the actual problem.
     this.pendingReviewUpdates = new Map(); // reviewId -> { newState, timestamp }
-    this.reviewStateDelay = 750; // Delay in ms before review state is visible in listReviews
+    this.reviewStateDelay = 750; // Delay in ms - ALWAYS ENABLED
     
     this.loadUserData();
   }
@@ -520,18 +526,39 @@ class GitHubMockServer {
       const routes = [
       {
         // Heartbeat: GET /heartbeat - quick health check
-        pattern: /^\/heartbeat$/,
+        pattern: /^\/heartbeat(\?.*)?$/,
         method: 'GET',
         handler: (req, res) => this.sendResponse(res, 200, { status: 'ok', timestamp: Date.now() })
       },
       {
+        // Debug log: POST /debug-log - receive logs from browser and test for unified debugging
+        pattern: /^\/debug-log(\?.*)?$/,
+        method: 'POST',
+        handler: async (req, res) => {
+          try {
+            let body = '';
+            for await (const chunk of req) {
+              body += chunk;
+            }
+            const { source, category, message, data } = JSON.parse(body);
+            // source will be 'BROWSER' or 'TEST'
+            debugLog(source || 'BROWSER', category, message, data);
+            this.sendResponse(res, 204, null); // No content response
+          } catch (error) {
+            this.sendResponse(res, 400, { error: 'Invalid log format' });
+          }
+        }
+      },
+      {
         // Reset: POST /reset - reload test data from disk (for serial tests)
-        pattern: /^\/reset$/,
+        pattern: /^\/reset(\?.*)?$/,
         method: 'POST',
         handler: (req, res) => {
           try {
             this.loadUserData();
             this.repoDataCache.clear();
+            // Clear pending review updates from eventual consistency simulation
+            this.pendingReviewUpdates.clear();
             // Clear error configurations
             const preserveOptions = { silent: this.silent };
             Object.keys(this.config).forEach(key => {
@@ -550,7 +577,7 @@ class GitHubMockServer {
       },
       {
         // Configure errors/latency: POST /config - set error responses for endpoints (for serial tests)
-        pattern: /^\/config$/,
+        pattern: /^\/config(\?.*)?$/,
         method: 'POST',
         handler: async (req, res) => {
           try {
@@ -582,7 +609,7 @@ class GitHubMockServer {
       },
       {
         // Get error messages: GET /error-messages - retrieve logged errors for debugging
-        pattern: /^\/error-messages$/,
+        pattern: /^\/error-messages(\?.*)?$/,
         method: 'GET',
         handler: (req, res) => {
           this.sendResponse(res, 200, { 
@@ -593,73 +620,73 @@ class GitHubMockServer {
       },
       {
         // Get authenticated user: GET /user
-        pattern: /^\/user$/,
+        pattern: /^\/user(\?.*)?$/,
         method: 'GET',
         handler: this.getUser.bind(this)
       },
       {
         // List repos for user: GET /user/repos
-        pattern: /^\/user\/repos$/,
+        pattern: /^\/user\/repos(\?.*)?$/,
         method: 'GET',
         handler: this.listUserRepos.bind(this)
       },
       {
         // List PRs: GET /repos/{owner}/{repo}/pulls
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls(\?.*)?$/,
         method: 'GET',
         handler: this.listPulls.bind(this)
       },
       {
         // Read PR: GET /repos/{owner}/{repo}/pulls/{pull_number}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)(\?.*)?$/,
         method: 'GET',
         handler: this.getPull.bind(this)
       },
       {
         // List PR files: GET /repos/{owner}/{repo}/pulls/{pull_number}/files
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/files$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/files(\?.*)?$/,
         method: 'GET',
         handler: this.listPullFiles.bind(this)
       },
       {
         // Get file contents: GET /repos/{owner}/{repo}/contents/{path}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/contents\/(.+)$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/contents\/(.+)(\?.*)?$/,
         method: 'GET',
         handler: this.getContents.bind(this)
       },
       {
         // Add review comment: POST /repos/{owner}/{repo}/pulls/{pull_number}/comments
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments(\?.*)?$/,
         method: 'POST',
         handler: this.addComment.bind(this)
       },
       {
         // Delete review comment: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)(\?.*)?$/,
         method: 'DELETE',
         handler: this.deleteComment.bind(this)
       },
       {
         // List reviews: GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?(\?.*)?$/,
         method: 'GET',
         handler: this.listReviews.bind(this)
       },
       {
         // Create review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?(\?.*)?$/,
         method: 'POST',
         handler: this.createReview.bind(this)
       },
       {
         // Submit review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events(\?.*)?(\?.*)?$/,
         method: 'POST',
         handler: this.submitReview.bind(this)
       },
       {
         // GraphQL endpoint: POST /graphql
-        pattern: /^\/graphql$/,
+        pattern: /^\/graphql(\?.*)?$/,
         method: 'POST',
         handler: this.handleGraphQL.bind(this)
       }
@@ -1606,10 +1633,26 @@ class GitHubMockServer {
       await new Promise(resolve => setTimeout(resolve, this.latency));
     }
     
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires, If-None-Match');
+    
+    // Simulate real GitHub API cache-control headers
+    // GitHub returns: Cache-Control: private, max-age=60, s-maxage=60
+    // This causes browsers to cache responses for 60 seconds
+    res.setHeader('Cache-Control', 'private, max-age=60, s-maxage=60');
+    
+    // Add ETag for cache validation (browsers use this with If-None-Match)
+    // Generate a simple ETag based on response content
+    const content = JSON.stringify(data);
+    const etag = `W/"${crypto.createHash('sha256').update(content).digest('hex').substring(0, 32)}"`;
+    res.setHeader('ETag', etag);
+    
+    // Add Vary header to indicate which request headers affect caching
+    // GitHub varies on these headers
+    res.setHeader('Vary', 'Accept, Authorization, Cookie, X-GitHub-OTP, Accept-Encoding, Accept, X-Requested-With');
+    
     res.statusCode = statusCode;
     
     if (statusCode === 204) {
@@ -1639,7 +1682,7 @@ function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000,
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires');
       res.statusCode = 204;
       res.end();
       return;

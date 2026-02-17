@@ -184,7 +184,7 @@ export function CommentModal() {
   };
 
   const handleResolve = async () => {
-    console.log('Resolve comment thread');
+    // TODO: Implement resolve thread functionality
   };
 
   const handleEditComment = (commentId, currentBody) => {
@@ -252,11 +252,10 @@ export function CommentModal() {
       showToast('Review submitted successfully!', 'success');
       
       // Modal stays open and focused - user can continue working
-      // The query invalidation in submitReview will refresh the UI:
+      // The query reset in submitReview will refresh the UI:
       // - activeReview will become null (button will disappear)
       // - comments will refresh (pending badges will be removed)
     } catch (error) {
-      console.error('Failed to submit review:', error);
       showToast('Failed to submit review. Please try again.', 'error');
     }
   };

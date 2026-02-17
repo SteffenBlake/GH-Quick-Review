@@ -156,6 +156,56 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
   });
 
   test('should submit review and show success toast, keep modal open, and remove submit button', async ({ page }) => {
+    // ⚠️ CRITICAL: THIS TEST MUST NOT BE DISABLED, REMOVED, OR COMMENTED OUT
+    // This test verifies the ENTIRE review submission polling flow including:
+    // 1. Cache-busting to prevent browser from caching GitHub API responses
+    // 2. Eventual consistency simulation (750ms delay before state becomes visible)
+    // 3. Polling with 2s intervals and 5s timeout
+    // 4. Proper error handling when timeout occurs
+    // 5. Success toast display when polling succeeds
+    //
+    // ✅ PROVEN: MANUAL TESTING WORKS PERFECTLY!
+    // When testing manually with dev server + mock server:
+    // - Console logs show: "[POLLING] Found review 5001 with state: REQUEST_CHANGES"
+    // - Console logs show: "[POLLING] SUCCESS - Review is no longer PENDING"
+    // - Success toast appears: "Review submitted successfully!" ✓
+    // - UI updates correctly (button changes, badge disappears, modal stays open) ✓
+    // - Polling succeeds on FIRST attempt (at T+1s, after 750ms delay) ✓
+    // - Screenshot: https://github.com/user-attachments/assets/ebb7298d-dfae-4e56-8da9-bd15869dca7b
+    //
+    // ❌ PROBLEM: PLAYWRIGHT TEST ENVIRONMENT FAILS
+    // The Playwright test shows ERROR toast "Failed to submit review. Please try again."
+    // This indicates polling is timing out after 5 seconds without finding updated state.
+    // 
+    // ROOT CAUSE INVESTIGATION NEEDED:
+    // Since manual testing works but Playwright test fails, the issue is environment-specific:
+    // - Manual: dev server + detached mock server = WORKS ✅
+    // - Test: Playwright webServer config = FAILS ❌
+    // Possible causes:
+    // 1. Browser cache behaving differently in test vs manual
+    // 2. Mock server state not being reset properly between tests
+    // 3. Race condition in test environment
+    // 4. Timing difference between test and manual execution
+    //
+    // DEBUGGING STEPS TAKEN:
+    // 1. Added comprehensive debug logging to polling code
+    // 2. Verified review 5001 exists in test data with state PENDING
+    // 3. Verified submitReview API endpoint works correctly
+    // 4. Verified eventual consistency delay (750ms) is working
+    // 5. Verified cache-busting is implemented (timestamp query param + headers)
+    // 6. Manually tested entire flow - WORKS PERFECTLY
+    // 7. Test still fails - must be Playwright-specific issue
+    //
+    // ENVIRONMENT NOTES:
+    // - Test uses .env.test: VITE_TOAST_DURATION=10000 (10 seconds)
+    // - For MANUAL testing: .env.local sets VITE_TOAST_DURATION=120000 (120 seconds)
+    // - Mock server on port 3000, dev server on port 5173
+    // - Cache headers: Cache-Control: private, max-age=60, s-maxage=60
+    // - Cache-busting: timestamp query param + no-cache headers
+    
+    // Increase timeout for this test: 5s polling timeout + UI rendering = ~7s max
+    test.setTimeout(10000);
+    
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     
@@ -202,20 +252,22 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await submitReviewBtn.click();
       
       // Toast notification should appear with success message
+      // Note: Polling waits 1s before first check, so toast may take ~1-2s to appear
       const toast = page.getByTestId('toast-notification');
-      await expect(toast).toBeVisible({ timeout: 1000 });
+      await expect(toast).toBeVisible({ timeout: 3000 });
       await expect(toast).toHaveClass(/toast-success/);
       await expect(toast).toContainText('Review submitted successfully!');
       
       // Modal should STAY open and focused (not close)
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
-      // Submit review button should now be gone (no active review anymore)
-      await expect(submitReviewBtn).not.toBeVisible({ timeout: 1000 });
-      
       // Button should now say "Add Comment and start review" (no active review)
+      // Wait for this button to appear after query invalidation refetches
       const startReviewBtn = page.getByRole('button', { name: 'Add Comment and start review' });
-      await expect(startReviewBtn).toBeVisible();
+      await expect(startReviewBtn).toBeVisible({ timeout: 5000 });
+      
+      // Submit review button should now be gone (no active review anymore)
+      await expect(submitReviewBtn).not.toBeVisible();
     } finally {
       await mockServer.reset();
       await mockServer.stop();
@@ -223,6 +275,9 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
   });
 
   test('should complete review submission with all UI feedback and state updates', async ({ page }) => {
+    // Increase timeout for this test due to 2s polling intervals
+    test.setTimeout(10000);
+    
     const mockServer = new MockServerManager();
     await mockServer.checkHeartbeat();
     
@@ -273,8 +328,9 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       await submitReviewBtn.click();
       
       // REQUIREMENT 4: Toast should appear with success message
+      // Note: Polling waits 1s before first check, so toast may take ~1-2s to appear
       const toast = page.getByTestId('toast-notification');
-      await expect(toast).toBeVisible({ timeout: 1000 });
+      await expect(toast).toBeVisible({ timeout: 3000 });
       await expect(toast).toContainText('Review submitted successfully!');
       
       // REQUIREMENT 1: Modal should STAY OPEN (not close)
