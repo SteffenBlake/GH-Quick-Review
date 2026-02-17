@@ -4,28 +4,30 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
+import { useComputed } from '@preact/signals';
 import { currentToast, hideToast } from '../stores/toastStore';
 
 /**
  * Toast notification component - displays in bottom-right corner  
+ * Uses useComputed to make component reactive to signal changes
  */
 export function Toast() {
-  const toast = currentToast.value;
-  console.log('[Toast] Component render - toast:', toast);
+  // useComputed makes this component reactive to signal changes
+  const toast = useComputed(() => currentToast.value);
   
-  if (!toast) {
+  if (!toast.value) {
     return null;
   }
   
   return (
     <div 
-      className={`toast toast-${toast.type}`}
+      className={`toast toast-${toast.value.type}`}
       data-testid="toast-notification"
       onClick={hideToast}
       role="status"
       aria-live="polite"
     >
-      {toast.message}
+      {toast.value.message}
     </div>
   );
 }
