@@ -592,6 +592,11 @@ class GitHubMockServer {
               Object.assign(this.config, config.errors);
             }
 
+            // Update GraphQL error configurations
+            if (config.graphqlErrors) {
+              this.config.graphqlErrors = config.graphqlErrors;
+            }
+
             // Update latency
             if (config.latency !== undefined) {
               this.latency = config.latency;
@@ -600,7 +605,11 @@ class GitHubMockServer {
             this.sendResponse(res, 200, {
               status: 'ok',
               message: 'Configuration updated',
-              config: { errors: this.config, latency: this.latency }
+              config: {
+                errors: this.config,
+                graphqlErrors: this.config.graphqlErrors,
+                latency: this.latency
+              }
             });
           } catch (error) {
             this.sendResponse(res, 400, { error: 'Invalid config', message: error.message });
