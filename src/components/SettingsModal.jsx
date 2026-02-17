@@ -6,11 +6,10 @@
 
 import { useRef, useState, useEffect } from 'preact/hooks';
 import { 
-  settingsModalOpen,
   settings,
-  hideSettings,
   saveSettings,
-  getDefaultSettings 
+  getDefaultSettings,
+  registerModalRef
 } from '../stores/settingsStore';
 
 // Icon constant
@@ -23,23 +22,27 @@ export function SettingsModal() {
   const modalRef = useRef(null);
   const [draftSettings, setDraftSettings] = useState(settings.value);
 
-  const isModalActive = settingsModalOpen.value;
-
-  // Auto-focus the modal when it becomes active
-  // The CSS :focus-within handles visibility - focused = visible, not focused = hidden
+  // Register this modal's ref so the store can focus it directly when button is clicked
   useEffect(() => {
-    if (isModalActive && modalRef.current) {
-      modalRef.current.focus();
-      // Reset draft settings to current settings when opening
-      setDraftSettings(settings.value);
-    }
-  }, [isModalActive]);
+    registerModalRef(modalRef);
+  }, []);
+
+  // Sync draft settings when actual settings change (e.g., from logout)
+  useEffect(() => {
+    setDraftSettings(settings.value);
+  }, [settings.value]);
 
   const handleSave = (e) => {
     e.preventDefault();
+    
+    // IMMEDIATELY focus the modal to prevent focus loss during state mutations
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     saveSettings(draftSettings);
-    hideSettings();
-    // Blur to hide modal
+    
+    // After saving, blur to close the modal
     if (document.activeElement) {
       document.activeElement.blur();
     }
@@ -48,14 +51,23 @@ export function SettingsModal() {
   const handleCancel = () => {
     // Revert to current settings (discard changes)
     setDraftSettings(settings.value);
-    hideSettings();
+    
     // Blur to hide modal
-    if (document.activeElement) {
-      document.activeElement.blur();
+    if (modalRef.current) {
+      const focusedElement = modalRef.current.querySelector(':focus');
+      if (focusedElement) {
+        focusedElement.blur();
+      }
+      modalRef.current.blur();
     }
   };
 
   const handleReset = () => {
+    // IMMEDIATELY focus the modal to prevent focus loss during state mutations
+    if (modalRef.current) {
+      modalRef.current.focus();
+    }
+    
     // Reset to defaults (but don't save or close)
     setDraftSettings(getDefaultSettings());
   };
