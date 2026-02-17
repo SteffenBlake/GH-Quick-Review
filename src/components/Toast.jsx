@@ -10,21 +10,20 @@ import { currentToast, hideToast } from '../stores/toastStore';
  * Toast notification component - displays in bottom-right corner
  */
 export function Toast() {
-  const toast = currentToast.value;
-  
-  if (!toast) {
+  // Access .value in JSX for reactivity - don't destructure outside render
+  if (!currentToast.value) {
     return null;
   }
   
   return (
     <div 
-      className={`toast toast-${toast.type}`}
+      className={`toast toast-${currentToast.value.type}`}
       data-testid="toast-notification"
       onClick={hideToast}
       role="status"
       aria-live="polite"
     >
-      {toast.message}
+      {currentToast.value.message}
     </div>
   );
 }
