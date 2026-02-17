@@ -22,10 +22,13 @@ export function useActiveReview() {
     queryFn: async () => {
       if (!selectedRepo.value || !selectedPr.value || !currentUser?.login) return null;
       
-      // Fetch all reviews for the PR
+      // Fetch all reviews for the PR with cache-busting
+      // CRITICAL: Always use cache-busting to avoid getting stale PENDING state
+      // from browser cache or GitHub's eventual consistency window (750ms)
       const reviews = await githubClient.listPullReviews(
         selectedRepo.value,
-        selectedPr.value
+        selectedPr.value,
+        { bustCache: true } // ALWAYS bust cache to get fresh review state
       );
       
       // Find a PENDING review by the current user
