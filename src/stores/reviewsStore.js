@@ -184,8 +184,16 @@ export function useSubmitReview() {
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
       
-      // Timeout reached - throw error so UI can display error message
-      throw new Error('GitHub API did not respond with updated review state within 5 seconds');
+      // Timeout reached - throw error with detailed debug info
+      const debugInfo = {
+        reviewId,
+        pollTimeout,
+        pollInterval,
+        totalTime: Date.now() - pollStartTime,
+        message: 'GitHub API did not respond with updated review state within timeout'
+      };
+      console.error('[POLLING] TIMEOUT!', debugInfo);
+      throw new Error(`Polling timeout: ${JSON.stringify(debugInfo)}`);
     },
      onSuccess: () => {
       // Invalidate active review and comments queries to refetch
