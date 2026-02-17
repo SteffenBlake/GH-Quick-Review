@@ -527,7 +527,7 @@ class GitHubMockServer {
         handler: (req, res) => this.sendResponse(res, 200, { status: 'ok', timestamp: Date.now() })
       },
       {
-        // Debug log: POST /debug-log - receive frontend logs for unified debugging
+        // Debug log: POST /debug-log - receive logs from browser and test for unified debugging
         pattern: /^\/debug-log$/,
         method: 'POST',
         handler: async (req, res) => {
@@ -536,8 +536,9 @@ class GitHubMockServer {
             for await (const chunk of req) {
               body += chunk;
             }
-            const { category, message, data } = JSON.parse(body);
-            debugLog('FRONTEND', category, message, data);
+            const { source, category, message, data } = JSON.parse(body);
+            // source will be 'BROWSER' or 'TEST'
+            debugLog(source || 'BROWSER', category, message, data);
             this.sendResponse(res, 204, null); // No content response
           } catch (error) {
             this.sendResponse(res, 400, { error: 'Invalid log format' });
@@ -1005,13 +1006,13 @@ class GitHubMockServer {
     // If a review was recently submitted, return the old PENDING state until the delay has passed
     // This matches real GitHub behavior where API reads lag behind writes
     const now = Date.now();
-    debugLog('BACKEND', 'listReviews', `Called with delay=${this.reviewStateDelay}ms, reviews=${reviews.length}`);
+    debugLog('SERVER', 'listReviews', `Called with delay=${this.reviewStateDelay}ms, reviews=${reviews.length}`);
     const reviewsWithEventualConsistency = reviews.map(review => {
       const pendingUpdate = this.pendingReviewUpdates.get(review.id);
       
       if (pendingUpdate) {
         const elapsed = now - pendingUpdate.timestamp;
-        debugLog('BACKEND', 'listReviews', `Review ${review.id}: elapsed=${elapsed}ms, will return ${elapsed < this.reviewStateDelay ? 'PENDING' : review.state}`);
+        debugLog('SERVER', 'listReviews', `Review ${review.id}: elapsed=${elapsed}ms, will return ${elapsed < this.reviewStateDelay ? 'PENDING' : review.state}`);
       }
       
       if (pendingUpdate && (now - pendingUpdate.timestamp) < this.reviewStateDelay) {
@@ -1022,7 +1023,7 @@ class GitHubMockServer {
       // Delay has passed, clean up the pending update
       if (pendingUpdate) {
         this.pendingReviewUpdates.delete(review.id);
-        debugLog('BACKEND', 'listReviews', `Review ${review.id}: cleaned up, returning state=${review.state}`);
+        debugLog('SERVER', 'listReviews', `Review ${review.id}: cleaned up, returning state=${review.state}`);
       }
       
       return review;
@@ -1127,7 +1128,7 @@ class GitHubMockServer {
       
       // Update review state and add submitted_at immediately
       const newState = body.event || 'REQUEST_CHANGES';
-      debugLog('BACKEND', 'submitReview', `Updating review ${reviewId} from ${review.state} to ${newState}`);
+      debugLog('SERVER', 'submitReview', `Updating review ${reviewId} from ${review.state} to ${newState}`);
       review.state = newState;
       review.body = body.body || review.body;
       review.submitted_at = new Date().toISOString();
@@ -1139,7 +1140,7 @@ class GitHubMockServer {
         newState,
         timestamp: Date.now()
       });
-      debugLog('BACKEND', 'submitReview', `Added to pendingUpdates. Delay=${this.reviewStateDelay}ms`);
+      debugLog('SERVER', 'submitReview', `Added to pendingUpdates. Delay=${this.reviewStateDelay}ms`);
       
       // Return the updated review immediately (GitHub does this too)
       this.sendResponse(res, 200, review);

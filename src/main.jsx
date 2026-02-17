@@ -7,6 +7,6 @@
 import { render } from 'preact';
 import { App } from './App';
 import './style.css';
-import './utils/debug-logger.js'; // Three-layer logging system (BROWSER + FRONTEND + BACKEND)
+import './utils/debug-logger.js'; // Three-layer logging: BROWSER + TEST + SERVER
 
 render(<App />, document.getElementById('app'));
