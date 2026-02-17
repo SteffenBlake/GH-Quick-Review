@@ -74,6 +74,11 @@ export default defineConfig({
   ],
   webServer: [
     {
+      // Mock server for GitHub API simulation
+      // To enable debug logging (writes to /tmp/unified-debug.log), use:
+      //   command: 'DEBUG_LOGGING=1 node tools/gh-mock-server.js tools/test_user 3000',
+      // Debug logging captures all HTTP requests/responses and is useful for debugging test failures.
+      // It's disabled by default for faster test execution.
       command: 'node tools/gh-mock-server.js tools/test_user 3000',
       port: 3000,
       reuseExistingServer: !process.env.CI,
