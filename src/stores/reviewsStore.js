@@ -219,16 +219,18 @@ export function useSubmitReview() {
       throw new Error(`Polling timeout: ${JSON.stringify(debugInfo)}`);
     },
      onSuccess: () => {
-      // Invalidate active review and comments queries to refetch
-      queryClient.invalidateQueries({
-        queryKey: ['activeReview', selectedRepo.value, selectedPr.value, currentUser?.login]
+      // Refetch ALL queries matching these partial keys
+      queryClient.refetchQueries({
+        queryKey: ['activeReview'],
+        exact: false
       });
-      queryClient.invalidateQueries({
-        queryKey: ['comments', selectedRepo.value, selectedPr.value]
+      queryClient.refetchQueries({
+        queryKey: ['comments'],
+        exact: false
       });
-      // Also invalidate reviews query to ensure UI updates
-      queryClient.invalidateQueries({
-        queryKey: ['reviews', selectedRepo.value, selectedPr.value]
+      queryClient.refetchQueries({
+        queryKey: ['reviews'],
+        exact: false
       });
     },
   });
