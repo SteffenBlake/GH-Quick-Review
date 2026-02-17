@@ -664,19 +664,19 @@ class GitHubMockServer {
       },
       {
         // List reviews: GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?$/,
         method: 'GET',
         handler: this.listReviews.bind(this)
       },
       {
         // Create review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?$/,
         method: 'POST',
         handler: this.createReview.bind(this)
       },
       {
         // Submit review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events(\?.*)?$/,
         method: 'POST',
         handler: this.submitReview.bind(this)
       },

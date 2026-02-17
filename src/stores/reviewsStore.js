@@ -161,13 +161,28 @@ export function useSubmitReview() {
       
       while (Date.now() - pollStartTime < pollTimeout) {
         console.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
+        console.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
+        
         // Fetch current reviews with cache-busting to prevent browser cache issues
         // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
-        const reviews = await githubClient.listPullReviews(
-          selectedRepo.value,
-          selectedPr.value,
-          { bustCache: true }
-        );
+        let reviews;
+        try {
+          reviews = await githubClient.listPullReviews(
+            selectedRepo.value,
+            selectedPr.value,
+            { bustCache: true }
+          );
+          console.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
+        } catch (err) {
+          console.error(`[MUTATION] listPullReviews ERROR:`, {
+            message: err?.message,
+            name: err?.name,
+            stack: err?.stack,
+            toString: String(err),
+            err
+          });
+          throw err; // Re-throw to maintain original behavior
+        }
         
         console.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
         
