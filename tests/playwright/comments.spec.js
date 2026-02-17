@@ -480,52 +480,52 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Skip the first button (empty-lines.txt - PENDING) and click the second one (example.cs - COMMENTED)
       const allCommentButtons = page.locator('.diff-line-message-btn.has-message');
       await expect(allCommentButtons.nth(1)).toBeVisible(); // Wait for the second button
-      
+
       // Get the count of has-message buttons before resolving
       const hasMessageCountBefore = await allCommentButtons.count();
-      
+
       // Click on the SECOND has-message button (example.cs line 32 - COMMENTED thread)
       await allCommentButtons.nth(1).click();
-      
+
       // Modal should appear and be focused
       const modal = page.locator('.comment-modal:focus');
       await expect(modal).toBeVisible({ timeout: 1000 });
       await expect(modal.locator('h2')).toContainText('Comment Thread');
-      
+
       // Verify resolve button exists
       const resolveButton = modal.locator('.comment-modal-resolve-btn');
       await expect(resolveButton).toBeVisible();
       await expect(resolveButton).toContainText('Resolve');
-      
+
       // NOW set latency to make the resolve operation slow enough to see loading state
       await mockServer.setConfig({ latency: 300 });
-      
+
       // Click the resolve button
       await resolveButton.click();
-      
+
       // Modal should show loading state due to 300ms latency
       // Don't require focus since content is changing
       await expect(page.locator('.comment-modal-resolving')).toBeVisible({ timeout: 1000 });
-      
+
       // Modal should close after resolution completes
       await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 2000 });
-      
+
       // Verify success toast is shown
       const toast = page.getByTestId('toast-notification');
       await expect(toast).toBeVisible({ timeout: 1000 });
       await expect(toast).toContainText('Thread resolved successfully');
-      
+
       // Wait for the UI to update by checking that the comment count actually decreases
       // This is more reliable than an arbitrary timeout
       await expect(async () => {
         const count = await page.locator('.diff-line-message-btn.has-message').count();
         expect(count).toBe(hasMessageCountBefore - 1);
       }).toPass({ timeout: 2000 });
-      
+
       // Verify final state
       const hasMessageCountAfter = await page.locator('.diff-line-message-btn.has-message').count();
       expect(hasMessageCountAfter).toBe(hasMessageCountBefore - 1);
-      
+
     } finally {
       await mockServer.reset(); // Reset server config and data
       await mockServer.stop();

@@ -1198,7 +1198,7 @@ class GitHubMockServer {
         }
 
         const threadId = threadIdMatch[1];
-        
+
         // Find and update the thread in memory across all repos
         let threadFound = false;
         for (const [repoName, repoData] of this.repoDataCache.entries()) {
@@ -1237,7 +1237,7 @@ class GitHubMockServer {
         }
 
         const threadId = threadIdMatch[1];
-        
+
         // Find and update the thread in memory across all repos
         let threadFound = false;
         for (const [repoName, repoData] of this.repoDataCache.entries()) {
