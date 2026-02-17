@@ -28,21 +28,25 @@ function loadSettings() {
 // Settings state
 export const settings = signal(loadSettings());
 
-// Settings modal open/closed state
-export const settingsModalOpen = signal(false);
+// Ref to the modal element for direct focus control
+let modalRef = null;
 
 /**
- * Show the settings modal
+ * Register the modal ref so we can focus it directly
+ * @param {Object} ref - The modal element ref
  */
-export function showSettings() {
-  settingsModalOpen.value = true;
+export function registerModalRef(ref) {
+  modalRef = ref;
 }
 
 /**
- * Hide the settings modal
+ * Show the settings modal by focusing it
  */
-export function hideSettings() {
-  settingsModalOpen.value = false;
+export function showSettings() {
+  // Directly focus the modal
+  if (modalRef && modalRef.current) {
+    modalRef.current.focus();
+  }
 }
 
 /**

@@ -31,7 +31,7 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
     }
   });
 
-  test('should open and close settings modal', async ({ page }) => {
+  test('should close via cancel button and reopen', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
 
@@ -43,26 +43,61 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
       });
       await page.reload();
 
-      // Click settings button
       const settingsButton = page.locator('.header-settings-button');
-      await settingsButton.click();
-
-      // Modal should be visible
       const modal = page.locator('.settings-modal');
+
+      // Open modal
+      await settingsButton.click();
       await expect(modal).toBeFocused({ timeout: 1000 });
 
-      // Should have Settings heading with gear icon
+      // Close via Cancel button
+      await page.getByRole('button', { name: 'Cancel' }).nth(1).click();
+      await page.waitForTimeout(200);
+      await expect(modal).not.toBeFocused();
+
+      // Reopen - should work
+      await settingsButton.click();
+      await expect(modal).toBeFocused({ timeout: 1000 });
+
+      // Should have Settings heading
       const heading = page.getByRole('heading', { name: / Settings/ });
       await expect(heading).toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
+  });
 
-      // Click Cancel to close
-      await page.getByRole('button', { name: 'Cancel' }).nth(1).click();
+  test('should close when clicking off modal and reopen', async ({ page }) => {
+    const mockServer = new MockServerManager();
+      await mockServer.checkHeartbeat();
 
-      // Wait a moment for blur to complete
+    try {
+      await page.goto(BASE_URL);
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
+      await page.reload();
+
+      const settingsButton = page.locator('.header-settings-button');
+      const modal = page.locator('.settings-modal');
+
+      // Open modal
+      await settingsButton.click();
+      await expect(modal).toBeFocused({ timeout: 1000 });
+
+      // Click outside the modal (on the body element, which should blur the modal)
+      await page.locator('body').click({ position: { x: 10, y: 10 } });
       await page.waitForTimeout(200);
-
-      // Modal should not be focused anymore (closed)
       await expect(modal).not.toBeFocused();
+
+      // Reopen - should work (THIS IS THE BUG)
+      await settingsButton.click();
+      await expect(modal).toBeFocused({ timeout: 1000 });
+
+      // Should have Settings heading
+      const heading = page.getByRole('heading', { name: / Settings/ });
+      await expect(heading).toBeVisible();
     } finally {
       await mockServer.stop();
     }
