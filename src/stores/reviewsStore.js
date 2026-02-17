@@ -219,16 +219,16 @@ export function useSubmitReview() {
       throw new Error(`Polling timeout: ${JSON.stringify(debugInfo)}`);
     },
      onSuccess: () => {
-      // Refetch ALL queries matching these partial keys
-      queryClient.refetchQueries({
+      // Reset ALL queries to force fresh data
+      queryClient.resetQueries({
         queryKey: ['activeReview'],
         exact: false
       });
-      queryClient.refetchQueries({
+      queryClient.resetQueries({
         queryKey: ['comments'],
         exact: false
       });
-      queryClient.refetchQueries({
+      queryClient.resetQueries({
         queryKey: ['reviews'],
         exact: false
       });
