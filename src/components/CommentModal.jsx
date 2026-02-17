@@ -29,6 +29,7 @@ import { useCurrentUser } from '../stores/userStore';
 import { usePrData } from '../stores/prDataStore';
 import { settings } from '../stores/settingsStore';
 import { showToast } from '../stores/toastStore';
+import { githubClient } from '../utils/github-client';
 
 // Icon constants
 const ICON_PENCIL = '\udb81\ude4f';
@@ -44,6 +45,7 @@ export function CommentModal() {
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState('');
+  const [isResolving, setIsResolving] = useState(false);
 
   // Fetch all comments for the PR
   const { data: allComments = [], refetch: refetchComments } = useComments();
@@ -184,7 +186,42 @@ export function CommentModal() {
   };
 
   const handleResolve = async () => {
-    // TODO: Implement resolve thread functionality
+    if (!hasCommentChain || threadComments.length === 0) {
+      return;
+    }
+
+    // Get thread ID from the first comment in the thread
+    const threadId = threadComments[0]._threadId;
+    if (!threadId) {
+      console.error('No thread ID found');
+      showToast('Unable to resolve thread: missing thread ID', 'error');
+      return;
+    }
+
+    setIsResolving(true);
+
+    try {
+      // Call GitHub API to resolve the thread
+      await githubClient.resolveReviewThread(threadId);
+      
+      // Invalidate comments query to refresh the UI
+      await queryClient.invalidateQueries({
+        queryKey: ['comments']
+      });
+      
+      // Close the modal
+      clearCommentModal();
+      
+      // Show success message
+      showToast('Thread resolved successfully', 'success');
+    } catch (error) {
+      console.error('Failed to resolve thread:', error);
+      showToast('Failed to resolve thread. Please try again.', 'error');
+      // Close modal even on error (as specified in requirements)
+      clearCommentModal();
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   const handleEditComment = (commentId, currentBody) => {
@@ -272,6 +309,14 @@ export function CommentModal() {
       className="comment-modal"
       tabIndex={-1}
     >
+      {isResolving ? (
+        // Show loading state while resolving thread
+        <div className="comment-modal-resolving">
+          <span className="spinner"></span>
+          <span>Resolving thread...</span>
+        </div>
+      ) : (
+        <>
         {/* Header with Resolve button */}
         <div className="comment-modal-header">
           <h2>
@@ -396,6 +441,8 @@ export function CommentModal() {
             </button>
           </div>
         </form>
+        </>
+      )}
     </div>
   );
 }
