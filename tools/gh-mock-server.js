@@ -522,13 +522,13 @@ class GitHubMockServer {
       const routes = [
       {
         // Heartbeat: GET /heartbeat - quick health check
-        pattern: /^\/heartbeat$/,
+        pattern: /^\/heartbeat(\?.*)?$/,
         method: 'GET',
         handler: (req, res) => this.sendResponse(res, 200, { status: 'ok', timestamp: Date.now() })
       },
       {
         // Debug log: POST /debug-log - receive logs from browser and test for unified debugging
-        pattern: /^\/debug-log$/,
+        pattern: /^\/debug-log(\?.*)?$/,
         method: 'POST',
         handler: async (req, res) => {
           try {
@@ -547,7 +547,7 @@ class GitHubMockServer {
       },
       {
         // Reset: POST /reset - reload test data from disk (for serial tests)
-        pattern: /^\/reset$/,
+        pattern: /^\/reset(\?.*)?$/,
         method: 'POST',
         handler: (req, res) => {
           try {
@@ -573,7 +573,7 @@ class GitHubMockServer {
       },
       {
         // Configure errors/latency: POST /config - set error responses for endpoints (for serial tests)
-        pattern: /^\/config$/,
+        pattern: /^\/config(\?.*)?$/,
         method: 'POST',
         handler: async (req, res) => {
           try {
@@ -605,7 +605,7 @@ class GitHubMockServer {
       },
       {
         // Get error messages: GET /error-messages - retrieve logged errors for debugging
-        pattern: /^\/error-messages$/,
+        pattern: /^\/error-messages(\?.*)?$/,
         method: 'GET',
         handler: (req, res) => {
           this.sendResponse(res, 200, { 
@@ -616,73 +616,73 @@ class GitHubMockServer {
       },
       {
         // Get authenticated user: GET /user
-        pattern: /^\/user$/,
+        pattern: /^\/user(\?.*)?$/,
         method: 'GET',
         handler: this.getUser.bind(this)
       },
       {
         // List repos for user: GET /user/repos
-        pattern: /^\/user\/repos$/,
+        pattern: /^\/user\/repos(\?.*)?$/,
         method: 'GET',
         handler: this.listUserRepos.bind(this)
       },
       {
         // List PRs: GET /repos/{owner}/{repo}/pulls
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls(\?.*)?$/,
         method: 'GET',
         handler: this.listPulls.bind(this)
       },
       {
         // Read PR: GET /repos/{owner}/{repo}/pulls/{pull_number}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)(\?.*)?$/,
         method: 'GET',
         handler: this.getPull.bind(this)
       },
       {
         // List PR files: GET /repos/{owner}/{repo}/pulls/{pull_number}/files
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/files$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/files(\?.*)?$/,
         method: 'GET',
         handler: this.listPullFiles.bind(this)
       },
       {
         // Get file contents: GET /repos/{owner}/{repo}/contents/{path}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/contents\/(.+)$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/contents\/(.+)(\?.*)?$/,
         method: 'GET',
         handler: this.getContents.bind(this)
       },
       {
         // Add review comment: POST /repos/{owner}/{repo}/pulls/{pull_number}/comments
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/comments(\?.*)?$/,
         method: 'POST',
         handler: this.addComment.bind(this)
       },
       {
         // Delete review comment: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/comments\/(\d+)(\?.*)?$/,
         method: 'DELETE',
         handler: this.deleteComment.bind(this)
       },
       {
         // List reviews: GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?(\?.*)?$/,
         method: 'GET',
         handler: this.listReviews.bind(this)
       },
       {
         // Create review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews(\?.*)?(\?.*)?$/,
         method: 'POST',
         handler: this.createReview.bind(this)
       },
       {
         // Submit review: POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events
-        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events(\?.*)?$/,
+        pattern: /^\/repos\/([^\/]+)\/([^\/]+)\/pulls\/(\d+)\/reviews\/(\d+)\/events(\?.*)?(\?.*)?$/,
         method: 'POST',
         handler: this.submitReview.bind(this)
       },
       {
         // GraphQL endpoint: POST /graphql
-        pattern: /^\/graphql$/,
+        pattern: /^\/graphql(\?.*)?$/,
         method: 'POST',
         handler: this.handleGraphQL.bind(this)
       }
