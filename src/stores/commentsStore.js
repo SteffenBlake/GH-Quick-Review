@@ -101,14 +101,10 @@ export function useComments() {
         return allComments;
       } catch (error) {
         console.error('Failed to fetch review threads:', error);
-        
-        // Check if this is a GraphQL FORBIDDEN error
-        if (error.graphqlError) {
-          const gqlError = error.graphqlError;
-          const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
-          setError(errorMsg);
-        }
-        
+
+        // Set the error message (already formatted in github-client)
+        setError(error.message);
+
         return [];
       }
     },
@@ -164,12 +160,8 @@ export function useUpdateComment() {
       );
     },
     onError: (error) => {
-      // Check if this is a GraphQL FORBIDDEN error
-      if (error.graphqlError) {
-        const gqlError = error.graphqlError;
-        const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
-        setError(errorMsg);
-      }
+      // Set the error message (already formatted in github-client)
+      setError(error.message);
     },
     onSuccess: () => {
       // Invalidate comments query to refetch

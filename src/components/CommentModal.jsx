@@ -217,18 +217,9 @@ export function CommentModal() {
       showToast('Thread resolved successfully', 'success');
     } catch (error) {
       console.error('Failed to resolve thread:', error);
-      
-      // Check if this is a GraphQL FORBIDDEN error
-      if (error.graphqlError) {
-        const gqlError = error.graphqlError;
-        const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
-        setError(errorMsg);
-        clearCommentModal();
-        return;
-      }
-      
-      showToast('Failed to resolve thread. Please try again.', 'error');
-      // Close modal even on error (as specified in requirements)
+
+      // Set the error message (already formatted in github-client)
+      setError(error.message);
       clearCommentModal();
     } finally {
       setIsResolving(false);

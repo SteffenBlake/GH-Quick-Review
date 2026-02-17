@@ -110,12 +110,8 @@ export function useAddReviewComment() {
       });
     },
     onError: (error) => {
-      // Check if this is a GraphQL FORBIDDEN error
-      if (error.graphqlError) {
-        const gqlError = error.graphqlError;
-        const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
-        setError(errorMsg);
-      }
+      // Set the error message (already formatted in github-client)
+      setError(error.message);
     },
     onSuccess: () => {
       // Invalidate comments query to refetch

@@ -628,7 +628,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Find a resolve button and try to click it
       await page.locator('.diff-viewer').click();
       const resolveButton = page.locator('button:has-text("Resolve")').first();
-      
+
       if (await resolveButton.isVisible()) {
         await resolveButton.click();
 
@@ -745,7 +745,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
 
       // Find an existing comment and try to edit it
       await page.locator('.diff-viewer').click();
-      
+
       // Click on existing comment thread
       const messageWithComments = page.locator('.diff-line-message-btn.has-message').first();
       await messageWithComments.click();
