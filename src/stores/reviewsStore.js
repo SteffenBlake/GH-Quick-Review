@@ -128,10 +128,14 @@ export function useSubmitReview() {
   
   return useMutation({
     mutationFn: async ({ reviewId, body, event }) => {
+      console.log('[MUTATION] START:', { reviewId, event });
+      
       if (!selectedRepo.value || !selectedPr.value) {
+        console.error('[MUTATION] ERROR: No PR selected');
         throw new Error('No PR selected');
       }
       
+      console.log('[MUTATION] Calling submitReview API...');
       // Submit the review
       const submittedReview = await githubClient.submitReview(
         selectedRepo.value,
@@ -139,6 +143,7 @@ export function useSubmitReview() {
         reviewId,
         { body, event }
       );
+      console.log('[MUTATION] submitReview returned:', submittedReview);
       
       // Poll for eventual consistency:
       // GitHub API may return cached/stale "PENDING" state briefly after submission
@@ -146,13 +151,16 @@ export function useSubmitReview() {
       const pollTimeout = 5000; // 5 second timeout
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
       
+      console.log('[MUTATION] Waiting 1s before polling...');
       // Wait 1s before first poll to allow for eventual consistency
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('[MUTATION] Starting polling loop...');
       // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
       
       while (Date.now() - pollStartTime < pollTimeout) {
+        console.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
         // Fetch current reviews with cache-busting to prevent browser cache issues
         // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
         const reviews = await githubClient.listPullReviews(
