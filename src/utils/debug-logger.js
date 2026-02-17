@@ -216,15 +216,8 @@ const createRealLogger = (source) => ({
       typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
     ).join(' ');
 
-    // Check if message has a category tag like [HTTP], [MUTATION], etc.
-    const match = text.match(/^\[([^\]]+)\]\s*(.+)/);
-    if (match) {
-      // Message has a specific category - prepend source to category
-      sendLog(`${source}:${match[1]}`, match[2]);
-    } else {
-      // No category - just use source
-      sendLog(source, text);
-    }
+    // Simply prepend source to the message
+    sendLog(source, text);
   },
 
   error: (...args) => {
@@ -232,15 +225,8 @@ const createRealLogger = (source) => ({
       typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
     ).join(' ');
 
-    // Check if message has a category tag like [HTTP], [MUTATION], etc.
-    const match = text.match(/^\[([^\]]+)\]\s*(.+)/);
-    if (match) {
-      // Message has a specific category - prepend source to category and add .error
-      sendLog(`${source}:${match[1]}.error`, match[2]);
-    } else {
-      // No category - use source with .error suffix
-      sendLog(`${source}.error`, text);
-    }
+    // Simply prepend source with .error suffix
+    sendLog(`${source}.error`, text);
   }
 });
 
