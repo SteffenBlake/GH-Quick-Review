@@ -111,10 +111,17 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
 
       // Click on example.cs to scroll to it
       await page.getByRole('list').getByText('example.cs').click();
-      await page.waitForTimeout(1500);
 
-      // Get the header element
+      // Get the header element and wait for scroll animation to complete
       const header = page.locator('[data-filename="example.cs"] .file-card-header');
+      await expect(header).toBeVisible({ timeout: 1000 });
+
+      // Wait for scroll to complete by checking header is near top
+      await expect(async () => {
+        const box = await header.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box.y).toBeLessThan(100); // Should be scrolled into view
+      }).toPass({ timeout: 1000 });
 
       // Verify the header has sticky positioning
       const headerStyles = await header.evaluate(el => {
@@ -138,7 +145,8 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
         }
       });
 
-      await page.waitForTimeout(300);
+      // Wait for scroll animation to settle
+      await page.waitForTimeout(200);
 
       // Header should still be visible at the top
       const headerBox = await header.boundingBox();
