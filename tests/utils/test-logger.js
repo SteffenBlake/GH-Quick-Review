@@ -1,17 +1,17 @@
 /**
  * Test Debug Logger Helper
- * 
+ *
  * Allows Playwright tests to log to the unified debug log file.
- * 
+ *
  * Usage:
  *   import { testLog } from '../utils/test-logger.js';
- *   
+ *
  *   test('my test', async ({ page }) => {
  *     await testLog('test-name', 'Starting test...');
  *     // ... test code ...
  *     await testLog('test-name', 'Test completed');
  *   });
- * 
+ *
  * Logs appear in /tmp/unified-debug.log as:
  *   [timestamp] [TEST] [category] message
  */
@@ -29,11 +29,11 @@ export async function testLog(category, message, data = null) {
     await fetch(`${MOCK_SERVER_URL}/debug-log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         source: 'TEST',
-        category, 
-        message, 
-        data 
+        category,
+        message,
+        data
       })
     });
   } catch (err) {

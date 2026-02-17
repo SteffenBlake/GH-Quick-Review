@@ -15,8 +15,8 @@ import { clearDirectorySettings } from './directorySettingsStore';
  */
 
 // Initialize from localStorage
-const initialToken = typeof window !== 'undefined' 
-  ? localStorage.getItem('github_pat') 
+const initialToken = typeof window !== 'undefined'
+  ? localStorage.getItem('github_pat')
   : null;
 
 export const token = signal(initialToken);

@@ -36,13 +36,13 @@ export function usePrData() {
         ]);
 
         clearError();
-        
+
         // Find existing pending review for current user
         const currentUser = await githubClient.getUser();
         const existingReview = reviews.find(
           review => review.state === 'PENDING' && review.user.login === currentUser.login
         );
-        
+
         // Return raw data object (comments are now managed by commentsStore separately)
         return {
           pull: pullDetails,

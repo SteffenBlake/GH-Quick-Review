@@ -33,7 +33,7 @@ export function showCommentModal(commentChain) {
     lineNumber: commentChain.lineNumber
   };
   selectedCommentLocation.value = null;
-  
+
   // Directly focus the modal
   if (modalRef && modalRef.current) {
     modalRef.current.focus();
@@ -48,7 +48,7 @@ export function showCommentModal(commentChain) {
 export function showNewCommentModal(filename, lineNumber) {
   selectedCommentLocation.value = { filename, lineNumber };
   selectedCommentChain.value = null;
-  
+
   // Directly focus the modal
   if (modalRef && modalRef.current) {
     modalRef.current.focus();

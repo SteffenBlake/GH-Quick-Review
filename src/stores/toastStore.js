@@ -28,10 +28,10 @@ export function showToast(message, type = 'info') {
   if (hideTimeout) {
     clearTimeout(hideTimeout);
   }
-  
+
   // Set the toast
   currentToast.value = { message, type };
-  
+
   // Auto-hide after duration
   hideTimeout = setTimeout(() => {
     currentToast.value = null;

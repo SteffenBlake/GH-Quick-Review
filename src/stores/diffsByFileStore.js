@@ -35,7 +35,7 @@ function parseDiffHunkHeader(hunkHeader) {
  * @returns {Array} - Array of diff hunk objects
  */
 function parsePatchIntoDiffs(patch) {
-  if (!patch) return [];
+  if (!patch) {return [];}
 
   const lines = patch.split('\n');
   const diffs = [];
@@ -90,14 +90,14 @@ function parsePatchIntoDiffs(patch) {
  * @returns {Array} - Array of comment chains (arrays of comments)
  */
 function groupCommentsIntoChains(comments) {
-  if (!comments || comments.length === 0) return [];
+  if (!comments || comments.length === 0) {return [];}
 
   const chains = new Map();
 
   // First pass: group by in_reply_to_id
   comments.forEach(comment => {
     const threadId = comment.in_reply_to_id || comment.id;
-    
+
     if (!chains.has(threadId)) {
       chains.set(threadId, []);
     }
@@ -105,7 +105,7 @@ function groupCommentsIntoChains(comments) {
   });
 
   // Convert to array and sort comments within each chain by creation time
-  return Array.from(chains.values()).map(chain => 
+  return Array.from(chains.values()).map(chain =>
     chain.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
   );
 }
@@ -117,7 +117,7 @@ function groupCommentsIntoChains(comments) {
  * @param {Array} chain - Array of comments in a chain
  * @returns {boolean} - True if unresolved
  */
-function isChainUnresolved(chain) {
+function isChainUnresolved(_chain) {
   // For now, assume all chains are unresolved
   return true;
 }
@@ -129,8 +129,8 @@ function isChainUnresolved(chain) {
  * @returns {number} - Index of the best matching diff
  */
 function findBestDiffForChain(chain, diffs) {
-  if (diffs.length === 0) return 0;
-  if (diffs.length === 1) return 0;
+  if (diffs.length === 0) {return 0;}
+  if (diffs.length === 1) {return 0;}
 
   // Get the line number from the first comment in the chain
   const firstComment = chain[0];
@@ -173,8 +173,8 @@ function getFilesInDirectoryOrder(tree) {
   function traverse(node, path = '') {
     const entries = Object.entries(node).sort(([aName, aData], [bName, bData]) => {
       // Directories first, then files
-      if (!aData.isFile && bData.isFile) return -1;
-      if (aData.isFile && !bData.isFile) return 1;
+      if (!aData.isFile && bData.isFile) {return -1;}
+      if (aData.isFile && !bData.isFile) {return 1;}
       // Then alphabetically
       return aName.localeCompare(bName);
     });
@@ -202,20 +202,20 @@ function getFilesInDirectoryOrder(tree) {
  * @returns {Array} - Array of file objects with diffs and comments
  */
 function processDiffsByFile(prData, tree, mergedComments) {
-  if (!prData || !prData.files) return [];
+  if (!prData || !prData.files) {return [];}
 
   const { files } = prData;
   const comments = mergedComments || [];
-  
+
   // Get files in directory browser order
   const orderedFilePaths = getFilesInDirectoryOrder(tree);
-  
+
   // Create a map for quick file lookup
   const fileMap = new Map(files.map(f => [f.filename, f]));
-  
+
   // Group all comments into chains
   const allChains = groupCommentsIntoChains(comments);
-  
+
   // Group chains by file path
   const chainsByFile = new Map();
   allChains.forEach(chain => {
@@ -229,7 +229,7 @@ function processDiffsByFile(prData, tree, mergedComments) {
   // Process each file in directory order
   const result = orderedFilePaths.map(filePath => {
     const file = fileMap.get(filePath);
-    if (!file) return null;
+    if (!file) {return null;}
 
     // Handle deleted files specially
     if (file.status === 'removed') {
@@ -262,7 +262,7 @@ function processDiffsByFile(prData, tree, mergedComments) {
 
     // Parse diffs from patch
     const diffs = parsePatchIntoDiffs(file.patch);
-    
+
     // Get unresolved chains for this file
     const fileChains = chainsByFile.get(filePath) || [];
     const unresolvedChains = fileChains.filter(isChainUnresolved);
@@ -277,7 +277,7 @@ function processDiffsByFile(prData, tree, mergedComments) {
       const firstComment = chain[0];
       const lineNumber = firstComment.line || firstComment.start_line || 1;
       const bestDiffIndex = findBestDiffForChain(chain, diffs);
-      
+
       if (diffsWithChains[bestDiffIndex]) {
         diffsWithChains[bestDiffIndex].unresolvedChains.push({
           chain,
@@ -308,9 +308,9 @@ export function useDiffsByFile() {
   const { data: mergedComments, isLoading: commentsLoading, error: commentsError } = useComments();
 
   const diffsByFile = useMemo(() => {
-    if (!prData || !tree) return [];
+    if (!prData || !tree) {return [];}
     // CRITICAL: Wait for comments to load before processing
-    if (commentsLoading) return [];
+    if (commentsLoading) {return [];}
     return processDiffsByFile(prData, tree, mergedComments || []);
   }, [prData, tree, mergedComments, commentsLoading]); // Add commentsLoading to deps!
 

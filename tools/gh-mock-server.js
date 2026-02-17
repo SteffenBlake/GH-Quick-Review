@@ -24,7 +24,7 @@ class GitHubMockServer {
     this.latency = config.latency || 0; // Artificial delay in ms
     this.silent = config.silent || false; // Suppress console output
     this.errorMessages = []; // Track unexpected errors (not configured error codes)
-    
+
     // Simulate GitHub eventual consistency for review submissions
     // After submitReview is called, there's a delay before listReviews returns the updated state
     // This matches real GitHub API behavior where the API is eventually consistent
@@ -35,7 +35,7 @@ class GitHubMockServer {
     // DO NOT add environment variables or toggles to disable this. Just fix the actual problem.
     this.pendingReviewUpdates = new Map(); // reviewId -> { newState, timestamp }
     this.reviewStateDelay = 750; // Delay in ms - ALWAYS ENABLED
-    
+
     this.loadUserData();
   }
 
@@ -58,7 +58,7 @@ class GitHubMockServer {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined
     };
-    
+
     this.errorMessages.push(errorMessage);
     this.log(`[ERROR] ${context}:`, error);
   }
@@ -79,13 +79,13 @@ class GitHubMockServer {
 
   loadUserData() {
     const absolutePath = resolve(this.userDirPath);
-    
+
     // Dynamically build repos list from directory structure
     this.repos = this.scanRepositories(absolutePath);
-    
+
     // Cache for repo data (loaded on demand)
     this.repoDataCache = new Map();
-    
+
     this.log(`Loaded ${this.repos.length} repositories for user`);
   }
 
@@ -94,45 +94,45 @@ class GitHubMockServer {
    */
   scanRepositories(userDir) {
     const repos = [];
-    
+
     if (!existsSync(userDir)) {
       return repos;
     }
 
     const entries = readdirSync(userDir);
-    
+
     for (const entry of entries) {
       const entryPath = join(userDir, entry);
       const stats = statSync(entryPath);
-      
+
       // Skip files and look only at directories
       if (!stats.isDirectory()) {
         continue;
       }
-      
+
       // Check if this directory has a data.json file (indicating it's a repo)
       const dataJsonPath = join(entryPath, 'data.json');
       if (!existsSync(dataJsonPath)) {
         continue;
       }
-      
+
       // Load basic metadata from data.json
       try {
         const data = JSON.parse(readFileSync(dataJsonPath, 'utf8'));
         const pulls = data.pulls || [];
-        
+
         // Count open issues (open PRs)
         const openIssuesCount = pulls.filter(pr => pr.state === 'open').length;
-        
+
         // Find latest update time
         const latestUpdate = pulls.reduce((latest, pr) => {
           const prUpdate = new Date(pr.updated_at);
           return prUpdate > latest ? prUpdate : latest;
         }, new Date(0));
-        
+
         // Determine primary language (simplified - could be from first PR or default)
         const language = pulls.length > 0 ? this.guessLanguageFromRepo(entryPath) : 'Unknown';
-        
+
         repos.push({
           id: repos.length + 1,
           node_id: `R_kgDO${entry}`,
@@ -181,7 +181,7 @@ class GitHubMockServer {
         console.warn(`Failed to load repository metadata for ${entry}:`, error.message);
       }
     }
-    
+
     return repos;
   }
 
@@ -191,26 +191,26 @@ class GitHubMockServer {
   guessLanguageFromRepo(repoPath) {
     // Look for files in PR directories to determine language
     const prDirs = readdirSync(repoPath).filter(name => !isNaN(name));
-    
+
     for (const prDir of prDirs) {
       const afterDir = join(repoPath, prDir, 'after');
       if (existsSync(afterDir)) {
         const files = readdirSync(afterDir);
-        
+
         // Check file extensions
         for (const file of files) {
-          if (file.endsWith('.js')) return 'JavaScript';
-          if (file.endsWith('.py')) return 'Python';
-          if (file.endsWith('.cs')) return 'C#';
-          if (file.endsWith('.java')) return 'Java';
-          if (file.endsWith('.yaml') || file.endsWith('.yml')) return 'YAML';
-          if (file.endsWith('.json')) return 'JSON';
-          if (file.endsWith('.html')) return 'HTML';
-          if (file.endsWith('.xml')) return 'XML';
+          if (file.endsWith('.js')) {return 'JavaScript';}
+          if (file.endsWith('.py')) {return 'Python';}
+          if (file.endsWith('.cs')) {return 'C#';}
+          if (file.endsWith('.java')) {return 'Java';}
+          if (file.endsWith('.yaml') || file.endsWith('.yml')) {return 'YAML';}
+          if (file.endsWith('.json')) {return 'JSON';}
+          if (file.endsWith('.html')) {return 'HTML';}
+          if (file.endsWith('.xml')) {return 'XML';}
         }
       }
     }
-    
+
     return 'Unknown';
   }
 
@@ -227,9 +227,9 @@ class GitHubMockServer {
 
     if (!existsSync(dataPath)) {
       console.warn(`Data file not found for repo: ${repoName}`);
-      return { 
-        pulls: new Map(), 
-        comments: new Map(), 
+      return {
+        pulls: new Map(),
+        comments: new Map(),
         reviews: new Map(),
         reviewThreads: new Map(),
         nextCommentId: 1,
@@ -262,18 +262,18 @@ class GitHubMockServer {
    */
   checkConfiguredError(endpointName, res) {
     const errorConfig = this.config[endpointName];
-    
+
     if (!errorConfig) {
       return false;
     }
-    
+
     // Handle timeout - don't respond at all
     if (errorConfig === 'timeout') {
-      this.log(`  → Configured to timeout (no response)`);
+      this.log('  → Configured to timeout (no response)');
       // Don't send any response - let it hang
       return true;
     }
-    
+
     // Handle specific error codes - use GitHub's exact error format
     if (typeof errorConfig === 'number') {
       const errorMessages = {
@@ -308,17 +308,17 @@ class GitHubMockServer {
           documentation_url: 'https://docs.github.com/rest'
         }
       };
-      
+
       const errorData = errorMessages[errorConfig] || {
         message: 'Error',
         documentation_url: 'https://docs.github.com/rest'
       };
-      
+
       this.log(`  → Configured to return ${errorConfig}`);
       this.sendResponse(res, errorConfig, errorData);
       return true;
     }
-    
+
     return false;
   }
 
@@ -342,14 +342,14 @@ class GitHubMockServer {
       // Use git diff --no-index to compare directories
       const diffCommand = `git diff --no-index --numstat --no-color "${beforeDir}" "${afterDir}" || true`;
       const numstatOutput = execSync(diffCommand, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
-      
+
       // Get the full diff with patch
       const patchCommand = `git diff --no-index --no-color "${beforeDir}" "${afterDir}" || true`;
       const patchOutput = execSync(patchCommand, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
 
       // Extract owner from repo (assumes format owner/repo_name or just repo_name)
       const owner = 'test_user';
-      
+
       return this.parseGitDiff(numstatOutput, patchOutput, beforeDir, afterDir, owner, repoName);
     } catch (error) {
       console.error('Error generating diffs:', error.message);
@@ -368,11 +368,11 @@ class GitHubMockServer {
 
     for (const line of lines) {
       const parts = line.split('\t');
-      if (parts.length < 3) continue;
+      if (parts.length < 3) {continue;}
 
       const additions = parseInt(parts[0]) || 0;
       const deletions = parseInt(parts[1]) || 0;
-      let rawPath = parts[2];
+      const rawPath = parts[2];
 
       let filename = '';
       let status = 'modified';
@@ -417,7 +417,7 @@ class GitHubMockServer {
         filename = rawPath.split('/').pop();
         const potentialBeforePath = join(beforeDir, filename);
         const potentialAfterPath = join(afterDir, filename);
-        
+
         if (existsSync(potentialBeforePath) && existsSync(potentialAfterPath)) {
           status = 'modified';
         } else if (existsSync(potentialAfterPath)) {
@@ -431,7 +431,7 @@ class GitHubMockServer {
       const patch = this.extractFilePatch(patchOutput, filename);
 
       // Calculate SHA (simplified - using file content hash)
-      const sha = status === 'removed' 
+      const sha = status === 'removed'
         ? this.calculateFileSha(join(beforeDir, filename))
         : this.calculateFileSha(join(afterDir, filename));
 
@@ -460,22 +460,22 @@ class GitHubMockServer {
   extractFilePatch(patchOutput, filename) {
     const lines = patchOutput.split('\n');
     let inFile = false;
-    let patchLines = [];
-    
+    const patchLines = [];
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // Check if this is the start of our file's diff
       if (line.startsWith('diff --git') && line.includes(filename)) {
         inFile = true;
         continue;
       }
-      
+
       // Check if we've moved to a different file
       if (inFile && line.startsWith('diff --git') && !line.includes(filename)) {
         break;
       }
-      
+
       // Collect patch lines (skip the diff header lines)
       if (inFile) {
         if (line.startsWith('@@')) {
@@ -485,7 +485,7 @@ class GitHubMockServer {
         }
       }
     }
-    
+
     return patchLines.join('\n');
   }
 
@@ -496,7 +496,7 @@ class GitHubMockServer {
     if (!existsSync(filePath)) {
       return '0000000000000000000000000000000000000000';
     }
-    
+
     try {
       const content = readFileSync(filePath);
       return crypto.createHash('sha1').update(content).digest('hex');
@@ -515,13 +515,13 @@ class GitHubMockServer {
   async handleRequest(req, res) {
     try {
       const { method, url } = req;
-      
+
       // Parse URL and extract path
       const urlParts = url.split('?');
       const path = urlParts[0];
-      
+
       this.log(`${method} ${path}`);
-      
+
       // Route matching
       const routes = [
       {
@@ -586,19 +586,19 @@ class GitHubMockServer {
               body += chunk;
             }
             const config = JSON.parse(body);
-            
+
             // Update error configurations
             if (config.errors) {
               Object.assign(this.config, config.errors);
             }
-            
+
             // Update latency
             if (config.latency !== undefined) {
               this.latency = config.latency;
             }
-            
-            this.sendResponse(res, 200, { 
-              status: 'ok', 
+
+            this.sendResponse(res, 200, {
+              status: 'ok',
               message: 'Configuration updated',
               config: { errors: this.config, latency: this.latency }
             });
@@ -612,7 +612,7 @@ class GitHubMockServer {
         pattern: /^\/error-messages(\?.*)?$/,
         method: 'GET',
         handler: (req, res) => {
-          this.sendResponse(res, 200, { 
+          this.sendResponse(res, 200, {
             errors: this.getErrors(),
             count: this.errorMessages.length
           });
@@ -691,7 +691,7 @@ class GitHubMockServer {
         handler: this.handleGraphQL.bind(this)
       }
     ];
-    
+
     // Find matching route
     for (const route of routes) {
       const match = path.match(route.pattern);
@@ -699,7 +699,7 @@ class GitHubMockServer {
         return route.handler(req, res, match);
       }
     }
-    
+
     // No route matched
     this.sendResponse(res, 404, {
       message: 'Not Found',
@@ -719,8 +719,8 @@ class GitHubMockServer {
   }
 
   listUserRepos(req, res, match) {
-    if (this.checkConfiguredError('listUserRepos', res)) return;
-    
+    if (this.checkConfiguredError('listUserRepos', res)) {return;}
+
     // Check for authorization header
     const authHeader = req.headers['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -729,13 +729,13 @@ class GitHubMockServer {
         documentation_url: 'https://docs.github.com/rest/reference/repos#list-repositories-for-the-authenticated-user'
       });
     }
-    
+
     this.sendResponse(res, 200, this.repos);
   }
 
   getUser(req, res, match) {
-    if (this.checkConfiguredError('getUser', res)) return;
-    
+    if (this.checkConfiguredError('getUser', res)) {return;}
+
     // Check for authorization header
     const authHeader = req.headers['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -744,7 +744,7 @@ class GitHubMockServer {
         documentation_url: 'https://docs.github.com/rest/users/users#get-the-authenticated-user'
       });
     }
-    
+
     // Return authenticated user info (reviewer1 so they match comments in test data)
     const userData = {
       login: 'reviewer1',
@@ -780,13 +780,13 @@ class GitHubMockServer {
       created_at: '2024-01-01T00:00:00Z',
       updated_at: new Date().toISOString()
     };
-    
+
     this.sendResponse(res, 200, userData);
   }
 
   listPulls(req, res, match) {
-    if (this.checkConfiguredError('listPulls', res)) return;
-    
+    if (this.checkConfiguredError('listPulls', res)) {return;}
+
     const [, owner, repo] = match;
     const repoData = this.loadRepoData(repo);
     const pulls = Array.from(repoData.pulls.values());
@@ -794,51 +794,51 @@ class GitHubMockServer {
   }
 
   getPull(req, res, match) {
-    if (this.checkConfiguredError('getPull', res)) return;
-    
+    if (this.checkConfiguredError('getPull', res)) {return;}
+
     const [, owner, repo, pullNumber] = match;
     const repoData = this.loadRepoData(repo);
     const pull = repoData.pulls.get(parseInt(pullNumber));
-    
+
     if (!pull) {
       return this.sendResponse(res, 404, {
         message: 'Not Found',
         documentation_url: 'https://docs.github.com/rest/pulls/pulls#get-a-pull-request'
       });
     }
-    
+
     this.sendResponse(res, 200, pull);
   }
 
   listPullFiles(req, res, match) {
-    if (this.checkConfiguredError('listPullFiles', res)) return;
-    
+    if (this.checkConfiguredError('listPullFiles', res)) {return;}
+
     const [, owner, repo, pullNumber] = match;
     const repoData = this.loadRepoData(repo);
     const pull = repoData.pulls.get(parseInt(pullNumber));
-    
+
     if (!pull) {
       return this.sendResponse(res, 404, {
         message: 'Not Found',
         documentation_url: 'https://docs.github.com/rest/pulls/pulls#list-pull-requests-files'
       });
     }
-    
+
     // Generate files dynamically from project directory
     const files = this.generateFileDiffs(repo, parseInt(pullNumber));
-    
+
     this.sendResponse(res, 200, files);
   }
 
   getContents(req, res, match) {
-    if (this.checkConfiguredError('getContents', res)) return;
-    
+    if (this.checkConfiguredError('getContents', res)) {return;}
+
     const [, owner, repo, pathParam] = match;
 
     // Get the query parameters to determine which PR to use (default to latest)
     const url = new URL(req.url, `http://${req.headers.host}`);
     const ref = url.searchParams.get('ref');
-    
+
     // For simplicity, we'll look in the "after" directory of PR 1 by default
     // In a real implementation, you'd parse the ref to determine the correct PR
     const prNumber = 1; // Default to PR 1
@@ -858,7 +858,7 @@ class GitHubMockServer {
 
     try {
       const stats = statSync(filePath);
-      
+
       if (stats.isDirectory()) {
         // Return directory listing (simplified)
         return this.sendResponse(res, 200, {
@@ -869,11 +869,11 @@ class GitHubMockServer {
 
       // Read file content
       const content = readFileSync(filePath);
-      
+
       // Base64 encode with line breaks every 60 characters (matching GitHub's format)
       const base64Content = content.toString('base64').match(/.{1,60}/g).join('\n');
       const sha = this.calculateFileSha(filePath);
-      
+
       // Use a consistent ref SHA for URLs
       const refSha = ref || 'abc123def456789012345678901234567890abcd';
 
@@ -907,21 +907,21 @@ class GitHubMockServer {
   }
 
   addComment(req, res, match) {
-    if (this.checkConfiguredError('addComment', res)) return;
-    
+    if (this.checkConfiguredError('addComment', res)) {return;}
+
     const [, owner, repo, pullNumber] = match;
-    
+
     this.readBody(req, (body) => {
       const repoData = this.loadRepoData(repo);
       const pull = repoData.pulls.get(parseInt(pullNumber));
-      
+
       if (!pull) {
         return this.sendResponse(res, 404, {
           message: 'Not Found',
           documentation_url: 'https://docs.github.com/rest/pulls/comments#create-a-review-comment-for-a-pull-request'
         });
       }
-      
+
       const newComment = {
         id: repoData.nextCommentId++,
         pull_number: parseInt(pullNumber),
@@ -947,20 +947,20 @@ class GitHubMockServer {
         start_side: body.start_side || null,
         in_reply_to_id: body.in_reply_to_id || null
       };
-      
+
       repoData.comments.set(newComment.id, newComment);
       this.sendResponse(res, 201, newComment);
     });
   }
 
   deleteComment(req, res, match) {
-    if (this.checkConfiguredError('deleteComment', res)) return;
-    
+    if (this.checkConfiguredError('deleteComment', res)) {return;}
+
     const [, owner, repo, commentId] = match;
-    
+
     // Find the comment across all repos
     let found = false;
-    
+
     for (const [repoName, repoData] of this.repoDataCache.entries()) {
       if (repoData.comments.has(parseInt(commentId))) {
         repoData.comments.delete(parseInt(commentId));
@@ -968,7 +968,7 @@ class GitHubMockServer {
         break;
       }
     }
-    
+
     // If not in cache, try loading from the specific repo
     if (!found) {
       const repoData = this.loadRepoData(repo);
@@ -977,74 +977,74 @@ class GitHubMockServer {
         found = true;
       }
     }
-    
+
     if (!found) {
       return this.sendResponse(res, 404, {
         message: 'Not Found',
         documentation_url: 'https://docs.github.com/rest/pulls/comments#delete-a-review-comment-for-a-pull-request'
       });
     }
-    
+
     this.sendResponse(res, 204, null);
   }
 
   listReviews(req, res, match) {
-    if (this.checkConfiguredError('listReviews', res)) return;
-    
+    if (this.checkConfiguredError('listReviews', res)) {return;}
+
     const [, owner, repo, pullNumber] = match;
     const repoData = this.loadRepoData(repo);
     const pull = repoData.pulls.get(parseInt(pullNumber));
-    
+
     if (!pull) {
       return this.sendResponse(res, 404, {
         message: 'Not Found',
         documentation_url: 'https://docs.github.com/rest/pulls/reviews#list-reviews-for-a-pull-request'
       });
     }
-    
+
     // Get all reviews for this PR
     const reviews = Array.from(repoData.reviews.values())
       .filter(review => review.pull_number === parseInt(pullNumber));
-    
+
     // Simulate GitHub eventual consistency:
     // If a review was recently submitted, return the old PENDING state until the delay has passed
     // This matches real GitHub behavior where API reads lag behind writes
     const now = Date.now();
     const reviewsWithEventualConsistency = reviews.map(review => {
       const pendingUpdate = this.pendingReviewUpdates.get(review.id);
-      
+
       if (pendingUpdate && (now - pendingUpdate.timestamp) < this.reviewStateDelay) {
         // Still within the eventual consistency window - return old PENDING state
         return { ...review, state: 'PENDING', submitted_at: null };
       }
-      
+
       // Delay has passed, clean up the pending update
       if (pendingUpdate) {
         this.pendingReviewUpdates.delete(review.id);
       }
-      
+
       return review;
     });
-    
+
     this.sendResponse(res, 200, reviewsWithEventualConsistency);
   }
 
   createReview(req, res, match) {
-    if (this.checkConfiguredError('createReview', res)) return;
-    
+    if (this.checkConfiguredError('createReview', res)) {return;}
+
     const [, owner, repo, pullNumber] = match;
-    
+
     this.readBody(req, (body) => {
       const repoData = this.loadRepoData(repo);
       const pull = repoData.pulls.get(parseInt(pullNumber));
-      
+
       if (!pull) {
         return this.sendResponse(res, 404, {
           message: 'Not Found',
           documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-for-a-pull-request'
         });
       }
-      
+
       // Validate event field - only APPROVE, REQUEST_CHANGES, COMMENT are valid
       const validEvents = ['APPROVE', 'REQUEST_CHANGES', 'COMMENT'];
       if (body.event !== undefined && !validEvents.includes(body.event)) {
@@ -1061,10 +1061,10 @@ class GitHubMockServer {
           documentation_url: 'https://docs.github.com/rest/pulls/reviews#create-a-review-for-a-pull-request'
         });
       }
-      
+
       // If event is omitted, the review is PENDING. Otherwise, use the event value.
       const state = body.event || 'PENDING';
-      
+
       const newReview = {
         id: repoData.nextReviewId++,
         node_id: `PRR_${repoData.nextReviewId - 1}`,
@@ -1092,7 +1092,7 @@ class GitHubMockServer {
         author_association: 'OWNER',
         submitted_at: state !== 'PENDING' ? new Date().toISOString() : undefined
       };
-      
+
       repoData.reviews.set(newReview.id, newReview);
       this.sendResponse(res, 200, newReview);
     });
@@ -1100,35 +1100,35 @@ class GitHubMockServer {
 
 
   submitReview(req, res, match) {
-    if (this.checkConfiguredError('submitReview', res)) return;
-    
+    if (this.checkConfiguredError('submitReview', res)) {return;}
+
     const [, owner, repo, pullNumber, reviewId] = match;
-    
+
     this.readBody(req, (body) => {
       const repoData = this.loadRepoData(repo);
       const pull = repoData.pulls.get(parseInt(pullNumber));
       const review = repoData.reviews.get(parseInt(reviewId));
-      
+
       if (!pull) {
         return this.sendResponse(res, 404, {
           message: 'Not Found',
           documentation_url: 'https://docs.github.com/rest/pulls/reviews#submit-a-review-for-a-pull-request'
         });
       }
-      
+
       if (!review) {
         return this.sendResponse(res, 404, {
           message: 'Review not found',
           documentation_url: 'https://docs.github.com/rest/pulls/reviews#submit-a-review-for-a-pull-request'
         });
       }
-      
+
       // Update review state and add submitted_at immediately
       const newState = body.event || 'REQUEST_CHANGES';
       review.state = newState;
       review.body = body.body || review.body;
       review.submitted_at = new Date().toISOString();
-      
+
       // Simulate GitHub eventual consistency:
       // Track this review update so listReviews will return PENDING for a short delay
       // This matches real GitHub API behavior where writes don't immediately appear in reads
@@ -1136,18 +1136,18 @@ class GitHubMockServer {
         newState,
         timestamp: Date.now()
       });
-      
+
       // Return the updated review immediately (GitHub does this too)
       this.sendResponse(res, 200, review);
     });
   }
 
   handleGraphQL(req, res, match) {
-    if (this.checkConfiguredError('handleGraphQL', res)) return;
-    
+    if (this.checkConfiguredError('handleGraphQL', res)) {return;}
+
     this.readBody(req, (body) => {
       const { query, variables } = body;
-      
+
       if (!query) {
         return this.sendResponse(res, 400, {
           errors: [{
@@ -1156,7 +1156,7 @@ class GitHubMockServer {
           }]
         });
       }
-      
+
       // Parse the GraphQL query properly
       let ast;
       try {
@@ -1169,22 +1169,22 @@ class GitHubMockServer {
           }]
         });
       }
-      
+
       // Extract operation type and field selections
       const operation = ast.definitions[0];
       const operationType = operation.operation; // 'query' or 'mutation'
       const selections = {};
-      
+
       // Walk the AST to find what fields are being requested
       visit(ast, {
         Field(node) {
           selections[node.name.value] = true;
         }
       });
-      
+
       // Build response data piecewise
       let responseData = null;
-      
+
       // Handle mutations
       if (selections.resolveReviewThread) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
@@ -1196,7 +1196,7 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         responseData = {
           resolveReviewThread: {
             thread: {
@@ -1206,7 +1206,7 @@ class GitHubMockServer {
           }
         };
       }
-      
+
       if (selections.unresolveReviewThread) {
         const threadIdMatch = query.match(/threadId:\s*"([^"]+)"/);
         if (!threadIdMatch) {
@@ -1217,7 +1217,7 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         responseData = {
           unresolveReviewThread: {
             thread: {
@@ -1227,7 +1227,7 @@ class GitHubMockServer {
           }
         };
       }
-      
+
       if (selections.reviewThreads) {
         if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
           return this.sendResponse(res, 400, {
@@ -1237,11 +1237,11 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         const { owner, repo, prNumber } = variables;
         const repoData = this.loadRepoData(repo);
         const pull = repoData.pulls.get(parseInt(prNumber));
-        
+
         if (!pull) {
           return this.sendResponse(res, 200, {
             data: {
@@ -1249,10 +1249,10 @@ class GitHubMockServer {
             }
           });
         }
-        
+
         const threads = Array.from(repoData.reviewThreads.values())
           .filter(thread => thread.pull_number === parseInt(prNumber));
-        
+
         const threadNodes = threads.map(thread => ({
           id: thread.id,
           isResolved: thread.isResolved,
@@ -1269,7 +1269,7 @@ class GitHubMockServer {
               const reviewId = parseInt(reviewIdStr);
               const currentReview = repoData.reviews.get(reviewId);
               const currentState = currentReview ? currentReview.state : comment.pullRequestReview.state;
-              
+
               return {
                 id: comment.id,
                 databaseId: comment.databaseId,
@@ -1291,7 +1291,7 @@ class GitHubMockServer {
             })
           }
         }));
-        
+
         responseData = {
           repository: {
             pullRequest: {
@@ -1302,7 +1302,7 @@ class GitHubMockServer {
           }
         };
       }
-      
+
       if (selections.reviews) {
         if (!variables || !variables.owner || !variables.repo || !variables.prNumber) {
           return this.sendResponse(res, 400, {
@@ -1312,11 +1312,11 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         const { owner, repo, prNumber } = variables;
         const repoData = this.loadRepoData(repo);
         const pull = repoData.pulls.get(parseInt(prNumber));
-        
+
         if (!pull) {
           return this.sendResponse(res, 200, {
             data: {
@@ -1324,14 +1324,14 @@ class GitHubMockServer {
             }
           });
         }
-        
+
         const reviews = Array.from(repoData.reviews.values())
           .filter(review => review.pull_number === parseInt(prNumber));
-        
+
         const reviewNodes = reviews.map(review => {
           const reviewComments = Array.from(repoData.comments.values())
             .filter(comment => comment.pull_request_review_id === review.id);
-          
+
           return {
             id: review.node_id,
             state: review.state,
@@ -1356,7 +1356,7 @@ class GitHubMockServer {
             }
           };
         });
-        
+
         responseData = {
           repository: {
             pullRequest: {
@@ -1367,7 +1367,7 @@ class GitHubMockServer {
           }
         };
       }
-      
+
       if (selections.addPullRequestReviewThread) {
         if (!variables || !variables.input) {
           return this.sendResponse(res, 400, {
@@ -1377,14 +1377,14 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         const { pullRequestId, pullRequestReviewId, body: commentBody, path, line, side } = variables.input;
-        
+
         // Find PR by node_id across all repos
         let repo = null;
         let pullNumber = null;
         let foundPr = null;
-        
+
         for (const repoObj of this.repos) {
           const repoData = this.loadRepoData(repoObj.name);
           for (const [num, pr] of repoData.pulls.entries()) {
@@ -1395,9 +1395,9 @@ class GitHubMockServer {
               break;
             }
           }
-          if (foundPr) break;
+          if (foundPr) {break;}
         }
-        
+
         if (!foundPr) {
           return this.sendResponse(res, 400, {
             errors: [{
@@ -1406,7 +1406,7 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         // Find the review by node_id
         const repoData = this.loadRepoData(repo);
         let foundReview = null;
@@ -1418,7 +1418,7 @@ class GitHubMockServer {
             break;
           }
         }
-        
+
         if (!foundReview) {
           return this.sendResponse(res, 400, {
             errors: [{
@@ -1427,7 +1427,7 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         // Create the new comment
         const newComment = {
           id: repoData.nextCommentId++,
@@ -1455,9 +1455,9 @@ class GitHubMockServer {
           start_side: null,
           in_reply_to_id: null
         };
-        
+
         repoData.comments.set(newComment.id, newComment);
-        
+
         // Update reviewThreads so the new comment appears in GraphQL queries
         let thread = null;
         for (const [threadId, t] of repoData.reviewThreads.entries()) {
@@ -1466,7 +1466,7 @@ class GitHubMockServer {
             break;
           }
         }
-        
+
         if (!thread) {
           const threadId = `PRT_kwDOThread${newComment.id}`;
           thread = {
@@ -1482,7 +1482,7 @@ class GitHubMockServer {
           };
           repoData.reviewThreads.set(threadId, thread);
         }
-        
+
         thread.comments.push({
           id: `PRRC_${newComment.id}`,
           databaseId: newComment.id,
@@ -1501,7 +1501,7 @@ class GitHubMockServer {
             state: foundReview.state
           }
         });
-        
+
         responseData = {
           addPullRequestReviewThread: {
             thread: {
@@ -1524,7 +1524,7 @@ class GitHubMockServer {
           }
         };
       }
-      
+
       if (selections.updatePullRequestReviewComment) {
         if (!variables || !variables.commentId || !variables.body) {
           return this.sendResponse(res, 400, {
@@ -1534,13 +1534,13 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         const { commentId, body } = variables;
-        
+
         // Find comment by GraphQL node ID across all repos
         let comment = null;
         let foundRepoData = null;
-        
+
         for (const [repoName, repoData] of this.repoDataCache.entries()) {
           // Search in reviewThreads
           for (const [threadId, thread] of repoData.reviewThreads.entries()) {
@@ -1551,9 +1551,9 @@ class GitHubMockServer {
               break;
             }
           }
-          if (comment) break;
+          if (comment) {break;}
         }
-        
+
         if (!comment) {
           return this.sendResponse(res, 200, {
             errors: [{
@@ -1562,18 +1562,18 @@ class GitHubMockServer {
             }]
           });
         }
-        
+
         // Update the comment
         comment.body = body;
         comment.updatedAt = new Date().toISOString();
-        
+
         // Also update in the REST comments map if it exists
         if (comment.databaseId && foundRepoData.comments.has(comment.databaseId)) {
           const restComment = foundRepoData.comments.get(comment.databaseId);
           restComment.body = body;
           restComment.updated_at = comment.updatedAt;
         }
-        
+
         responseData = {
           updatePullRequestReviewComment: {
             pullRequestReviewComment: {
@@ -1585,12 +1585,12 @@ class GitHubMockServer {
           }
         };
       }
-      
+
       // Send response
       if (responseData) {
         return this.sendResponse(res, 200, { data: responseData });
       }
-      
+
       // Unknown GraphQL operation
       return this.sendResponse(res, 400, {
         errors: [{
@@ -1603,17 +1603,17 @@ class GitHubMockServer {
   readBody(req, callback) {
     let body = '';
     let callbackInvoked = false;
-    
+
     req.on('data', chunk => {
       body += chunk.toString();
     });
-    
+
     req.on('end', () => {
       if (callbackInvoked) {
         return; // Duplicate end event, skip
       }
       callbackInvoked = true;
-      
+
       // Parse the body BEFORE invoking callback, so try/catch only catches parse errors
       let parsed;
       try {
@@ -1621,7 +1621,7 @@ class GitHubMockServer {
       } catch (error) {
         parsed = {};
       }
-      
+
       // Invoke callback outside of try/catch to avoid catching errors from the callback itself
       callback(parsed);
     });
@@ -1632,29 +1632,29 @@ class GitHubMockServer {
     if (this.latency > 0) {
       await new Promise(resolve => setTimeout(resolve, this.latency));
     }
-    
+
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires, If-None-Match');
-    
+
     // Simulate real GitHub API cache-control headers
     // GitHub returns: Cache-Control: private, max-age=60, s-maxage=60
     // This causes browsers to cache responses for 60 seconds
     res.setHeader('Cache-Control', 'private, max-age=60, s-maxage=60');
-    
+
     // Add ETag for cache validation (browsers use this with If-None-Match)
     // Generate a simple ETag based on response content
     const content = JSON.stringify(data);
     const etag = `W/"${crypto.createHash('sha256').update(content).digest('hex').substring(0, 32)}"`;
     res.setHeader('ETag', etag);
-    
+
     // Add Vary header to indicate which request headers affect caching
     // GitHub varies on these headers
     res.setHeader('Vary', 'Accept, Authorization, Cookie, X-GitHub-OTP, Accept-Encoding, Accept, X-Requested-With');
-    
+
     res.statusCode = statusCode;
-    
+
     if (statusCode === 204) {
       res.end();
     } else {
@@ -1666,59 +1666,61 @@ class GitHubMockServer {
 // Main execution
 function startServer(userDirPath = resolve(__dirname, 'test_user'), port = 3000, config = {}) {
   const silent = config.silent || false;
-  
+
   if (!silent) {
-    console.log(`Starting GitHub Mock Server...`);
+    console.log('Starting GitHub Mock Server...');
     console.log(`User directory: ${userDirPath}`);
     console.log(`Port: ${port}`);
     if (Object.keys(config).length > 0 && !config.silent) {
-      console.log(`Error config:`, JSON.stringify(config, null, 2));
+      console.log('Error config:', JSON.stringify(config, null, 2));
     }
   }
-  
+
   const mockServer = new GitHubMockServer(userDirPath, config);
-  
+
   const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept, Cache-Control, Pragma, Expires');
+      // Match real GitHub API CORS policy - does NOT allow Cache-Control, Pragma, or Expires headers
+      // Only standard headers are allowed: Content-Type, Authorization, Accept, X-GitHub-Api-Version
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-GitHub-Api-Version, Accept');
       res.statusCode = 204;
       res.end();
       return;
     }
-    
+
     mockServer.handleRequest(req, res);
   });
-  
+
   server.listen(port, () => {
     const actualPort = server.address().port;
     if (!silent) {
       console.log(`\n✓ GitHub Mock Server running on http://localhost:${actualPort}`);
-      console.log(`\nAvailable endpoints:`);
-      console.log(`  GET    /user`);
-      console.log(`  GET    /user/repos`);
-      console.log(`  GET    /repos/{owner}/{repo}/pulls`);
-      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}`);
-      console.log(`  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files`);
-      console.log(`  GET    /repos/{owner}/{repo}/contents/{path}`);
-      console.log(`  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments`);
-      console.log(`  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}`);
-      console.log(`  POST   /graphql`);
-      console.log(`\n  GraphQL Queries:`);
-      console.log(`    - reviewThreads, reviews`);
-      console.log(`\n  GraphQL Mutations:`);
-      console.log(`    - resolveReviewThread, unresolveReviewThread`);
-      console.log(`    - addPullRequestReviewThread`);
-      console.log(`    - updatePullRequestReviewComment`);
-      console.log(`\nPress Ctrl+C to stop\n`);
+      console.log('\nAvailable endpoints:');
+      console.log('  GET    /user');
+      console.log('  GET    /user/repos');
+      console.log('  GET    /repos/{owner}/{repo}/pulls');
+      console.log('  GET    /repos/{owner}/{repo}/pulls/{pull_number}');
+      console.log('  GET    /repos/{owner}/{repo}/pulls/{pull_number}/files');
+      console.log('  GET    /repos/{owner}/{repo}/contents/{path}');
+      console.log('  POST   /repos/{owner}/{repo}/pulls/{pull_number}/comments');
+      console.log('  DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}');
+      console.log('  POST   /graphql');
+      console.log('\n  GraphQL Queries:');
+      console.log('    - reviewThreads, reviews');
+      console.log('\n  GraphQL Mutations:');
+      console.log('    - resolveReviewThread, unresolveReviewThread');
+      console.log('    - addPullRequestReviewThread');
+      console.log('    - updatePullRequestReviewComment');
+      console.log('\nPress Ctrl+C to stop\n');
     }
   });
-  
+
   const close = (callback) => {
     server.close(callback);
   };
-  
+
   return { server, close };
 }
 

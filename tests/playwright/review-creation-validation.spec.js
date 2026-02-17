@@ -17,14 +17,14 @@ test.describe('Review Creation Event Validation', { tag: '@parallel' }, () => {
         event: 'PENDING'  // Invalid - PENDING is not a valid event value
       }
     });
-    
+
     expect(response.status()).toBe(422);
     const error = await response.json();
     expect(error.message).toBe('Validation Failed');
     expect(error.errors).toBeDefined();
     expect(error.errors[0].field).toBe('event');
   });
-  
+
   test('should accept APPROVE as valid event', async ({ request }) => {
     const response = await request.post(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
       data: {
@@ -33,13 +33,13 @@ test.describe('Review Creation Event Validation', { tag: '@parallel' }, () => {
         event: 'APPROVE'
       }
     });
-    
+
     expect(response.status()).toBe(200);
     const review = await response.json();
     expect(review.state).toBe('APPROVE');
     expect(review.submitted_at).toBeDefined();
   });
-  
+
   test('should accept REQUEST_CHANGES as valid event', async ({ request }) => {
     const response = await request.post(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
       data: {
@@ -48,13 +48,13 @@ test.describe('Review Creation Event Validation', { tag: '@parallel' }, () => {
         event: 'REQUEST_CHANGES'
       }
     });
-    
+
     expect(response.status()).toBe(200);
     const review = await response.json();
     expect(review.state).toBe('REQUEST_CHANGES');
     expect(review.submitted_at).toBeDefined();
   });
-  
+
   test('should accept COMMENT as valid event', async ({ request }) => {
     const response = await request.post(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
       data: {
@@ -63,13 +63,13 @@ test.describe('Review Creation Event Validation', { tag: '@parallel' }, () => {
         event: 'COMMENT'
       }
     });
-    
+
     expect(response.status()).toBe(200);
     const review = await response.json();
     expect(review.state).toBe('COMMENT');
     expect(review.submitted_at).toBeDefined();
   });
-  
+
   test('should create PENDING review when event is omitted', async ({ request }) => {
     const response = await request.post(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
       data: {
@@ -77,16 +77,16 @@ test.describe('Review Creation Event Validation', { tag: '@parallel' }, () => {
         body: 'Draft review'
       }
     });
-    
+
     expect(response.status()).toBe(200);
     const review = await response.json();
     expect(review.state).toBe('PENDING');
     expect(review.submitted_at).toBeUndefined();
   });
-  
+
   test('should reject other invalid event values', async ({ request }) => {
     const invalidEvents = ['INVALID', 'REJECT', 'DISMISS', 'pending', 'approve'];
-    
+
     for (const invalidEvent of invalidEvents) {
       const response = await request.post(`${MOCK_SERVER_URL}/repos/test_user/test_repo_1/pulls/1/reviews`, {
         data: {
@@ -95,7 +95,7 @@ test.describe('Review Creation Event Validation', { tag: '@parallel' }, () => {
           event: invalidEvent
         }
       });
-      
+
       expect(response.status()).toBe(422);
       const error = await response.json();
       expect(error.message).toBe('Validation Failed');

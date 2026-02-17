@@ -20,11 +20,11 @@ class UserManager {
       created: new Date(),
       active: true
     };
-    
+
     this.users.push(user);
     this.cache.set(email, user);
     await this.db.save(user);
-    
+
     this.logger.info(`User created: ${email}`);
     return user;
   }
