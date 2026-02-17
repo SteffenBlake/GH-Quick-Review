@@ -17,12 +17,15 @@
  *   debugLogger.website.error('[MUTATION] ERROR:', errorMessage);
  *
  *   // Test logs (from Playwright tests):
- *   debugLogger.test.log('[TEST] Starting test scenario');
- *   debugLogger.test.error('[TEST] Assertion failed:', details);
+ *   debugLogger.test.log('[SETUP] Starting test scenario');
+ *   debugLogger.test.error('[ASSERTION] Failed:', details);
  *
  *   // Server logs (from mock server):
- *   debugLogger.server.log('[SERVER] Handling request:', endpoint);
- *   debugLogger.server.error('[SERVER] Error:', error);
+ *   debugLogger.server.log('[REQUEST] Handling:', endpoint);
+ *   debugLogger.server.error('[ERROR]:', error);
+ *
+ * Note: The source tag (WEBSITE/SERVER/TEST) is AUTOMATICALLY prepended.
+ * Only add category tags like [HTTP], [MUTATION], [POLLING] for additional context.
  *
  * Features:
  * - Clean API - no DEBUG_ENABLED checks in production code
@@ -213,12 +216,14 @@ const createRealLogger = (source) => ({
       typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
     ).join(' ');
 
-    // Parse [CATEGORY] prefix if present
+    // Check if message has a category tag like [HTTP], [MUTATION], etc.
     const match = text.match(/^\[([^\]]+)\]\s*(.+)/);
     if (match) {
-      sendLog(match[1], match[2]);
+      // Message has a specific category - prepend source to category
+      sendLog(`${source}:${match[1]}`, match[2]);
     } else {
-      sendLog(`${source}`, text);
+      // No category - just use source
+      sendLog(source, text);
     }
   },
 
@@ -227,11 +232,13 @@ const createRealLogger = (source) => ({
       typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
     ).join(' ');
 
-    // Parse [CATEGORY] prefix if present, add .error suffix
+    // Check if message has a category tag like [HTTP], [MUTATION], etc.
     const match = text.match(/^\[([^\]]+)\]\s*(.+)/);
     if (match) {
-      sendLog(`${match[1]}.error`, match[2]);
+      // Message has a specific category - prepend source to category and add .error
+      sendLog(`${source}:${match[1]}.error`, match[2]);
     } else {
+      // No category - use source with .error suffix
       sendLog(`${source}.error`, text);
     }
   }
