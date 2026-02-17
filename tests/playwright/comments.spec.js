@@ -441,4 +441,100 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await mockServer.stop();
     }
   });
+
+  test('should resolve thread and update UI completely', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    await mockServer.checkHeartbeat();
+
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+
+      // Select repo and PR #1
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
+
+      // Wait for diff viewer to load
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
+
+      // Click on diff viewer to unfocus directory browser
+      await page.locator('.diff-viewer').click();
+
+      // Navigate to empty-lines.txt which has ONE thread at line 3
+      // This file should have a comment icon in the directory browser
+      const fileInDirectory = page.locator('.directory-item').filter({ hasText: 'empty-lines.txt' });
+      await expect(fileInDirectory).toBeVisible();
+      
+      // Verify file has comment icon before resolving
+      const commentIconBefore = fileInDirectory.locator('.file-comment-indicator');
+      await expect(commentIconBefore).toBeVisible();
+      
+      // Click the file to open it in diff viewer
+      await fileInDirectory.click();
+      
+      // Wait for the file to load in diff viewer
+      await expect(page.locator('.diff-viewer')).toContainText('empty-lines.txt');
+      
+      // Find the line with the existing comment thread (line 3)
+      // Look for the message button that shows there's a comment
+      const lineWithComment = page.locator('.diff-line-message-btn.has-message').first();
+      await expect(lineWithComment).toBeVisible();
+      
+      // Click to open the comment modal
+      await lineWithComment.click();
+      
+      // Modal should appear and be focused
+      const modal = page.locator('.comment-modal:focus');
+      await expect(modal).toBeVisible({ timeout: 1000 });
+      await expect(modal.locator('h2')).toContainText('Comment Thread');
+      
+      // Verify resolve button exists
+      const resolveButton = modal.locator('.comment-modal-resolve-btn');
+      await expect(resolveButton).toBeVisible();
+      await expect(resolveButton).toContainText('Resolve');
+      
+      // Click the resolve button
+      await resolveButton.click();
+      
+      // Modal should show loading state briefly
+      await expect(modal.locator('.comment-modal-resolving')).toBeVisible({ timeout: 1000 });
+      
+      // Modal should close after resolution
+      await expect(modal).toHaveCSS('opacity', '0', { timeout: 2000 });
+      
+      // After resolving the only thread on this line, the message button should change
+      // from "has-message" (existing thread) to "add-message" (start new thread)
+      const addMessageButton = page.locator('.diff-line-message-btn.add-message').first();
+      await expect(addMessageButton).toBeVisible({ timeout: 2000 });
+      
+      // Verify the "has-message" button is gone (no unresolved threads on this line)
+      await expect(page.locator('.diff-line-message-btn.has-message')).toHaveCount(0);
+      
+      // Go back to directory browser to verify comment icon is removed
+      // Since we resolved the only thread on empty-lines.txt, the file should no longer
+      // show a comment indicator
+      const fileInDirectoryAfter = page.locator('.directory-item').filter({ hasText: 'empty-lines.txt' });
+      await expect(fileInDirectoryAfter).toBeVisible();
+      
+      // Comment icon should be gone (file has no unresolved threads)
+      const commentIconAfter = fileInDirectoryAfter.locator('.file-comment-indicator');
+      await expect(commentIconAfter).not.toBeVisible();
+      
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
 });
