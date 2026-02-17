@@ -74,7 +74,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'DEBUG_LOGGING=1 node tools/gh-mock-server.js tools/test_user 3000',
+      command: 'node tools/gh-mock-server.js tools/test_user 3000',
       port: 3000,
       reuseExistingServer: !process.env.CI,
     },

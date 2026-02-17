@@ -1006,23 +1006,12 @@ class GitHubMockServer {
     const reviews = Array.from(repoData.reviews.values())
       .filter(review => review.pull_number === parseInt(pullNumber));
     
-    // Debug: Log raw review states from cache
-    reviews.forEach(r => {
-      debugLog('SERVER', 'listReviews', `RAW review ${r.id} from cache: state=${r.state}`);
-    });
-    
     // Simulate GitHub eventual consistency:
     // If a review was recently submitted, return the old PENDING state until the delay has passed
     // This matches real GitHub behavior where API reads lag behind writes
     const now = Date.now();
-    debugLog('SERVER', 'listReviews', `Called with delay=${this.reviewStateDelay}ms, reviews=${reviews.length}`);
     const reviewsWithEventualConsistency = reviews.map(review => {
       const pendingUpdate = this.pendingReviewUpdates.get(review.id);
-      
-      if (pendingUpdate) {
-        const elapsed = now - pendingUpdate.timestamp;
-        debugLog('SERVER', 'listReviews', `Review ${review.id}: elapsed=${elapsed}ms, will return ${elapsed < this.reviewStateDelay ? 'PENDING' : review.state}`);
-      }
       
       if (pendingUpdate && (now - pendingUpdate.timestamp) < this.reviewStateDelay) {
         // Still within the eventual consistency window - return old PENDING state
@@ -1032,7 +1021,6 @@ class GitHubMockServer {
       // Delay has passed, clean up the pending update
       if (pendingUpdate) {
         this.pendingReviewUpdates.delete(review.id);
-        debugLog('SERVER', 'listReviews', `Review ${review.id}: cleaned up, returning state=${review.state}`);
       }
       
       return review;
@@ -1137,16 +1125,9 @@ class GitHubMockServer {
       
       // Update review state and add submitted_at immediately
       const newState = body.event || 'REQUEST_CHANGES';
-      debugLog('SERVER', 'submitReview', `BEFORE: review ${reviewId} state=${review.state}, object=${review.id}`);
-      debugLog('SERVER', 'submitReview', `Updating review ${reviewId} from ${review.state} to ${newState}`);
       review.state = newState;
       review.body = body.body || review.body;
       review.submitted_at = new Date().toISOString();
-      debugLog('SERVER', 'submitReview', `AFTER: review ${reviewId} state=${review.state}`);
-      
-      // Verify the change persisted in the cache
-      const cachedReview = repoData.reviews.get(parseInt(reviewId));
-      debugLog('SERVER', 'submitReview', `CACHE CHECK: cached review ${reviewId} state=${cachedReview.state}`);
       
       // Simulate GitHub eventual consistency:
       // Track this review update so listReviews will return PENDING for a short delay
@@ -1155,7 +1136,6 @@ class GitHubMockServer {
         newState,
         timestamp: Date.now()
       });
-      debugLog('SERVER', 'submitReview', `Added to pendingUpdates. Delay=${this.reviewStateDelay}ms`);
       
       // Return the updated review immediately (GitHub does this too)
       this.sendResponse(res, 200, review);
