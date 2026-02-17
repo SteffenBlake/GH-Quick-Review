@@ -5,7 +5,7 @@
  */
 
 import { getToken } from '../stores/authStore.js';
-import { DEBUG_ENABLED } from './debug-logger.js';
+import { debugLogger } from './debug-logger.js';
 
 /**
  * GitHub API client for making authenticated requests
@@ -37,16 +37,12 @@ class GitHubClient {
     const baseUrl = this.getBaseUrl();
     const url = new URL(endpoint, baseUrl);
     
-    if (DEBUG_ENABLED) {
-      console.log(`[HTTP] Request: ${method} ${url.href}`);
-    }
+    debugLogger.website.log(`[HTTP] Request: ${method} ${url.href}`);
     
     // Add cache-busting timestamp if requested
     if (options.bustCache) {
       url.searchParams.set('_', Date.now().toString());
-      if (DEBUG_ENABLED) {
-        console.log(`[HTTP] Cache-busting: ${url.href}`);
-      }
+      debugLogger.website.log(`[HTTP] Cache-busting: ${url.href}`);
     }
     
     const fetchOptions = {

@@ -10,7 +10,7 @@ import { selectedPr } from './selectedPrStore';
 import { githubClient } from '../utils/github-client';
 import { useCurrentUser } from './userStore';
 import { usePrData } from './prDataStore';
-import { DEBUG_ENABLED } from '../utils/debug-logger.js';
+import { debugLogger } from '../utils/debug-logger.js';
 
 /**
  * Hook to fetch the active (pending) review for the current user on the selected PR
@@ -132,20 +132,14 @@ export function useSubmitReview() {
   
   return useMutation({
     mutationFn: async ({ reviewId, body, event }) => {
-      if (DEBUG_ENABLED) {
-        console.log('[MUTATION] START:', { reviewId, event });
-      }
+      debugLogger.website.log('[MUTATION] START:', { reviewId, event });
       
       if (!selectedRepo.value || !selectedPr.value) {
-        if (DEBUG_ENABLED) {
-          console.error('[MUTATION] ERROR: No PR selected');
-        }
+        debugLogger.website.error('[MUTATION] ERROR: No PR selected');
         throw new Error('No PR selected');
       }
       
-      if (DEBUG_ENABLED) {
-        console.log('[MUTATION] Calling submitReview API...');
-      }
+      debugLogger.website.log('[MUTATION] Calling submitReview API...');
       // Submit the review
       const submittedReview = await githubClient.submitReview(
         selectedRepo.value,
@@ -153,9 +147,7 @@ export function useSubmitReview() {
         reviewId,
         { body, event }
       );
-      if (DEBUG_ENABLED) {
-        console.log('[MUTATION] submitReview returned:', submittedReview);
-      }
+      debugLogger.website.log('[MUTATION] submitReview returned:', submittedReview);
       
       // Poll for eventual consistency:
       // GitHub API may return cached/stale "PENDING" state briefly after submission
@@ -163,23 +155,17 @@ export function useSubmitReview() {
       const pollTimeout = 5000; // 5 second timeout
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
       
-      if (DEBUG_ENABLED) {
-        console.log('[MUTATION] Waiting 1s before polling...');
-      }
+      debugLogger.website.log('[MUTATION] Waiting 1s before polling...');
       // Wait 1s before first poll to allow for eventual consistency
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (DEBUG_ENABLED) {
-        console.log('[MUTATION] Starting polling loop...');
-      }
+      debugLogger.website.log('[MUTATION] Starting polling loop...');
       // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
       
       while (Date.now() - pollStartTime < pollTimeout) {
-        if (DEBUG_ENABLED) {
-          console.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
-          console.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
-        }
+        debugLogger.website.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
+        debugLogger.website.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
         
         // Fetch current reviews with cache-busting to prevent browser cache issues
         // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
@@ -190,48 +176,36 @@ export function useSubmitReview() {
             selectedPr.value,
             { bustCache: true }
           );
-          if (DEBUG_ENABLED) {
-            console.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
-          }
+          debugLogger.website.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
         } catch (err) {
-          if (DEBUG_ENABLED) {
-            console.error(`[MUTATION] listPullReviews ERROR:`, {
-              message: err?.message,
-              name: err?.name,
-              stack: err?.stack,
-              toString: String(err),
-              err
-            });
-          }
+          debugLogger.website.error(`[MUTATION] listPullReviews ERROR:`, {
+            message: err?.message,
+            name: err?.name,
+            stack: err?.stack,
+            toString: String(err),
+            err
+          });
           throw err; // Re-throw to maintain original behavior
         }
         
-        if (DEBUG_ENABLED) {
-          console.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
-        }
+        debugLogger.website.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
         
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
         
-        if (DEBUG_ENABLED) {
-          if (review) {
-            console.log(`[POLLING] Found review ${reviewId} with state: ${review.state}`);
-          } else {
-            console.log(`[POLLING] Review ${reviewId} NOT FOUND in response!`);
-          }
-        }
+        debugLogger.website.log(
+          review 
+            ? `[POLLING] Found review ${reviewId} with state: ${review.state}`
+            : `[POLLING] Review ${reviewId} NOT FOUND in response!`
+        );
         
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
-          if (DEBUG_ENABLED) {
-            console.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
-          }
+          debugLogger.website.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
           return submittedReview;
         }
         
-        if (DEBUG_ENABLED) {
-          console.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
-        }
+        debugLogger.website.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
         
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
@@ -245,9 +219,7 @@ export function useSubmitReview() {
         totalTime: Date.now() - pollStartTime,
         message: 'GitHub API did not respond with updated review state within timeout'
       };
-      if (DEBUG_ENABLED) {
-        console.error('[POLLING] TIMEOUT!', debugInfo);
-      }
+      debugLogger.website.error('[POLLING] TIMEOUT!', debugInfo);
       throw new Error(`Polling timeout: ${JSON.stringify(debugInfo)}`);
     },
      onSuccess: () => {

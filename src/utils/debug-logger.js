@@ -1,40 +1,49 @@
 /**
- * Browser Debug Logger
+ * Unified Debug Logger
  * 
- * Three-layer logging system for comprehensive debugging:
- * 1. BROWSER: Logs from the app running in the browser (this file)
- * 2. TEST: Logs from Playwright test code itself
+ * Provides a clean API for logging from different layers of the application.
+ * All logs are written to /tmp/unified-debug.log when VITE_DEBUG_LOGGING=1 is set.
+ * 
+ * Three-layer logging system:
+ * 1. WEBSITE (browser): Logs from the web application running in the browser
+ * 2. TEST: Logs from Playwright test code
  * 3. SERVER: Logs from the mock server backend
  * 
- * All three layers write to /tmp/unified-debug.log with timestamps.
- * Only active when VITE_DEBUG_LOGGING=1 is set.
+ * Usage in Production Code:
+ *   import { debugLogger } from '../utils/debug-logger.js';
+ *   
+ *   // Website logs (from browser app):
+ *   debugLogger.website.log('[HTTP] Request:', method, url);
+ *   debugLogger.website.error('[MUTATION] ERROR:', errorMessage);
+ *   
+ *   // Test logs (from Playwright tests):
+ *   debugLogger.test.log('[TEST] Starting test scenario');
+ *   debugLogger.test.error('[TEST] Assertion failed:', details);
+ *   
+ *   // Server logs (from mock server):
+ *   debugLogger.server.log('[SERVER] Handling request:', endpoint);
+ *   debugLogger.server.error('[SERVER] Error:', error);
  * 
  * Features:
- * - Captures all console.log/warn/error calls
- * - Intercepts ALL HTTP requests (fetch API)
- * - Logs request details: URL, method, headers, body
- * - Logs response details: status, headers, body, cache status, duration
+ * - Clean API - no DEBUG_ENABLED checks in production code
+ * - Tree-shakeable - no-ops when VITE_DEBUG_LOGGING !== '1'
+ * - Automatic HTTP request/response interception (when enabled)
+ * - Unified log file with timestamps and source prefixes
  * - Preserves original console output for DevTools
  * 
- * Usage:
- *   import './utils/debug-logger.js'; // Import once in main.jsx
- *   
- *   // All console.log/warn/error calls are sent to unified log:
- *   console.log('[MUTATION] Starting...'); 
- *   
- *   // All fetch requests are automatically logged:
- *   fetch('/api/data') // Logged with full request/response details
+ * Environment Setup:
+ * - Development: Set VITE_DEBUG_LOGGING=1 in .env.development
+ * - Tests: Set VITE_DEBUG_LOGGING=1 in .env.test
+ * - Production: Leave unset (logging will be tree-shaken out)
  * 
- * Unified log format:
- *   [timestamp] [BROWSER] [HTTP-REQ] GET /api/data {...}
- *   [timestamp] [BROWSER] [HTTP-RES] GET /api/data → 200 {...}
- *   [timestamp] [BROWSER] [category] message
- *   [timestamp] [TEST] [category] message  
- *   [timestamp] [SERVER] [category] message
+ * The debug logger is automatically initialized when imported in main.jsx.
+ * It overrides console methods and fetch when DEBUG_ENABLED=true.
  */
 
 const DEBUG_ENABLED = import.meta.env.VITE_DEBUG_LOGGING === '1';
-const API_URL = import.meta.env.VITE_GITHUB_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_DEBUG_LOGGING === '1' 
+  ? (import.meta.env.VITE_GITHUB_API_URL || 'http://localhost:3000')
+  : '';
 
 /**
  * Send a log message to the backend for unified logging
@@ -189,4 +198,63 @@ if (DEBUG_ENABLED) {
   };
 }
 
-export { sendLog, DEBUG_ENABLED };
+/**
+ * Public Debug Logger API
+ * 
+ * Provides clean logging methods for different application layers.
+ * When DEBUG_ENABLED is false, these are replaced with no-op functions
+ * that get tree-shaken out of production builds.
+ */
+
+// Create real logger for development/testing
+const createRealLogger = (source) => ({
+  log: (...args) => {
+    const text = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+    ).join(' ');
+    
+    // Parse [CATEGORY] prefix if present
+    const match = text.match(/^\[([^\]]+)\]\s*(.+)/);
+    if (match) {
+      sendLog(match[1], match[2]);
+    } else {
+      sendLog(`${source}`, text);
+    }
+  },
+  
+  error: (...args) => {
+    const text = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+    ).join(' ');
+    
+    // Parse [CATEGORY] prefix if present, add .error suffix
+    const match = text.match(/^\[([^\]]+)\]\s*(.+)/);
+    if (match) {
+      sendLog(`${match[1]}.error`, match[2]);
+    } else {
+      sendLog(`${source}.error`, text);
+    }
+  }
+});
+
+// Tree-shake friendly: Use explicit if/else for better dead code elimination
+let debugLogger;
+
+if (DEBUG_ENABLED) {
+  // Real logger implementation - only included when DEBUG_ENABLED is true  
+  debugLogger = {
+    website: createRealLogger('WEBSITE'),
+    server: createRealLogger('SERVER'),
+    test: createRealLogger('TEST')
+  };
+} else {
+  // No-op logger for production - will be tree-shaken out
+  const noOp = () => {};
+  debugLogger = {
+    website: { log: noOp, error: noOp },
+    server: { log: noOp, error: noOp },
+    test: { log: noOp, error: noOp }
+  };
+}
+
+export { debugLogger, sendLog, DEBUG_ENABLED };
