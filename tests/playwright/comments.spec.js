@@ -476,15 +476,16 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
 
       // Find a line with an existing COMMENTED (not PENDING) thread
       // PENDING threads will still show after resolving, so we need a COMMENTED thread
-      // example.js line 15 has a COMMENTED thread (not PENDING)
-      const lineWithComment = page.locator('.diff-line-message-btn.has-message').first();
-      await expect(lineWithComment).toBeVisible();
+      // Files appear in order: empty-lines.txt (PENDING), example.cs (COMMENTED), example.js (COMMENTED)
+      // Skip the first button (empty-lines.txt - PENDING) and click the second one (example.cs - COMMENTED)
+      const allCommentButtons = page.locator('.diff-line-message-btn.has-message');
+      await expect(allCommentButtons.nth(1)).toBeVisible(); // Wait for the second button
       
       // Get the count of has-message buttons before resolving
-      const hasMessageCountBefore = await page.locator('.diff-line-message-btn.has-message').count();
+      const hasMessageCountBefore = await allCommentButtons.count();
       
-      // Click to open the comment modal
-      await lineWithComment.click();
+      // Click on the SECOND has-message button (example.cs line 32 - COMMENTED thread)
+      await allCommentButtons.nth(1).click();
       
       // Modal should appear and be focused
       const modal = page.locator('.comment-modal:focus');
