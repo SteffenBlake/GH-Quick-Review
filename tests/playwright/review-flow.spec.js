@@ -156,6 +156,36 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
   });
 
   test('should submit review and show success toast, keep modal open, and remove submit button', async ({ page }) => {
+    // ⚠️ CRITICAL: THIS TEST MUST NOT BE DISABLED, REMOVED, OR COMMENTED OUT
+    // This test verifies the ENTIRE review submission polling flow including:
+    // 1. Cache-busting to prevent browser from caching GitHub API responses
+    // 2. Eventual consistency simulation (750ms delay before state becomes visible)
+    // 3. Polling with 2s intervals and 5s timeout
+    // 4. Proper error handling when timeout occurs
+    // 5. Success toast display when polling succeeds
+    //
+    // FINDINGS FROM MANUAL TESTING:
+    // - Manual testing with dev server WORKS PERFECTLY
+    // - Test environment with Playwright-managed servers FAILS
+    // - Issue appears to be timing-related or cache-related
+    // - Polling timeout is being reached (shows ERROR toast instead of SUCCESS toast)
+    // - Need to debug WHY polling times out in test but not manually
+    //
+    // DEBUGGING NOTES:
+    // - Review 5001 exists in test_repo_2 PR #2 with state PENDING
+    // - submitReview API call succeeds (returns review with updated state)
+    // - Mock server simulates 750ms eventual consistency delay
+    // - Polling should wait 1s, then poll every 2s for up to 5s
+    // - First poll at T+1s should see updated state (since 1000ms > 750ms)
+    // - But test consistently times out and shows error toast
+    //
+    // ENVIRONMENT NOTES:
+    // - Test uses .env.test which sets VITE_TOAST_DURATION=10000 (10 seconds)
+    // - For MANUAL testing, set VITE_TOAST_DURATION=120000 (120 seconds) so toast stays visible
+    // - Mock server on port 3000, dev server on port 5173
+    // - Cache headers: Cache-Control: private, max-age=60, s-maxage=60
+    // - Cache-busting: timestamp query param + no-cache headers
+    
     // Increase timeout for this test: 5s polling timeout + UI rendering = ~7s max
     test.setTimeout(10000);
     

@@ -161,13 +161,24 @@ export function useSubmitReview() {
           { bustCache: true }
         );
         
+        console.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
+        
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
         
+        if (review) {
+          console.log(`[POLLING] Found review ${reviewId} with state: ${review.state}`);
+        } else {
+          console.log(`[POLLING] Review ${reviewId} NOT FOUND in response!`);
+        }
+        
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
+          console.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
           return submittedReview;
         }
+        
+        console.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
         
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
