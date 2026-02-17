@@ -28,9 +28,13 @@ class GitHubMockServer {
     // Simulate GitHub eventual consistency for review submissions
     // After submitReview is called, there's a delay before listReviews returns the updated state
     // This matches real GitHub API behavior where the API is eventually consistent
-    // In test mode (MOCK_SERVER_NO_DELAY=1), disable the delay for faster tests
+    // ⚠️ CRITICAL: DO NOT DISABLE OR REMOVE THIS DELAY ⚠️
+    // This 750ms delay simulates GitHub's eventual consistency behavior where API reads lag behind writes.
+    // This is REQUIRED to test that the polling and cache-busting logic works correctly in production.
+    // Attempting to disable this delay is a waste of time - the real fix is to make the code work WITH it.
+    // DO NOT add environment variables or toggles to disable this. Just fix the actual problem.
     this.pendingReviewUpdates = new Map(); // reviewId -> { newState, timestamp }
-    this.reviewStateDelay = process.env.MOCK_SERVER_NO_DELAY ? 0 : 750; // Delay in ms
+    this.reviewStateDelay = 750; // Delay in ms - ALWAYS ENABLED
     
     this.loadUserData();
   }
@@ -1002,6 +1006,11 @@ class GitHubMockServer {
     const reviews = Array.from(repoData.reviews.values())
       .filter(review => review.pull_number === parseInt(pullNumber));
     
+    // Debug: Log raw review states from cache
+    reviews.forEach(r => {
+      debugLog('SERVER', 'listReviews', `RAW review ${r.id} from cache: state=${r.state}`);
+    });
+    
     // Simulate GitHub eventual consistency:
     // If a review was recently submitted, return the old PENDING state until the delay has passed
     // This matches real GitHub behavior where API reads lag behind writes
@@ -1128,10 +1137,16 @@ class GitHubMockServer {
       
       // Update review state and add submitted_at immediately
       const newState = body.event || 'REQUEST_CHANGES';
+      debugLog('SERVER', 'submitReview', `BEFORE: review ${reviewId} state=${review.state}, object=${review.id}`);
       debugLog('SERVER', 'submitReview', `Updating review ${reviewId} from ${review.state} to ${newState}`);
       review.state = newState;
       review.body = body.body || review.body;
       review.submitted_at = new Date().toISOString();
+      debugLog('SERVER', 'submitReview', `AFTER: review ${reviewId} state=${review.state}`);
+      
+      // Verify the change persisted in the cache
+      const cachedReview = repoData.reviews.get(parseInt(reviewId));
+      debugLog('SERVER', 'submitReview', `CACHE CHECK: cached review ${reviewId} state=${cachedReview.state}`);
       
       // Simulate GitHub eventual consistency:
       // Track this review update so listReviews will return PENDING for a short delay
