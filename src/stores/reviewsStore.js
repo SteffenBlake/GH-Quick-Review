@@ -10,6 +10,7 @@ import { selectedPr } from './selectedPrStore';
 import { githubClient } from '../utils/github-client';
 import { useCurrentUser } from './userStore';
 import { usePrData } from './prDataStore';
+import { DEBUG_ENABLED } from '../utils/debug-logger.js';
 
 /**
  * Hook to fetch the active (pending) review for the current user on the selected PR
@@ -131,14 +132,20 @@ export function useSubmitReview() {
   
   return useMutation({
     mutationFn: async ({ reviewId, body, event }) => {
-      console.log('[MUTATION] START:', { reviewId, event });
+      if (DEBUG_ENABLED) {
+        console.log('[MUTATION] START:', { reviewId, event });
+      }
       
       if (!selectedRepo.value || !selectedPr.value) {
-        console.error('[MUTATION] ERROR: No PR selected');
+        if (DEBUG_ENABLED) {
+          console.error('[MUTATION] ERROR: No PR selected');
+        }
         throw new Error('No PR selected');
       }
       
-      console.log('[MUTATION] Calling submitReview API...');
+      if (DEBUG_ENABLED) {
+        console.log('[MUTATION] Calling submitReview API...');
+      }
       // Submit the review
       const submittedReview = await githubClient.submitReview(
         selectedRepo.value,
@@ -146,7 +153,9 @@ export function useSubmitReview() {
         reviewId,
         { body, event }
       );
-      console.log('[MUTATION] submitReview returned:', submittedReview);
+      if (DEBUG_ENABLED) {
+        console.log('[MUTATION] submitReview returned:', submittedReview);
+      }
       
       // Poll for eventual consistency:
       // GitHub API may return cached/stale "PENDING" state briefly after submission
@@ -154,17 +163,23 @@ export function useSubmitReview() {
       const pollTimeout = 5000; // 5 second timeout
       const pollInterval = 2000; // Poll every 2 seconds to avoid rate limiting
       
-      console.log('[MUTATION] Waiting 1s before polling...');
+      if (DEBUG_ENABLED) {
+        console.log('[MUTATION] Waiting 1s before polling...');
+      }
       // Wait 1s before first poll to allow for eventual consistency
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('[MUTATION] Starting polling loop...');
+      if (DEBUG_ENABLED) {
+        console.log('[MUTATION] Starting polling loop...');
+      }
       // Start timeout measurement AFTER initial wait
       const pollStartTime = Date.now();
       
       while (Date.now() - pollStartTime < pollTimeout) {
-        console.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
-        console.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
+        if (DEBUG_ENABLED) {
+          console.log(`[MUTATION] Poll attempt (elapsed: ${Date.now() - pollStartTime}ms)`);
+          console.log(`[MUTATION] selectedRepo=${selectedRepo.value}, selectedPr=${selectedPr.value}`);
+        }
         
         // Fetch current reviews with cache-busting to prevent browser cache issues
         // Real GitHub API sends Cache-Control headers that cause browsers to cache for 60s
@@ -175,36 +190,48 @@ export function useSubmitReview() {
             selectedPr.value,
             { bustCache: true }
           );
-          console.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
+          if (DEBUG_ENABLED) {
+            console.log(`[MUTATION] listPullReviews SUCCESS: ${reviews.length} reviews`);
+          }
         } catch (err) {
-          console.error(`[MUTATION] listPullReviews ERROR:`, {
-            message: err?.message,
-            name: err?.name,
-            stack: err?.stack,
-            toString: String(err),
-            err
-          });
+          if (DEBUG_ENABLED) {
+            console.error(`[MUTATION] listPullReviews ERROR:`, {
+              message: err?.message,
+              name: err?.name,
+              stack: err?.stack,
+              toString: String(err),
+              err
+            });
+          }
           throw err; // Re-throw to maintain original behavior
         }
         
-        console.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
+        if (DEBUG_ENABLED) {
+          console.log(`[POLLING] Fetched ${reviews.length} reviews. Looking for ID ${reviewId}`);
+        }
         
         // Check if the review is no longer PENDING
         const review = reviews.find(r => r.id === reviewId);
         
-        if (review) {
-          console.log(`[POLLING] Found review ${reviewId} with state: ${review.state}`);
-        } else {
-          console.log(`[POLLING] Review ${reviewId} NOT FOUND in response!`);
+        if (DEBUG_ENABLED) {
+          if (review) {
+            console.log(`[POLLING] Found review ${reviewId} with state: ${review.state}`);
+          } else {
+            console.log(`[POLLING] Review ${reviewId} NOT FOUND in response!`);
+          }
         }
         
         if (!review || review.state !== 'PENDING') {
           // Review state has been updated - success!
-          console.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
+          if (DEBUG_ENABLED) {
+            console.log(`[POLLING] SUCCESS - Review is no longer PENDING`);
+          }
           return submittedReview;
         }
         
-        console.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
+        if (DEBUG_ENABLED) {
+          console.log(`[POLLING] Review still PENDING, waiting ${pollInterval}ms before next poll`);
+        }
         
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
@@ -218,7 +245,9 @@ export function useSubmitReview() {
         totalTime: Date.now() - pollStartTime,
         message: 'GitHub API did not respond with updated review state within timeout'
       };
-      console.error('[POLLING] TIMEOUT!', debugInfo);
+      if (DEBUG_ENABLED) {
+        console.error('[POLLING] TIMEOUT!', debugInfo);
+      }
       throw new Error(`Polling timeout: ${JSON.stringify(debugInfo)}`);
     },
      onSuccess: () => {

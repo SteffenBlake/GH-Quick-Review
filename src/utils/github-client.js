@@ -5,6 +5,7 @@
  */
 
 import { getToken } from '../stores/authStore.js';
+import { DEBUG_ENABLED } from './debug-logger.js';
 
 /**
  * GitHub API client for making authenticated requests
@@ -36,12 +37,16 @@ class GitHubClient {
     const baseUrl = this.getBaseUrl();
     const url = new URL(endpoint, baseUrl);
     
-    console.log(`[HTTP] Request: ${method} ${url.href}`);
+    if (DEBUG_ENABLED) {
+      console.log(`[HTTP] Request: ${method} ${url.href}`);
+    }
     
     // Add cache-busting timestamp if requested
     if (options.bustCache) {
       url.searchParams.set('_', Date.now().toString());
-      console.log(`[HTTP] Cache-busting: ${url.href}`);
+      if (DEBUG_ENABLED) {
+        console.log(`[HTTP] Cache-busting: ${url.href}`);
+      }
     }
     
     const fetchOptions = {
@@ -53,12 +58,8 @@ class GitHubClient {
       },
     };
     
-    // Add cache-busting headers if requested
-    if (options.bustCache) {
-      fetchOptions.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-      fetchOptions.headers['Pragma'] = 'no-cache';
-      fetchOptions.headers['Expires'] = '0';
-    }
+    // Note: Cache-Control headers are NOT sent as they violate CORS policy
+    // Cache busting is done via URL query parameter (_=timestamp) instead
 
     if (body && (method === 'POST' || method === 'PATCH')) {
       fetchOptions.headers['Content-Type'] = 'application/json';
