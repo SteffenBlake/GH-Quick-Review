@@ -226,6 +226,10 @@ export function useSubmitReview() {
       queryClient.invalidateQueries({
         queryKey: ['comments', selectedRepo.value, selectedPr.value]
       });
+      // Also invalidate reviews query to ensure UI updates
+      queryClient.invalidateQueries({
+        queryKey: ['reviews', selectedRepo.value, selectedPr.value]
+      });
     },
   });
 }

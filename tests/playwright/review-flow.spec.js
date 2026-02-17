@@ -261,12 +261,13 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
       // Modal should STAY open and focused (not close)
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
       
-      // Submit review button should now be gone (no active review anymore)
-      await expect(submitReviewBtn).not.toBeVisible({ timeout: 1000 });
-      
       // Button should now say "Add Comment and start review" (no active review)
+      // Wait for this button to appear after query invalidation refetches
       const startReviewBtn = page.getByRole('button', { name: 'Add Comment and start review' });
-      await expect(startReviewBtn).toBeVisible();
+      await expect(startReviewBtn).toBeVisible({ timeout: 5000 });
+      
+      // Submit review button should now be gone (no active review anymore)
+      await expect(submitReviewBtn).not.toBeVisible();
     } finally {
       await mockServer.reset();
       await mockServer.stop();
