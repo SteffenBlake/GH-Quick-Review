@@ -510,6 +510,11 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Modal should close after resolution completes
       await expect(page.locator('.comment-modal')).toHaveCSS('opacity', '0', { timeout: 2000 });
       
+      // Verify success toast is shown
+      const toast = page.getByTestId('toast-notification');
+      await expect(toast).toBeVisible({ timeout: 1000 });
+      await expect(toast).toContainText('Thread resolved successfully');
+      
       // Wait for the UI to update by checking that the comment count actually decreases
       // This is more reliable than an arbitrary timeout
       await expect(async () => {
