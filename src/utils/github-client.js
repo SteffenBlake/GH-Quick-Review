@@ -148,9 +148,24 @@ class GitHubClient {
    * @param {string} query - GraphQL query/mutation string
    * @param {Object} variables - Variables for the query/mutation
    * @returns {Promise<Object>} - GraphQL response with data or errors
+   * @throws {Error} - If GraphQL returns a FORBIDDEN error
    */
   async graphql(query, variables = {}) {
-    return this.post('/graphql', { query, variables });
+    const response = await this.post('/graphql', { query, variables });
+    
+    // Check for GraphQL errors in the response
+    if (response.errors && response.errors.length > 0) {
+      // Check if any errors are FORBIDDEN type
+      const forbiddenError = response.errors.find(err => err.type === 'FORBIDDEN');
+      if (forbiddenError) {
+        // Throw an error that includes the GraphQL error details
+        const error = new Error('GraphQL FORBIDDEN error');
+        error.graphqlError = forbiddenError;
+        throw error;
+      }
+    }
+    
+    return response;
   }
 
   /**

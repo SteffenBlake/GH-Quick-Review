@@ -531,4 +531,246 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await mockServer.stop();
     }
   });
+
+  test('should display error when fetchReviewThreads GraphQL returns FORBIDDEN', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    mockServer.port = 3000;
+    await mockServer.checkHeartbeat();
+
+    try {
+      // Configure ONLY fetchReviewThreads to error (reviewThreads query)
+      // Other operations should still work normally
+      await mockServer.setConfig({
+        graphqlErrors: {
+          reviewThreads: {
+            type: 'FORBIDDEN',
+            path: ['reviewThreads'],
+            message: 'Resource not accessible by personal access token'
+          }
+        }
+      });
+
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+
+      // Login
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+
+      // Select repo - this should work normally
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+
+      // Select PR - this should work normally
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
+
+      // fetchReviewThreads is called when PR is selected - should trigger error
+      await expect(page.locator('.error-page')).toBeVisible({ timeout: 1000 });
+      await expect(page.locator('.error-message')).toContainText('FORBIDDEN');
+      await expect(page.locator('.error-message')).toContainText('reviewThreads');
+      await expect(page.locator('.error-message')).toContainText('Resource not accessible by personal access token');
+
+      // Verify navbar and footer are still visible
+      await expect(page.locator('header')).toBeVisible();
+      await expect(page.locator('footer')).toBeVisible();
+
+      // Verify other UI is hidden
+      await expect(page.locator('.diff-viewer')).not.toBeVisible();
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should display error when resolveReviewThread GraphQL mutation returns FORBIDDEN', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    mockServer.port = 3000;
+    await mockServer.checkHeartbeat();
+
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+
+      // Login and navigate to PR first (without error config)
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
+
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
+
+      // NOW configure error ONLY for resolveReviewThread mutation
+      await mockServer.setConfig({
+        graphqlErrors: {
+          resolveReviewThread: {
+            type: 'FORBIDDEN',
+            path: ['resolveReviewThread'],
+            message: 'Resource not accessible by personal access token'
+          }
+        }
+      });
+
+      // Find a resolve button and try to click it
+      await page.locator('.diff-viewer').click();
+      const resolveButton = page.locator('button:has-text("Resolve")').first();
+      
+      if (await resolveButton.isVisible()) {
+        await resolveButton.click();
+
+        // Error message should be displayed
+        await expect(page.locator('.error-page')).toBeVisible({ timeout: 1000 });
+        await expect(page.locator('.error-message')).toContainText('FORBIDDEN');
+        await expect(page.locator('.error-message')).toContainText('resolveReviewThread');
+      }
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should display error when addPullRequestReviewThread GraphQL mutation returns FORBIDDEN', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    mockServer.port = 3000;
+    await mockServer.checkHeartbeat();
+
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+
+      // Login and navigate first
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
+
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
+
+      // NOW configure error ONLY for addPullRequestReviewThread mutation
+      await mockServer.setConfig({
+        graphqlErrors: {
+          addPullRequestReviewThread: {
+            type: 'FORBIDDEN',
+            path: ['addPullRequestReviewThread'],
+            message: 'Resource not accessible by personal access token'
+          }
+        }
+      });
+
+      // Try to add a comment to pending review
+      await page.locator('.diff-viewer').click();
+      const lineWithNumber = page.locator('.diff-line:has(.diff-line-number:not(:empty))').first();
+      await lineWithNumber.hover();
+
+      const messageButton = lineWithNumber.locator('.diff-line-message-btn.add-message');
+      await messageButton.click();
+
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+
+      const textarea = page.locator('.comment-modal-textarea');
+      await textarea.fill('Test comment that will trigger FORBIDDEN error');
+
+      const submitButton = page.locator('.comment-modal-submit-btn');
+      await submitButton.click();
+
+      // Error message should be displayed
+      await expect(page.locator('.error-page')).toBeVisible({ timeout: 1000 });
+      await expect(page.locator('.error-message')).toContainText('FORBIDDEN');
+      await expect(page.locator('.error-message')).toContainText('addPullRequestReviewThread');
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
+
+  test('should display error when updatePullRequestReviewComment GraphQL mutation returns FORBIDDEN', async ({ page }) => {
+    const mockServer = new MockServerManager();
+    mockServer.port = 3000;
+    await mockServer.checkHeartbeat();
+
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+
+      // Login and navigate first
+      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
+      await page.getByRole('button', { name: 'Login' }).click();
+
+      const repoDropdown = page.locator('#repo-select');
+      await expect(repoDropdown).toBeVisible();
+      await repoDropdown.locator('.fuzzy-dropdown-control').click();
+      await repoDropdown.getByText('test_repo_1').click();
+
+      const prDropdown = page.locator('#pr-select');
+      await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
+      await prDropdown.locator('.fuzzy-dropdown-control').click();
+      await prDropdown.getByText('#1 -').click();
+
+      await expect(page.locator('.diff-viewer')).toBeVisible({ timeout: 1000 });
+
+      // NOW configure error ONLY for updatePullRequestReviewComment mutation
+      await mockServer.setConfig({
+        graphqlErrors: {
+          updatePullRequestReviewComment: {
+            type: 'FORBIDDEN',
+            path: ['updatePullRequestReviewComment'],
+            message: 'Resource not accessible by personal access token'
+          }
+        }
+      });
+
+      // Find an existing comment and try to edit it
+      await page.locator('.diff-viewer').click();
+      
+      // Click on existing comment thread
+      const messageWithComments = page.locator('.diff-line-message-btn.has-message').first();
+      await messageWithComments.click();
+
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+
+      // Click edit button on first comment
+      const editButton = page.locator('.comment-edit-btn').first();
+      await editButton.click();
+
+      // Edit the comment
+      const textarea = page.locator('.comment-modal-textarea');
+      await textarea.fill('Updated comment that will trigger FORBIDDEN error');
+
+      // Submit the edit
+      const submitButton = page.locator('.comment-modal-submit-btn');
+      await submitButton.click();
+
+      // Error message should be displayed
+      await expect(page.locator('.error-page')).toBeVisible({ timeout: 1000 });
+      await expect(page.locator('.error-message')).toContainText('FORBIDDEN');
+      await expect(page.locator('.error-message')).toContainText('updatePullRequestReviewComment');
+    } finally {
+      await mockServer.reset();
+      await mockServer.stop();
+    }
+  });
 });

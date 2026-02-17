@@ -11,6 +11,7 @@ import { githubClient } from '../utils/github-client';
 import { useCurrentUser } from './userStore';
 import { usePrData } from './prDataStore';
 import { debugLogger } from '../utils/debug-logger.js';
+import { setError } from './errorStore';
 
 /**
  * Hook to fetch the active (pending) review for the current user on the selected PR
@@ -107,6 +108,14 @@ export function useAddReviewComment() {
         line,
         side: side || 'RIGHT'
       });
+    },
+    onError: (error) => {
+      // Check if this is a GraphQL FORBIDDEN error
+      if (error.graphqlError) {
+        const gqlError = error.graphqlError;
+        const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
+        setError(errorMsg);
+      }
     },
     onSuccess: () => {
       // Invalidate comments query to refetch

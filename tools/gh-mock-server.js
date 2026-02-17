@@ -1182,6 +1182,32 @@ class GitHubMockServer {
         }
       });
 
+      // Check for configured GraphQL-specific errors
+      if (this.config.graphqlErrors) {
+        for (const [operationName, errorConfig] of Object.entries(this.config.graphqlErrors)) {
+          if (selections[operationName]) {
+            // Return GraphQL error response with 200 OK status
+            return this.sendResponse(res, 200, {
+              data: {
+                [operationName]: null
+              },
+              errors: [{
+                type: errorConfig.type || 'FORBIDDEN',
+                path: errorConfig.path || [operationName],
+                extensions: {
+                  saml_failure: false
+                },
+                locations: [{
+                  line: 1,
+                  column: 12
+                }],
+                message: errorConfig.message || 'Resource not accessible by personal access token'
+              }]
+            });
+          }
+        }
+      }
+
       // Build response data piecewise
       let responseData = null;
 

@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { selectedRepo } from './selectedRepoStore';
 import { selectedPr } from './selectedPrStore';
 import { githubClient } from '../utils/github-client';
+import { setError } from './errorStore';
 
 /**
  * Hook to fetch all comments for the currently selected PR
@@ -100,6 +101,14 @@ export function useComments() {
         return allComments;
       } catch (error) {
         console.error('Failed to fetch review threads:', error);
+        
+        // Check if this is a GraphQL FORBIDDEN error
+        if (error.graphqlError) {
+          const gqlError = error.graphqlError;
+          const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
+          setError(errorMsg);
+        }
+        
         return [];
       }
     },
@@ -153,6 +162,14 @@ export function useUpdateComment() {
         comment._graphqlId,
         body
       );
+    },
+    onError: (error) => {
+      // Check if this is a GraphQL FORBIDDEN error
+      if (error.graphqlError) {
+        const gqlError = error.graphqlError;
+        const errorMsg = `GraphQL Error (${gqlError.type}): ${gqlError.path?.join('.')} - ${gqlError.message}`;
+        setError(errorMsg);
+      }
     },
     onSuccess: () => {
       // Invalidate comments query to refetch
