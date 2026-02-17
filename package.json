@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "npm run lint && vitest run",
     "test:playwright": "npm run lint && playwright test",
-    "test:all": "npm run lint && npm run test && npm run test:playwright",
+    "test:all": "npm run lint && vitest run && playwright test",
     "lint": "eslint src/ tools/ tests/",
     "lint:fix": "eslint src/ tools/ tests/ --fix",
     "start": "node src/index.js",
