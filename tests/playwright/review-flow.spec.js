@@ -164,24 +164,41 @@ test.describe('Review-Based Comment Flow', { tag: '@serial' }, () => {
     // 4. Proper error handling when timeout occurs
     // 5. Success toast display when polling succeeds
     //
-    // FINDINGS FROM MANUAL TESTING:
-    // - Manual testing with dev server WORKS PERFECTLY
-    // - Test environment with Playwright-managed servers FAILS
-    // - Issue appears to be timing-related or cache-related
-    // - Polling timeout is being reached (shows ERROR toast instead of SUCCESS toast)
-    // - Need to debug WHY polling times out in test but not manually
+    // ✅ PROVEN: MANUAL TESTING WORKS PERFECTLY!
+    // When testing manually with dev server + mock server:
+    // - Console logs show: "[POLLING] Found review 5001 with state: REQUEST_CHANGES"
+    // - Console logs show: "[POLLING] SUCCESS - Review is no longer PENDING"
+    // - Success toast appears: "Review submitted successfully!" ✓
+    // - UI updates correctly (button changes, badge disappears, modal stays open) ✓
+    // - Polling succeeds on FIRST attempt (at T+1s, after 750ms delay) ✓
+    // - Screenshot: https://github.com/user-attachments/assets/ebb7298d-dfae-4e56-8da9-bd15869dca7b
     //
-    // DEBUGGING NOTES:
-    // - Review 5001 exists in test_repo_2 PR #2 with state PENDING
-    // - submitReview API call succeeds (returns review with updated state)
-    // - Mock server simulates 750ms eventual consistency delay
-    // - Polling should wait 1s, then poll every 2s for up to 5s
-    // - First poll at T+1s should see updated state (since 1000ms > 750ms)
-    // - But test consistently times out and shows error toast
+    // ❌ PROBLEM: PLAYWRIGHT TEST ENVIRONMENT FAILS
+    // The Playwright test shows ERROR toast "Failed to submit review. Please try again."
+    // This indicates polling is timing out after 5 seconds without finding updated state.
+    // 
+    // ROOT CAUSE INVESTIGATION NEEDED:
+    // Since manual testing works but Playwright test fails, the issue is environment-specific:
+    // - Manual: dev server + detached mock server = WORKS ✅
+    // - Test: Playwright webServer config = FAILS ❌
+    // Possible causes:
+    // 1. Browser cache behaving differently in test vs manual
+    // 2. Mock server state not being reset properly between tests
+    // 3. Race condition in test environment
+    // 4. Timing difference between test and manual execution
+    //
+    // DEBUGGING STEPS TAKEN:
+    // 1. Added comprehensive debug logging to polling code
+    // 2. Verified review 5001 exists in test data with state PENDING
+    // 3. Verified submitReview API endpoint works correctly
+    // 4. Verified eventual consistency delay (750ms) is working
+    // 5. Verified cache-busting is implemented (timestamp query param + headers)
+    // 6. Manually tested entire flow - WORKS PERFECTLY
+    // 7. Test still fails - must be Playwright-specific issue
     //
     // ENVIRONMENT NOTES:
-    // - Test uses .env.test which sets VITE_TOAST_DURATION=10000 (10 seconds)
-    // - For MANUAL testing, set VITE_TOAST_DURATION=120000 (120 seconds) so toast stays visible
+    // - Test uses .env.test: VITE_TOAST_DURATION=10000 (10 seconds)
+    // - For MANUAL testing: .env.local sets VITE_TOAST_DURATION=120000 (120 seconds)
     // - Mock server on port 3000, dev server on port 5173
     // - Cache headers: Cache-Control: private, max-age=60, s-maxage=60
     // - Cache-busting: timestamp query param + no-cache headers
