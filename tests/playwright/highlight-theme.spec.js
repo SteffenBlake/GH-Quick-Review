@@ -3,10 +3,10 @@ import { MockServerManager } from './mock-server-manager.js';
 
 /**
  * Highlight Theme Tests
- * Ensures the highlight theme dropdown works correctly and persists selection
+ * Ensures the highlight theme dropdown in Settings modal works correctly and persists selection
  */
 test.describe('Highlight Theme', { tag: '@parallel' }, () => {
-  test('should display theme dropdown with default value', async ({ page }) => {
+  test('should not show theme dropdown in header when logged out', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
 
@@ -15,17 +15,41 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
       await page.evaluate(() => localStorage.clear());
       await page.reload();
 
-      // Theme dropdown should be visible even before login
+      // Theme dropdown should NOT be visible in header when logged out
       const themeDropdown = page.locator('.theme-fuzzy-select');
+      await expect(themeDropdown).not.toBeVisible();
+
+      // Settings button should NOT be visible when logged out
+      const settingsButton = page.locator('.header-settings-button');
+      await expect(settingsButton).not.toBeVisible();
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
+  test('should display theme dropdown in settings with default value', async ({ page }) => {
+    const mockServer = new MockServerManager();
+      await mockServer.checkHeartbeat();
+
+    try {
+      await page.goto('/GH-Quick-Review/');
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
+      await page.reload();
+
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      const modal = page.locator('.settings-modal');
+      await expect(modal).toBeFocused({ timeout: 1000 });
+
+      // Theme dropdown should be visible in settings
+      const themeDropdown = page.locator('.settings-theme-dropdown');
       await expect(themeDropdown).toBeVisible();
 
       // Should show default theme 'github-dark' in UI
       await expect(themeDropdown).toContainText('Github Dark');
-
-      // Verify localStorage has the default value after interaction
-      const themeValue = await page.evaluate(() => localStorage.getItem('highlight_theme'));
-      // Initially null until user interacts, then defaults to 'github-dark'
-      expect(themeValue === null || themeValue === 'github-dark').toBeTruthy();
     } finally {
       await mockServer.stop();
     }
@@ -37,17 +61,30 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
     try {
       await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
       await page.reload();
 
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
       // Click theme dropdown to open it
-      await page.locator('.theme-fuzzy-select').click();
+      await page.locator('.settings-theme-dropdown').click();
 
       // Wait for dropdown menu to be visible
       await expect(page.locator('.fuzzy-dropdown-menu')).toBeVisible();
 
       // Find and click Monokai theme in the list
       await page.locator('.fuzzy-dropdown-option').filter({ hasText: /^Monokai$/ }).click();
+
+      // Save settings
+      await page.getByRole('button', { name: 'Save' }).click();
+
+      // Wait for modal to close
+      await page.waitForTimeout(500);
 
       // Verify theme was saved to localStorage
       const savedTheme = await page.evaluate(() => localStorage.getItem('highlight_theme'));
@@ -65,6 +102,7 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => {
         localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
         localStorage.setItem('highlight_theme', 'monokai-sublime');
       });
       await page.reload();
@@ -72,8 +110,12 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
       // Wait for page to load
       await page.waitForLoadState('networkidle');
 
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
       // Verify the theme dropdown shows the persisted value
-      const themeDropdown = page.locator('.theme-fuzzy-select');
+      const themeDropdown = page.locator('.settings-theme-dropdown');
       await expect(themeDropdown).toContainText('Monokai Sublime');
     } finally {
       await mockServer.stop();
@@ -86,11 +128,18 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
     try {
       await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
       await page.reload();
 
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
       // Click theme dropdown to open it
-      await page.locator('.theme-fuzzy-select').click();
+      await page.locator('.settings-theme-dropdown').click();
 
       // Type to search for a specific theme
       await page.getByPlaceholder('Type to search...').fill('night owl');
@@ -112,11 +161,18 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
 
     try {
       await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
       await page.reload();
 
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
       // Click theme dropdown to open it
-      await page.locator('.theme-fuzzy-select').click();
+      await page.locator('.settings-theme-dropdown').click();
 
       // Wait for dropdown to open
       await expect(page.locator('.fuzzy-dropdown-menu')).toBeVisible();
