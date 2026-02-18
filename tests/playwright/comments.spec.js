@@ -538,11 +538,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     await mockServer.checkHeartbeat();
 
     try {
-      // CRITICAL: Reset first to ensure clean state from previous tests
-      await mockServer.reset();
-
       // Configure ONLY fetchReviewThreads to error (reviewThreads query)
       // Other operations should still work normally
+      // NOTE: Not calling reset() first - just overwriting config directly
       await mockServer.setConfig({
         graphqlErrors: {
           reviewThreads: {
