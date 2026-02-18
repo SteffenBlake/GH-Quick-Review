@@ -758,7 +758,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await page.locator('.diff-viewer').click();
 
       // Click on existing comment thread
-      const messageWithComments = page.locator('.diff-line-message-btn.has-message').first();
+      // NOTE: Using .nth(1) to get the SECOND comment (first one might be pending)
+      // We need a non-pending comment to trigger the GraphQL mutation
+      const messageWithComments = page.locator('.diff-line-message-btn.has-message').nth(1);
       await messageWithComments.click();
 
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
@@ -768,12 +770,12 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await expect(editButton).toBeVisible({ timeout: 1000 });
       await editButton.click();
 
-      // Edit the comment
-      const textarea = page.locator('.comment-modal-textarea');
+      // Edit the comment - use the EDIT textarea, not the new comment textarea
+      const textarea = page.locator('.comment-edit-textarea');
       await textarea.fill('Updated comment that will trigger FORBIDDEN error');
 
-      // Submit the edit
-      const submitButton = page.locator('.comment-modal-submit-btn');
+      // Submit the edit - use the EDIT submit button, not the new comment button
+      const submitButton = page.locator('.comment-edit-submit-btn');
       await submitButton.click();
 
       // Error message should be displayed
