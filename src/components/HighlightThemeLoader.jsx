@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef } from 'preact/hooks';
-import { highlightTheme } from '../stores/highlightThemeStore.js';
+import { settings } from '../stores/settingsStore.js';
 
 // Explicitly import ALL themes - Vite requires static imports
 import hljsTheme1cLight from 'highlight.js/styles/1c-light.min.css?inline';
@@ -197,12 +197,12 @@ export function HighlightThemeLoader() {
     }
 
     // Step 2: Enable ONLY the selected theme, disable all others
-    const currentTheme = highlightTheme.value;
+    const currentTheme = settings.value.highlightTheme;
     Object.entries(styleElements.current).forEach(([themeName, styleTag]) => {
       styleTag.disabled = (themeName !== currentTheme);
     });
-    
-  }, [highlightTheme.value]);
+
+  }, [settings.value.highlightTheme]);
 
   return null; // This component doesn't render anything
 }

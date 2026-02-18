@@ -60,26 +60,6 @@ body {
   width: 100%;
 }
 
-.header-font-picker {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-}
-
-.header-font-picker .fuzzy-dropdown {
-  width: 100%;
-}
-
-.header-theme-picker {
-  flex: 2 1 0;
-  min-width: 0;
-  display: flex;
-}
-
-.header-theme-picker .fuzzy-dropdown {
-  width: 100%;
-}
-
 .header-logout-button {
   flex: 0 0 auto;
   background-color: var(--bg-primary);

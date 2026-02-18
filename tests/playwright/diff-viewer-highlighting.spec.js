@@ -99,7 +99,11 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => {
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('highlight_theme', 'monokai');
+        localStorage.setItem('gh_quick_review_settings', JSON.stringify({
+          reviewSubmissionComment: '@copilot Read your agent file IN FULL before proceeding. Please address all PR comments below.',
+          font: 'FiraCode',
+          highlightTheme: 'monokai',
+        }));
       });
       await page.reload();
 
@@ -140,7 +144,11 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => {
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('highlight_theme', 'github-dark');
+        localStorage.setItem('gh_quick_review_settings', JSON.stringify({
+          reviewSubmissionComment: '@copilot Read your agent file IN FULL before proceeding. Please address all PR comments below.',
+          font: 'FiraCode',
+          highlightTheme: 'github-dark',
+        }));
       });
       await page.reload();
 
@@ -162,9 +170,16 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
         return window.getComputedStyle(el).backgroundColor;
       });
 
-      // Change theme
-      await page.locator('.theme-fuzzy-select').click();
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
+      // Change theme to Monokai
+      await page.locator('.settings-theme-dropdown').click();
       await page.locator('.fuzzy-dropdown-option').filter({ hasText: /^Monokai$/ }).click();
+
+      // Save settings
+      await page.getByRole('button', { name: 'Save' }).click();
 
       // Wait a bit for theme to apply
       await page.waitForTimeout(500);

@@ -233,6 +233,65 @@ test.describe('Settings Modal', { tag: '@parallel' }, () => {
     }
   });
 
+  test('should reset font and highlight theme to defaults', async ({ page }) => {
+    const mockServer = new MockServerManager();
+      await mockServer.checkHeartbeat();
+
+    try {
+      await page.goto(BASE_URL);
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
+      await page.reload();
+
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
+      // Change font to JetBrains Mono
+      await page.locator('.settings-font-dropdown').click();
+      await page.locator('.fuzzy-dropdown-option').filter({ hasText: 'JetBrains Mono' }).click();
+
+      // Change theme to Monokai
+      await page.locator('.settings-theme-dropdown').click();
+      await page.locator('.fuzzy-dropdown-option').filter({ hasText: /^Monokai$/ }).click();
+
+      // Save changes
+      await page.getByRole('button', { name: 'Save' }).click();
+
+      // Wait for modal to close
+      await page.waitForTimeout(500);
+
+      // Reopen settings and verify changes were saved
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+      await expect(page.locator('.settings-font-dropdown')).toContainText('JetBrains Mono');
+      await expect(page.locator('.settings-theme-dropdown')).toContainText('Monokai');
+
+      // Click Reset to Defaults
+      await page.getByRole('button', { name: 'Reset to Defaults' }).click();
+
+      // Should show default values without saving
+      await expect(page.locator('.settings-font-dropdown')).toContainText('Fira Code');
+      await expect(page.locator('.settings-theme-dropdown')).toContainText('Github Dark');
+
+      // Save the reset
+      await page.getByRole('button', { name: 'Save' }).click();
+
+      // Wait for modal to close
+      await page.waitForTimeout(500);
+
+      // Reopen and verify defaults were saved
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+      await expect(page.locator('.settings-font-dropdown')).toContainText('Fira Code');
+      await expect(page.locator('.settings-theme-dropdown')).toContainText('Github Dark');
+    } finally {
+      await mockServer.stop();
+    }
+  });
+
   test('should clear settings on logout', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();

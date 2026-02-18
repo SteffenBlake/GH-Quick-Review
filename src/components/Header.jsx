@@ -6,35 +6,9 @@
 
 import { ReposDropdown } from './ReposDropdown';
 import { PullsDropdown } from './PullsDropdown';
-import { FuzzyDropdown } from './FuzzyDropdown';
-import { 
-  highlightTheme, 
-  setHighlightTheme, 
-  HIGHLIGHT_THEMES 
-} from '../stores/highlightThemeStore.js';
 import { showSettings } from '../stores/settingsStore.js';
 
-export function Header({ font, setFont, authenticated, onLogout }) {
-  const fontOptions = [
-    { value: 'FiraCode', label: 'Fira Code', searchableText: 'Fira Code FiraCode' },
-    { value: 'JetBrainsMono', label: 'JetBrains Mono', searchableText: 'JetBrains Mono JetBrainsMono' },
-  ];
-
-  // Convert theme names to readable labels
-  const themeOptions = HIGHLIGHT_THEMES.map(theme => {
-    // Convert kebab-case to Title Case
-    const label = theme
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-    
-    return {
-      value: theme,
-      label: label,
-      searchableText: `${label} ${theme}`
-    };
-  });
-
+export function Header({ authenticated, onLogout }) {
   return (
     <header className="header">
       <h1 className="header-icon">
@@ -50,24 +24,6 @@ export function Header({ font, setFont, authenticated, onLogout }) {
           <PullsDropdown />
         </div>
       )}
-      <div className="header-font-picker">
-        <FuzzyDropdown
-          value={font}
-          onChange={setFont}
-          options={fontOptions}
-          placeholder="Select font..."
-          className="font-fuzzy-select"
-        />
-      </div>
-      <div className="header-theme-picker">
-        <FuzzyDropdown
-          value={highlightTheme.value}
-          onChange={setHighlightTheme}
-          options={themeOptions}
-          placeholder="Select theme..."
-          className="theme-fuzzy-select"
-        />
-      </div>
       {authenticated && (
         <button onClick={showSettings} className="header-settings-button" title="Settings">
           {'\uf085'}

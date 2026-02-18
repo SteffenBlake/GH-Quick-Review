@@ -5,15 +5,19 @@
  */
 
 import { signal } from '@preact/signals';
+import { HIGHLIGHT_THEMES } from './highlightThemeStore.js';
 
 // Default settings values
 const DEFAULT_SETTINGS = {
   reviewSubmissionComment: '@copilot Read your agent file IN FULL before proceeding. Please address all PR comments below.',
+  font: 'FiraCode',
+  highlightTheme: 'github-dark',
 };
 
 // Load settings from localStorage or use defaults
 function loadSettings() {
   const stored = localStorage.getItem('gh_quick_review_settings');
+
   if (stored) {
     try {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
@@ -22,6 +26,7 @@ function loadSettings() {
       return { ...DEFAULT_SETTINGS };
     }
   }
+
   return { ...DEFAULT_SETTINGS };
 }
 
@@ -71,6 +76,8 @@ export function resetSettings() {
 export function clearSettings() {
   settings.value = { ...DEFAULT_SETTINGS };
   localStorage.removeItem('gh_quick_review_settings');
+  // Clean up any old highlight_theme key if it exists
+  localStorage.removeItem('highlight_theme');
 }
 
 /**
@@ -78,4 +85,27 @@ export function clearSettings() {
  */
 export function getDefaultSettings() {
   return { ...DEFAULT_SETTINGS };
+}
+
+/**
+ * Set the font setting
+ * @param {string} font - The font family to use
+ */
+export function setFont(font) {
+  settings.value = { ...settings.value, font };
+  localStorage.setItem('gh_quick_review_settings', JSON.stringify(settings.value));
+}
+
+/**
+ * Set the highlight theme setting
+ * @param {string} theme - The highlight.js theme to use
+ */
+export function setHighlightTheme(theme) {
+  if (!HIGHLIGHT_THEMES.includes(theme)) {
+    console.warn(`Invalid highlight theme: ${theme}`);
+    return;
+  }
+
+  settings.value = { ...settings.value, highlightTheme: theme };
+  localStorage.setItem('gh_quick_review_settings', JSON.stringify(settings.value));
 }

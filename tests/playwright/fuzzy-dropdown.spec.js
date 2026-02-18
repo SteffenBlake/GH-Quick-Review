@@ -364,24 +364,27 @@ test.describe('Fuzzy Dropdown Component', { tag: '@parallel' }, () => {
     }
   });
 
-  test('font dropdown should work with fuzzy search', async ({ page }) => {
+  test('font dropdown should work with fuzzy search in Settings', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
 
     try {
       await page.goto('/GH-Quick-Review/');
-      await page.evaluate(() => localStorage.clear());
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('github_pat', 'test_token_12345');
+      });
       await page.reload();
-
-      // Login
-      await page.getByPlaceholder('Enter your GitHub PAT').fill('test_token');
-      await page.getByRole('button', { name: 'Login' }).click();
 
       // Wait for page to load
       await expect(page.locator('.repos-dropdown')).toBeVisible();
 
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
       // Open font dropdown
-      const fontPicker = page.locator('.font-fuzzy-select');
+      const fontPicker = page.locator('.settings-font-dropdown');
       await fontPicker.locator('.fuzzy-dropdown-control').click();
 
       // Should show search input
