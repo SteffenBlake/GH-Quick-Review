@@ -6,11 +6,10 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './queryClient';
-import { useState } from 'preact/hooks';
 import { token, clearToken } from './stores/authStore';
 import { errorMessage, clearError } from './stores/errorStore';
 import { selectedPr } from './stores/selectedPrStore';
-import { clearSettings } from './stores/settingsStore';
+import { settings, clearSettings } from './stores/settingsStore';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -54,8 +53,6 @@ function MainContent() {
 }
 
 export function App() {
-  const [font, setFont] = useState('FiraCode');
-
   const handleLogout = () => {
     clearToken();
     queryClient.clear(); // Clear all cached queries on logout
@@ -68,10 +65,8 @@ export function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app" style={{ fontFamily: font }}>
+      <div className="app" style={{ fontFamily: settings.value.font }}>
         <Header 
-          font={font} 
-          setFont={setFont} 
           authenticated={!!token.value}
           onLogout={handleLogout}
         />

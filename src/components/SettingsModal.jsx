@@ -9,8 +9,12 @@ import {
   settings,
   saveSettings,
   getDefaultSettings,
-  registerModalRef
+  registerModalRef,
+  setFont,
+  setHighlightTheme
 } from '../stores/settingsStore';
+import { HIGHLIGHT_THEMES } from '../stores/highlightThemeStore.js';
+import { FuzzyDropdown } from './FuzzyDropdown';
 
 // Icon constant
 const ICON_GEARS = '\uf085';
@@ -31,6 +35,27 @@ export function SettingsModal() {
   useEffect(() => {
     setDraftSettings(settings.value);
   }, [settings.value]);
+
+  // Font options for the dropdown
+  const fontOptions = [
+    { value: 'FiraCode', label: 'Fira Code', searchableText: 'Fira Code FiraCode' },
+    { value: 'JetBrainsMono', label: 'JetBrains Mono', searchableText: 'JetBrains Mono JetBrainsMono' },
+  ];
+
+  // Convert theme names to readable labels
+  const themeOptions = HIGHLIGHT_THEMES.map(theme => {
+    // Convert kebab-case to Title Case
+    const label = theme
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    return {
+      value: theme,
+      label: label,
+      searchableText: `${label} ${theme}`
+    };
+  });
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -92,6 +117,38 @@ export function SettingsModal() {
 
       {/* Settings content (scrollable) */}
       <div className="settings-modal-content">
+        <div className="settings-section">
+          <label className="settings-label">
+            Font
+            <span className="settings-description">
+              The font family to use across the application.
+            </span>
+          </label>
+          <FuzzyDropdown
+            value={draftSettings.font}
+            onChange={(value) => handleInputChange('font', value)}
+            options={fontOptions}
+            placeholder="Select font..."
+            className="settings-font-dropdown"
+          />
+        </div>
+
+        <div className="settings-section">
+          <label className="settings-label">
+            Highlight Theme
+            <span className="settings-description">
+              The syntax highlighting theme for code blocks.
+            </span>
+          </label>
+          <FuzzyDropdown
+            value={draftSettings.highlightTheme}
+            onChange={(value) => handleInputChange('highlightTheme', value)}
+            options={themeOptions}
+            placeholder="Select theme..."
+            className="settings-theme-dropdown"
+          />
+        </div>
+
         <div className="settings-section">
           <label className="settings-label">
             Review Submission Comment
