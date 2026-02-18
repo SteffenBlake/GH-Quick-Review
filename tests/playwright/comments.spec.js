@@ -538,20 +538,10 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     await mockServer.checkHeartbeat();
 
     try {
-      // Configure ONLY fetchReviewThreads to error (reviewThreads query)
-      // Other operations should still work normally
-      // NOTE: Not calling reset() first - just overwriting config directly
-      await mockServer.setConfig({
-        graphqlErrors: {
-          reviewThreads: {
-            type: 'FORBIDDEN',
-            path: ['reviewThreads'],
-            message: 'Resource not accessible by personal access token'
-          }
-        }
-      });
+      // CRITICAL: Reset mock server FIRST to clear any config from previous tests
+      await mockServer.reset();
 
-      // CRITICAL: Clear localStorage BEFORE first navigation to avoid loading with old state
+      // Navigate and login WITHOUT setting error config first
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -566,7 +556,19 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await repoDropdown.locator('.fuzzy-dropdown-control').click();
       await repoDropdown.getByText('test_repo_1').click();
 
-      // Select PR - this should work normally
+      // NOW configure error ONLY for fetchReviewThreads (reviewThreads query)
+      // Set this RIGHT BEFORE selecting PR to minimize race conditions
+      await mockServer.setConfig({
+        graphqlErrors: {
+          reviewThreads: {
+            type: 'FORBIDDEN',
+            path: ['reviewThreads'],
+            message: 'Resource not accessible by personal access token'
+          }
+        }
+      });
+
+      // Select PR - this will trigger fetchReviewThreads which should error
       const prDropdown = page.locator('#pr-select');
       await expect(prDropdown.locator('.fuzzy-dropdown-control:not(.disabled)')).toBeVisible();
       await prDropdown.locator('.fuzzy-dropdown-control').click();
