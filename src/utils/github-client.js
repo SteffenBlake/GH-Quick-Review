@@ -468,7 +468,7 @@ class GitHubClient {
    * @param {string} owner - Repository owner
    * @param {string} repo - Repository name (not full name)
    * @param {number} prNumber - Pull request number
-   * @returns {Promise<Object>} - GraphQL response with review threads and comments
+   * @returns {Promise<Object>} - GraphQL response with review threads and comments (resolved threads filtered out)
    */
   async fetchReviewThreads(owner, repo, prNumber) {
     if (!owner) {
@@ -485,7 +485,7 @@ class GitHubClient {
       query($owner: String!, $repo: String!, $prNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $prNumber) {
-            reviewThreads(first: 100, resolved: false) {
+            reviewThreads(first: 100) {
               nodes {
                 id
                 isResolved
@@ -527,7 +527,17 @@ class GitHubClient {
       prNumber
     };
 
-    return this.graphql(query, variables);
+    const result = await this.graphql(query, variables);
+    
+    // Filter out resolved threads in memory (GitHub API doesn't support resolved argument)
+    if (result?.data?.repository?.pullRequest?.reviewThreads?.nodes) {
+      result.data.repository.pullRequest.reviewThreads.nodes = 
+        result.data.repository.pullRequest.reviewThreads.nodes.filter(
+          thread => !thread.isResolved
+        );
+    }
+    
+    return result;
   }
 }
 
