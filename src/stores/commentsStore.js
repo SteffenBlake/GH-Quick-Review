@@ -109,6 +109,7 @@ export function useComments() {
       }
     },
     enabled: !!selectedRepo.value && !!selectedPr.value,
+    retry: false, // Don't retry on errors - show error page immediately
   });
 }
 
