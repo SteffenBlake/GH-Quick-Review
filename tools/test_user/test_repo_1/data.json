@@ -291,6 +291,66 @@
     },
     {
       "pull_number": 1,
+      "id": "PRT_kwDOThread1003",
+      "isResolved": true,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.js",
+      "originalLine": 20,
+      "line": 20,
+      "comments": [
+        {
+          "id": "PRRC_kwDO1003",
+          "databaseId": 1003,
+          "body": "This is a resolved thread on example.js - should NOT appear in directory browser or diff lines!",
+          "path": "example.js",
+          "line": 20,
+          "startLine": null,
+          "diffHunk": "@@ -15,6 +15,9 @@ export const authenticate = async (req, res, next) => {\n   }\n   \n   try {\n+    // Validate JWT token\n     const decoded = jwt.verify(token, process.env.JWT_SECRET);",
+          "createdAt": "2024-01-15T13:00:00Z",
+          "updatedAt": "2024-01-15T13:30:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6002",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 1,
+      "id": "PRT_kwDOThread1004",
+      "isResolved": true,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.cs",
+      "originalLine": 40,
+      "line": 40,
+      "comments": [
+        {
+          "id": "PRRC_kwDO1004",
+          "databaseId": 1004,
+          "body": "This resolved thread should also be hidden from UI.",
+          "path": "example.cs",
+          "line": 40,
+          "startLine": null,
+          "diffHunk": "@@ -35,6 +35,9 @@ export const authenticate = async (req, res, next) => {\n     req.authenticated = true;\n     req.authTime = Date.now();\n     next();",
+          "createdAt": "2024-01-15T14:00:00Z",
+          "updatedAt": "2024-01-15T14:30:00Z",
+          "author": {
+            "login": "reviewer2"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6003",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 1,
       "id": "PRT_kwDOThread4001",
       "isResolved": false,
       "isOutdated": false,

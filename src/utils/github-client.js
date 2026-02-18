@@ -485,7 +485,7 @@ class GitHubClient {
       query($owner: String!, $repo: String!, $prNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $prNumber) {
-            reviewThreads(first: 100) {
+            reviewThreads(first: 100, resolved: false) {
               nodes {
                 id
                 isResolved
