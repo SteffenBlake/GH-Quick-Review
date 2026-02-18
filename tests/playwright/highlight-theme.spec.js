@@ -86,9 +86,12 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
       // Wait for modal to close
       await page.waitForTimeout(500);
 
-      // Verify theme was saved to localStorage
-      const savedTheme = await page.evaluate(() => localStorage.getItem('highlight_theme'));
-      expect(savedTheme).toBe('monokai');
+      // Verify theme was saved to settings
+      const savedSettings = await page.evaluate(() => {
+        const settings = localStorage.getItem('gh_quick_review_settings');
+        return settings ? JSON.parse(settings) : null;
+      });
+      expect(savedSettings.highlightTheme).toBe('monokai');
     } finally {
       await mockServer.stop();
     }
@@ -103,7 +106,11 @@ test.describe('Highlight Theme', { tag: '@parallel' }, () => {
       await page.evaluate(() => {
         localStorage.clear();
         localStorage.setItem('github_pat', 'test_token_12345');
-        localStorage.setItem('highlight_theme', 'monokai-sublime');
+        localStorage.setItem('gh_quick_review_settings', JSON.stringify({
+          reviewSubmissionComment: '@copilot Read your agent file IN FULL before proceeding. Please address all PR comments below.',
+          font: 'FiraCode',
+          highlightTheme: 'monokai-sublime',
+        }));
       });
       await page.reload();
 

@@ -4,8 +4,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { signal } from '@preact/signals';
-
 /**
  * Available highlight.js themes
  * List generated from highlight.js/styles directory
@@ -92,33 +90,3 @@ export const HIGHLIGHT_THEMES = [
   'xcode',
   'xt256',
 ];
-
-/**
- * Selected highlight theme signal
- * Persisted to localStorage
- */
-export const highlightTheme = signal(
-  localStorage.getItem('highlight_theme') || 'github-dark'
-);
-
-/**
- * Set the highlight theme
- * @param {string} theme - Theme name (must be in HIGHLIGHT_THEMES)
- */
-export function setHighlightTheme(theme) {
-  if (!HIGHLIGHT_THEMES.includes(theme)) {
-    console.warn(`Invalid highlight theme: ${theme}`);
-    return;
-  }
-
-  highlightTheme.value = theme;
-  localStorage.setItem('highlight_theme', theme);
-}
-
-/**
- * Get the current highlight theme
- * @returns {string} - Current theme name
- */
-export function getHighlightTheme() {
-  return highlightTheme.value;
-}

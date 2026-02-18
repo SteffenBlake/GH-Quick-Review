@@ -17,26 +17,17 @@ const DEFAULT_SETTINGS = {
 // Load settings from localStorage or use defaults
 function loadSettings() {
   const stored = localStorage.getItem('gh_quick_review_settings');
-  let settings;
 
   if (stored) {
     try {
-      settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
     } catch (e) {
       console.error('Failed to parse stored settings:', e);
-      settings = { ...DEFAULT_SETTINGS };
+      return { ...DEFAULT_SETTINGS };
     }
-  } else {
-    settings = { ...DEFAULT_SETTINGS };
   }
 
-  // Check for legacy highlight_theme in localStorage (backward compatibility)
-  const legacyTheme = localStorage.getItem('highlight_theme');
-  if (legacyTheme && HIGHLIGHT_THEMES.includes(legacyTheme)) {
-    settings.highlightTheme = legacyTheme;
-  }
-
-  return settings;
+  return { ...DEFAULT_SETTINGS };
 }
 
 // Settings state
@@ -70,9 +61,6 @@ export function showSettings() {
 export function saveSettings(newSettings) {
   settings.value = newSettings;
   localStorage.setItem('gh_quick_review_settings', JSON.stringify(newSettings));
-
-  // Also update legacy localStorage for backward compatibility
-  localStorage.setItem('highlight_theme', newSettings.highlightTheme);
 }
 
 /**
@@ -88,6 +76,8 @@ export function resetSettings() {
 export function clearSettings() {
   settings.value = { ...DEFAULT_SETTINGS };
   localStorage.removeItem('gh_quick_review_settings');
+  // Clean up any old highlight_theme key if it exists
+  localStorage.removeItem('highlight_theme');
 }
 
 /**
@@ -118,7 +108,4 @@ export function setHighlightTheme(theme) {
 
   settings.value = { ...settings.value, highlightTheme: theme };
   localStorage.setItem('gh_quick_review_settings', JSON.stringify(settings.value));
-
-  // Also update legacy localStorage for backward compatibility
-  localStorage.setItem('highlight_theme', theme);
 }
