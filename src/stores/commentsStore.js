@@ -26,90 +26,85 @@ export function useComments() {
       // Parse owner/repo from full repo name
       const [owner, repo] = selectedRepo.value.split('/');
 
-      try {
-        const graphqlResponse = await githubClient.fetchReviewThreads(
-          owner,
-          repo,
-          selectedPr.value
-        );
+      const graphqlResponse = await githubClient.fetchReviewThreads(
+        owner,
+        repo,
+        selectedPr.value
+      );
 
-        // Extract review threads from GraphQL response
-        if (!graphqlResponse?.data?.repository?.pullRequest?.reviewThreads?.nodes) {
-          return [];
-        }
-
-        const threads = graphqlResponse.data.repository.pullRequest.reviewThreads.nodes;
-
-        // Flatten all comments from all threads
-        // Filter threads to show:
-        // 1. Unresolved threads (isResolved === false)
-        // 2. Threads with any PENDING comment
-        const allComments = [];
-
-        for (const thread of threads) {
-          const comments = thread.comments?.nodes || [];
-          if (comments.length === 0) {continue;}
-
-          // Check if thread should be visible
-          const hasPendingComment = comments.some(
-            comment => comment.pullRequestReview?.state === 'PENDING'
-          );
-          const isUnresolved = thread.isResolved === false;
-
-          // Show thread if it's unresolved OR has pending comments
-          if (isUnresolved || hasPendingComment) {
-            // Transform comments to flat structure for compatibility
-            const transformedComments = comments.map(comment => ({
-              // Use databaseId if available, otherwise extract from node id
-              id: comment.databaseId || parseInt(comment.id.replace(/^PRRC_/, '')) || 0,
-              pull_number: selectedPr.value,
-              diff_hunk: comment.diffHunk || '',
-              path: comment.path || '',
-              position: null,
-              original_position: null,
-              commit_id: null,
-              original_commit_id: null,
-              user: {
-                login: comment.author?.login || 'unknown',
-                id: 0,
-                type: 'User'
-              },
-              body: comment.body || '',
-              created_at: comment.createdAt,
-              updated_at: comment.updatedAt,
-              html_url: '',
-              pull_request_url: '',
-              line: comment.line,
-              side: 'RIGHT',
-              start_line: comment.startLine,
-              start_side: comment.startLine ? 'RIGHT' : null,
-              in_reply_to_id: null,
-              // Add thread and review metadata
-              _threadId: thread.id,
-              _isResolved: thread.isResolved,
-              _isOutdated: thread.isOutdated,
-              _isPending: comment.pullRequestReview?.state === 'PENDING',
-              _reviewState: comment.pullRequestReview?.state,
-              // Store GraphQL node ID for mutations
-              _graphqlId: comment.id
-            }));
-
-            allComments.push(...transformedComments);
-          }
-        }
-
-        return allComments;
-      } catch (error) {
-        console.error('Failed to fetch review threads:', error);
-
-        // Set the error message (already formatted in github-client)
-        setError(error.message);
-
+      // Extract review threads from GraphQL response
+      if (!graphqlResponse?.data?.repository?.pullRequest?.reviewThreads?.nodes) {
         return [];
       }
+
+      const threads = graphqlResponse.data.repository.pullRequest.reviewThreads.nodes;
+
+      // Flatten all comments from all threads
+      // Filter threads to show:
+      // 1. Unresolved threads (isResolved === false)
+      // 2. Threads with any PENDING comment
+      const allComments = [];
+
+      for (const thread of threads) {
+        const comments = thread.comments?.nodes || [];
+        if (comments.length === 0) {continue;}
+
+        // Check if thread should be visible
+        const hasPendingComment = comments.some(
+          comment => comment.pullRequestReview?.state === 'PENDING'
+        );
+        const isUnresolved = thread.isResolved === false;
+
+        // Show thread if it's unresolved OR has pending comments
+        if (isUnresolved || hasPendingComment) {
+          // Transform comments to flat structure for compatibility
+          const transformedComments = comments.map(comment => ({
+            // Use databaseId if available, otherwise extract from node id
+            id: comment.databaseId || parseInt(comment.id.replace(/^PRRC_/, '')) || 0,
+            pull_number: selectedPr.value,
+            diff_hunk: comment.diffHunk || '',
+            path: comment.path || '',
+            position: null,
+            original_position: null,
+            commit_id: null,
+            original_commit_id: null,
+            user: {
+              login: comment.author?.login || 'unknown',
+              id: 0,
+              type: 'User'
+            },
+            body: comment.body || '',
+            created_at: comment.createdAt,
+            updated_at: comment.updatedAt,
+            html_url: '',
+            pull_request_url: '',
+            line: comment.line,
+            side: 'RIGHT',
+            start_line: comment.startLine,
+            start_side: comment.startLine ? 'RIGHT' : null,
+            in_reply_to_id: null,
+            // Add thread and review metadata
+            _threadId: thread.id,
+            _isResolved: thread.isResolved,
+            _isOutdated: thread.isOutdated,
+            _isPending: comment.pullRequestReview?.state === 'PENDING',
+            _reviewState: comment.pullRequestReview?.state,
+            // Store GraphQL node ID for mutations
+            _graphqlId: comment.id
+          }));
+
+          allComments.push(...transformedComments);
+        }
+      }
+
+      return allComments;
     },
     enabled: !!selectedRepo.value && !!selectedPr.value,
     retry: false, // Don't retry on errors - show error page immediately
+    onError: (error) => {
+      // Set the error message (already formatted in github-client)
+      setError(error.message);
+    },
   });
 }
 
