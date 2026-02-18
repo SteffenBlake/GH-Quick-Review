@@ -1321,27 +1321,11 @@ class GitHubMockServer {
           });
         }
 
-        // Parse the 'resolved' argument from reviewThreads field
-        // Default to undefined (return all) if not specified
-        let resolvedFilter = undefined;
-        visit(ast, {
-          Field(node) {
-            if (node.name.value === 'reviewThreads' && node.arguments) {
-              const resolvedArg = node.arguments.find(arg => arg.name.value === 'resolved');
-              if (resolvedArg && resolvedArg.value.kind === 'BooleanValue') {
-                resolvedFilter = resolvedArg.value.value;
-              }
-            }
-          }
-        });
-
-        // Filter threads by PR number and optionally by resolved status
+        // Filter threads by PR number only
+        // Note: GitHub's API does NOT support a 'resolved' argument on reviewThreads
+        // All threads are returned; filtering by resolution status happens client-side
         const threads = Array.from(repoData.reviewThreads.values())
-          .filter(thread => {
-            if (thread.pull_number !== parseInt(prNumber)) return false;
-            if (resolvedFilter !== undefined && thread.isResolved !== resolvedFilter) return false;
-            return true;
-          });
+          .filter(thread => thread.pull_number === parseInt(prNumber));
 
         const threadNodes = threads.map(thread => ({
           id: thread.id,
