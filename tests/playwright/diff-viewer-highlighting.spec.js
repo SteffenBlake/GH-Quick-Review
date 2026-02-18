@@ -162,9 +162,16 @@ test.describe('Diff Viewer Syntax Highlighting', { tag: '@parallel' }, () => {
         return window.getComputedStyle(el).backgroundColor;
       });
 
-      // Change theme
-      await page.locator('.theme-fuzzy-select').click();
+      // Open settings modal
+      await page.locator('.header-settings-button').click();
+      await expect(page.locator('.settings-modal')).toBeFocused({ timeout: 1000 });
+
+      // Change theme to Monokai
+      await page.locator('.settings-theme-dropdown').click();
       await page.locator('.fuzzy-dropdown-option').filter({ hasText: /^Monokai$/ }).click();
+
+      // Save settings
+      await page.getByRole('button', { name: 'Save' }).click();
 
       // Wait a bit for theme to apply
       await page.waitForTimeout(500);
