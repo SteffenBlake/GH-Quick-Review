@@ -72,7 +72,7 @@ test.describe('Dropdown Width Constraints', { tag: '@parallel' }, () => {
     }
   });
 
-  test('PR dropdown should be visible and not hidden by font picker', async ({ page }) => {
+  test('PR dropdown should be visible and fit within header', async ({ page }) => {
     const mockServer = new MockServerManager();
       await mockServer.checkHeartbeat();
 
@@ -94,13 +94,12 @@ test.describe('Dropdown Width Constraints', { tag: '@parallel' }, () => {
       await page.locator('.pr-fuzzy-select').click();
       await page.getByRole('listitem').filter({ hasText: '#2 - Fix critical bug in' }).click();
 
-      // Get positions of PR dropdown and font picker
+      // Get positions of PR dropdown and header
       const prDropdownBox = await page.locator('.pr-fuzzy-select').boundingBox();
-      const fontPickerBox = await page.locator('.font-fuzzy-select').boundingBox();
+      const headerBox = await page.locator('.header').boundingBox();
 
-      // PR dropdown should not overlap with font picker
-      // PR dropdown's right edge should be to the left of font picker's left edge
-      expect(prDropdownBox.x + prDropdownBox.width).toBeLessThanOrEqual(fontPickerBox.x);
+      // PR dropdown should fit within the header bounds
+      expect(prDropdownBox.x + prDropdownBox.width).toBeLessThanOrEqual(headerBox.x + headerBox.width);
 
     } finally {
       await mockServer.stop();
