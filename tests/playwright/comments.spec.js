@@ -538,6 +538,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     await mockServer.checkHeartbeat();
 
     try {
+      // CRITICAL: Reset first to ensure clean state from previous tests
+      await mockServer.reset();
+
       // Configure ONLY fetchReviewThreads to error (reviewThreads query)
       // Other operations should still work normally
       await mockServer.setConfig({
@@ -595,6 +598,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     await mockServer.checkHeartbeat();
 
     try {
+      // CRITICAL: Reset first to ensure clean state from previous tests
+      await mockServer.reset();
+
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -650,6 +656,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     await mockServer.checkHeartbeat();
 
     try {
+      // CRITICAL: Reset first to ensure clean state from previous tests
+      await mockServer.reset();
+
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
@@ -713,6 +722,9 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
     await mockServer.checkHeartbeat();
 
     try {
+      // CRITICAL: Reset first to ensure clean state from previous tests
+      await mockServer.reset();
+
       await page.goto('/GH-Quick-Review/');
       await page.evaluate(() => localStorage.clear());
       await page.reload();
