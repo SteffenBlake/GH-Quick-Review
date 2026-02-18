@@ -191,8 +191,19 @@ test.describe('Resolved Review Threads Filtering - Read Only', { tag: '@parallel
     const exampleCsEntry = page.locator('.directory-entry-content:has(.entry-name:text("example.cs"))');
     await expect(exampleCsEntry.locator('.comment-indicator')).toBeVisible();
 
-    // If we had a file with ONLY resolved threads, it should NOT show the indicator
-    // (We don't have such a file in our test data, but the logic is tested above)
+    // resolved-only.txt has ONLY resolved threads - should NOT show indicator
+    const resolvedOnlyEntry = page.locator('.directory-entry-content:has(.entry-name:text("resolved-only.txt"))');
+    await expect(resolvedOnlyEntry).toBeVisible(); // File exists in directory
+    await expect(resolvedOnlyEntry.locator('.comment-indicator')).not.toBeVisible(); // No icon!
+
+    // Also verify the diff lines don't show comment buttons
+    const resolvedOnlyCard = page.locator('.file-card[data-filename="resolved-only.txt"]');
+    await expect(resolvedOnlyCard).toBeVisible();
+
+    // The file has a resolved thread at line 1, but should NOT show has-message button
+    const resolvedOnlyLines = resolvedOnlyCard.locator('.diff-line');
+    const hasMessageButtons = resolvedOnlyLines.locator('.diff-line-message-btn.has-message');
+    await expect(hasMessageButtons).toHaveCount(0); // No has-message buttons at all!
   });
 });
 

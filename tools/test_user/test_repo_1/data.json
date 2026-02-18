@@ -408,6 +408,37 @@
           }
         }
       ]
+    },
+    {
+      "id": "PRT_kwDOThread9999",
+      "isResolved": true,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "resolved-only.txt",
+      "originalLine": 1,
+      "line": 1,
+      "comments": {
+        "nodes": [
+          {
+            "id": "PRRC_kwDO9999",
+            "databaseId": 9999,
+            "body": "This is a resolved thread - should be invisible!",
+            "path": "resolved-only.txt",
+            "line": 1,
+            "startLine": null,
+            "diffHunk": "@@ -1 +1 @@\n-old content\n+new content",
+            "createdAt": "2024-01-15T16:00:00Z",
+            "updatedAt": "2024-01-15T16:30:00Z",
+            "author": {
+              "login": "reviewer1"
+            },
+            "pullRequestReview": {
+              "id": "PRR_6999",
+              "state": "COMMENTED"
+            }
+          }
+        ]
+      }
     }
   ]
 }
