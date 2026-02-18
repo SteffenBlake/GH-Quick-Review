@@ -112,13 +112,22 @@ function groupCommentsIntoChains(comments) {
 
 /**
  * Check if a comment chain is unresolved
- * For now, we consider all chains unresolved (no resolution API data in mock)
- * In a real implementation, this would check GitHub's resolution status
+ * A chain is unresolved if the _isResolved flag on any comment in the chain is false
  * @param {Array} chain - Array of comments in a chain
  * @returns {boolean} - True if unresolved
  */
-function isChainUnresolved(_chain) {
-  // For now, assume all chains are unresolved
+function isChainUnresolved(chain) {
+  if (!chain || chain.length === 0) {return false;}
+
+  // Check the _isResolved flag from the first comment (all comments in a thread share the same flag)
+  const firstComment = chain[0];
+
+  // If _isResolved is explicitly true, the chain is resolved
+  if (firstComment._isResolved === true) {
+    return false;
+  }
+
+  // Otherwise (false or undefined), consider it unresolved
   return true;
 }
 

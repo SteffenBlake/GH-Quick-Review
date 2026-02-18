@@ -41,9 +41,9 @@ export function useComments() {
         const threads = graphqlResponse.data.repository.pullRequest.reviewThreads.nodes;
 
         // Flatten all comments from all threads
-        // Filter threads to show:
-        // 1. Unresolved threads (isResolved === false)
-        // 2. Threads with any PENDING comment
+        // Filter threads to show ONLY unresolved threads:
+        // 1. isResolved === false (not resolved)
+        // 2. Threads with any PENDING comment (even if marked resolved)
         const allComments = [];
 
         for (const thread of threads) {
@@ -56,7 +56,7 @@ export function useComments() {
           );
           const isUnresolved = thread.isResolved === false;
 
-          // Show thread if it's unresolved OR has pending comments
+          // Show thread ONLY if it's unresolved OR has pending comments
           if (isUnresolved || hasPendingComment) {
             // Transform comments to flat structure for compatibility
             const transformedComments = comments.map(comment => ({
