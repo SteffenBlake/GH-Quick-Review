@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { token } from './authStore.js';
 import { selectedRepo } from './selectedRepoStore.js';
 import { selectedPr } from './selectedPrStore.js';
-import { setError, clearError } from './errorStore.js';
+import { setError } from './errorStore.js';
 import { githubClient } from '../utils/github-client.js';
 
 /**
@@ -34,8 +34,6 @@ export function usePrData() {
           githubClient.listPullFiles(repo, prNumber),
           githubClient.listPullReviews(repo, prNumber)
         ]);
-
-        clearError();
 
         // Find existing pending review for current user
         const currentUser = await githubClient.getUser();

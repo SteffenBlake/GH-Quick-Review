@@ -63,6 +63,9 @@ export function App() {
     clearSettings(); // Clear settings on logout
   };
 
+  // Check if there's an error - if so, only show header, error content, and footer
+  const hasError = !!errorMessage.value;
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="app" style={{ fontFamily: font }}>
@@ -73,10 +76,11 @@ export function App() {
           onLogout={handleLogout}
         />
         <HighlightThemeLoader />
-        <DirectoryBrowser />
-        <CommentModal />
-        <SettingsModal />
-        <Toast />
+        {/* Only show modals and sidebars if there's NO error */}
+        {!hasError && <DirectoryBrowser />}
+        {!hasError && <CommentModal />}
+        {!hasError && <SettingsModal />}
+        {!hasError && <Toast />}
         {!token.value ? (
           <LoginPage />
         ) : (

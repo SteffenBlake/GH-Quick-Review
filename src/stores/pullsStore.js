@@ -7,7 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { token } from './authStore.js';
 import { selectedRepo } from './selectedRepoStore.js';
-import { setError, clearError } from './errorStore.js';
+import { setError } from './errorStore.js';
 import { githubClient } from '../utils/github-client.js';
 
 /**
@@ -21,7 +21,6 @@ export function usePulls() {
     queryFn: async () => {
       try {
         const data = await githubClient.listPulls(selectedRepo.value);
-        clearError(); // Clear error on success
         return data;
       } catch (error) {
         setError(error.message || 'Failed to load pull requests');
