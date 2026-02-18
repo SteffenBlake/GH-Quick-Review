@@ -117,16 +117,16 @@ function groupCommentsIntoChains(comments) {
  * @returns {boolean} - True if unresolved
  */
 function isChainUnresolved(chain) {
-  if (!chain || chain.length === 0) return false;
-  
+  if (!chain || chain.length === 0) {return false;}
+
   // Check the _isResolved flag from the first comment (all comments in a thread share the same flag)
   const firstComment = chain[0];
-  
+
   // If _isResolved is explicitly true, the chain is resolved
   if (firstComment._isResolved === true) {
     return false;
   }
-  
+
   // Otherwise (false or undefined), consider it unresolved
   return true;
 }
