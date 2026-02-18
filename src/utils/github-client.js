@@ -528,15 +528,15 @@ class GitHubClient {
     };
 
     const result = await this.graphql(query, variables);
-    
+
     // Filter out resolved threads in memory (GitHub API doesn't support resolved argument)
     if (result?.data?.repository?.pullRequest?.reviewThreads?.nodes) {
-      result.data.repository.pullRequest.reviewThreads.nodes = 
+      result.data.repository.pullRequest.reviewThreads.nodes =
         result.data.repository.pullRequest.reviewThreads.nodes.filter(
           thread => !thread.isResolved
         );
     }
-    
+
     return result;
   }
 }

@@ -68,14 +68,14 @@ test.describe('Resolved Review Threads Filtering - Read Only', { tag: '@parallel
     // Verify we have both resolved and unresolved threads in the raw response
     const resolvedThreads = threads.filter(t => t.isResolved);
     const unresolvedThreads = threads.filter(t => !t.isResolved);
-    
+
     expect(resolvedThreads.length).toBeGreaterThan(0);
     expect(unresolvedThreads.length).toBeGreaterThan(0);
-    
+
     // Verify that the client-side filtering would work
     // (the actual filtering is done in github-client.js after receiving the data)
     const filteredThreads = threads.filter(t => !t.isResolved);
-    
+
     // All filtered threads should be unresolved
     filteredThreads.forEach(thread => {
       expect(thread.isResolved).toBe(false);
