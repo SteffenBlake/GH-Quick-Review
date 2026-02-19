@@ -108,9 +108,21 @@ function getCodeContent(line) {
  * @param {number} props.index - Line index in the hunk
  * @param {boolean} props.isSelected - Whether this line is selected/picked
  * @param {boolean} props.hasComments - Whether this line has comments
+ * @param {Array} props.commentChains - Array of comment chains for this line
+ * @param {number} props.unresolvedThreadCount - Number of unresolved threads on this line
  * @param {Function} props.onClick - Click handler
  */
-export function DiffLine({ line, lineNumber, index, filename, isSelected, hasComments, commentChain, onClick }) {
+export function DiffLine({ 
+  line, 
+  lineNumber, 
+  index, 
+  filename, 
+  isSelected, 
+  hasComments, 
+  commentChains, 
+  unresolvedThreadCount,
+  onClick 
+}) {
   const lineInfo = getLineType(line);
   const codeContent = getCodeContent(line);
   const isHunkHeader = lineInfo.type === 'hunk';
@@ -124,8 +136,12 @@ export function DiffLine({ line, lineNumber, index, filename, isSelected, hasCom
   const handleMessageClick = (e) => {
     e.stopPropagation(); // Prevent line selection
     if (hasMessage) {
-      // Show existing comment chain
-      showCommentModal({ filename, lineNumber, comments: commentChain });
+      // Show existing comment chains - use first chain for now
+      // TODO: In the future, we might want to show a picker for multiple chains
+      const firstChain = commentChains && commentChains.length > 0 ? commentChains[0] : null;
+      if (firstChain) {
+        showCommentModal({ filename, lineNumber, comments: firstChain });
+      }
     } else {
       // Create new comment
       showNewCommentModal(filename, lineNumber);
@@ -155,12 +171,17 @@ export function DiffLine({ line, lineNumber, index, filename, isSelected, hasCom
       {/* Message button gutter */}
       <span className="diff-line-message-gutter">
         {hasMessage ? (
-          <button 
-            className="diff-line-message-btn has-message"
-            onClick={handleMessageClick}
-          >
-            {ICON_MESSAGE_ALERT}
-          </button>
+          <>
+            <button 
+              className="diff-line-message-btn has-message"
+              onClick={handleMessageClick}
+            >
+              {ICON_MESSAGE_ALERT}
+            </button>
+            {unresolvedThreadCount > 0 && (
+              <span className="icon-badge-counter">{unresolvedThreadCount}</span>
+            )}
+          </>
         ) : lineNumber !== null ? (
           <button 
             className="diff-line-message-btn add-message"

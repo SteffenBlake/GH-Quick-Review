@@ -150,9 +150,14 @@ export function DirectoryEntry({ node, depth = 0 }) {
         
         {/* Comment indicator */}
         {isFile && node.commentCount > 0 && (
-          <span className="comment-indicator">
-            {'\udb80\udf62'}
-          </span>
+          <>
+            <span className="comment-indicator">
+              {'\udb80\udf62'}
+            </span>
+            {node.unresolvedThreadCount > 0 && (
+              <span className="icon-badge-counter">{node.unresolvedThreadCount}</span>
+            )}
+          </>
         )}
       </div>
       

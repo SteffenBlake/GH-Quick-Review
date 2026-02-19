@@ -24,10 +24,14 @@ export function DiffHunk({ diff, filename }) {
   };
   
   // Build a Map of line numbers to their comment chains
+  // A line can have multiple unresolved threads
   const commentChainsByLine = new Map();
   unresolvedChains.forEach(({ lineNumber, chain }) => {
     if (lineNumber) {
-      commentChainsByLine.set(lineNumber, chain);
+      if (!commentChainsByLine.has(lineNumber)) {
+        commentChainsByLine.set(lineNumber, []);
+      }
+      commentChainsByLine.get(lineNumber).push(chain);
     }
   });
   
@@ -47,15 +51,17 @@ export function DiffHunk({ diff, filename }) {
     }
     
     // Check if this line has comments
-    const commentChain = lineNumber !== null ? commentChainsByLine.get(lineNumber) : null;
-    const hasComments = commentChain !== null && commentChain !== undefined;
+    const commentChains = lineNumber !== null ? commentChainsByLine.get(lineNumber) : null;
+    const hasComments = commentChains && commentChains.length > 0;
+    const unresolvedThreadCount = hasComments ? commentChains.length : 0;
     
     return {
       line,
       lineNumber,
       index,
       hasComments,
-      commentChain
+      commentChains,
+      unresolvedThreadCount
     };
   });
   
@@ -70,7 +76,8 @@ export function DiffHunk({ diff, filename }) {
           filename={filename}
           isSelected={selectedLine === lineData.index}
           hasComments={lineData.hasComments}
-          commentChain={lineData.commentChain}
+          commentChains={lineData.commentChains}
+          unresolvedThreadCount={lineData.unresolvedThreadCount}
           onClick={() => handleLineClick(lineData.index)}
         />
       ))}

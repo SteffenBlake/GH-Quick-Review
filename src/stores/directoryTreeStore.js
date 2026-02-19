@@ -23,10 +23,44 @@ function buildDirectoryTree(files, comments) {
 
   // Count comments per file
   const commentCounts = {};
+  // Count unresolved threads per file
+  const unresolvedThreadCounts = {};
+  
   if (comments) {
+    // First, count total comments per file
     comments.forEach(comment => {
       const path = comment.path || '';
       commentCounts[path] = (commentCounts[path] || 0) + 1;
+    });
+    
+    // Then, count unresolved threads per file
+    // Group by threadId and file path
+    const threadsByFile = new Map();
+    comments.forEach(comment => {
+      const path = comment.path || '';
+      const threadId = comment._threadId || comment.id;
+      
+      if (!threadsByFile.has(path)) {
+        threadsByFile.set(path, new Map());
+      }
+      
+      const fileThreads = threadsByFile.get(path);
+      if (!fileThreads.has(threadId)) {
+        // Store first comment of thread to get _isResolved flag
+        fileThreads.set(threadId, comment);
+      }
+    });
+    
+    // Count unresolved threads per file
+    threadsByFile.forEach((threads, path) => {
+      let unresolvedCount = 0;
+      threads.forEach(comment => {
+        // Thread is unresolved if _isResolved is not explicitly true
+        if (comment._isResolved !== true) {
+          unresolvedCount++;
+        }
+      });
+      unresolvedThreadCounts[path] = unresolvedCount;
     });
   }
 
@@ -45,6 +79,7 @@ function buildDirectoryTree(files, comments) {
           isFile,
           children: isFile ? null : {},
           commentCount: 0,
+          unresolvedThreadCount: 0,
           status: isFile ? file.status : null,
           additions: isFile ? file.additions : 0,
           deletions: isFile ? file.deletions : 0,
@@ -52,9 +87,10 @@ function buildDirectoryTree(files, comments) {
         };
       }
 
-      // Add comment count to file
+      // Add comment count and unresolved thread count to file
       if (isFile) {
         current[part].commentCount = commentCounts[file.filename] || 0;
+        current[part].unresolvedThreadCount = unresolvedThreadCounts[file.filename] || 0;
       }
 
       if (!isFile) {
@@ -63,31 +99,40 @@ function buildDirectoryTree(files, comments) {
     });
   });
 
-  // Bubble up comment counts to parent directories
+  // Bubble up comment counts and unresolved thread counts to parent directories
   function bubbleUpCounts(node) {
     if (!node.children) {
-      return node.commentCount || 0;
+      return {
+        comments: node.commentCount || 0,
+        unresolvedThreads: node.unresolvedThreadCount || 0
+      };
     }
 
     let totalComments = 0;
+    let totalUnresolvedThreads = 0;
     let totalAdditions = 0;
     let totalDeletions = 0;
     let totalChanges = 0;
 
     Object.values(node.children).forEach(child => {
-      const childComments = bubbleUpCounts(child);
-      totalComments += childComments;
+      const childCounts = bubbleUpCounts(child);
+      totalComments += childCounts.comments;
+      totalUnresolvedThreads += childCounts.unresolvedThreads;
       totalAdditions += child.additions || 0;
       totalDeletions += child.deletions || 0;
       totalChanges += child.changes || 0;
     });
 
     node.commentCount = totalComments;
+    node.unresolvedThreadCount = totalUnresolvedThreads;
     node.additions = totalAdditions;
     node.deletions = totalDeletions;
     node.changes = totalChanges;
 
-    return totalComments;
+    return {
+      comments: totalComments,
+      unresolvedThreads: totalUnresolvedThreads
+    };
   }
 
   // Apply bubble up to all top-level nodes
