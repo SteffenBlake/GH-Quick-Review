@@ -198,6 +198,32 @@
       "start_line": null,
       "start_side": null,
       "in_reply_to_id": null
+    },
+    {
+      "id": 4002,
+      "pull_number": 1,
+      "diff_hunk": "@@ -1,4 +1,6 @@\n line 1\n line 2\n+\n+\n line 4",
+      "path": "empty-lines.txt",
+      "position": 3,
+      "original_position": 3,
+      "commit_id": "abc123def456",
+      "original_commit_id": "abc123def456",
+      "pull_request_review_id": 6001,
+      "user": {
+        "login": "reviewer1",
+        "id": 201,
+        "type": "User"
+      },
+      "body": "This is a pending comment - should be visible in directory browser!",
+      "created_at": "2024-01-15T12:00:00Z",
+      "updated_at": "2024-01-15T12:00:00Z",
+      "html_url": "https://github.com/test_user/test_repo_1/pull/1#discussion_r4002",
+      "pull_request_url": "https://api.github.com/repos/test_user/test_repo_1/pulls/1",
+      "line": 3,
+      "side": "RIGHT",
+      "start_line": null,
+      "start_side": null,
+      "in_reply_to_id": null
     }
   ],
   "reviews": [
@@ -351,7 +377,37 @@
     },
     {
       "pull_number": 1,
-      "id": "PRT_kwDOThread4001",
+      "id": "PRT_kwDOThread4001_js",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.js",
+      "originalLine": 4,
+      "line": 4,
+      "comments": [
+        {
+          "id": "PRRC_kwDO4001_js",
+          "databaseId": 4001,
+          "body": "Pending comment on app.js",
+          "path": "example.js",
+          "line": 4,
+          "startLine": null,
+          "diffHunk": "@@ -1,5 +1,8 @@\n function hello() {\n   console.log(\"Hello, world!\");\n+  console.log(\"This is a test\");\n }",
+          "createdAt": "2024-01-15T12:00:00Z",
+          "updatedAt": "2024-01-15T12:00:00Z",
+          "author": {
+            "login": "reviewer1"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6001",
+            "state": "PENDING"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 1,
+      "id": "PRT_kwDOThread4002",
       "isResolved": false,
       "isOutdated": false,
       "isCollapsed": false,
@@ -360,8 +416,8 @@
       "line": 3,
       "comments": [
         {
-          "id": "PRRC_kwDO4001",
-          "databaseId": 4001,
+          "id": "PRRC_kwDO4002",
+          "databaseId": 4002,
           "body": "This is a pending comment - should be visible in directory browser!",
           "path": "empty-lines.txt",
           "line": 3,
