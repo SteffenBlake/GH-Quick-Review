@@ -4,7 +4,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
-import { signal, computed } from '@preact/signals';
+import { signal } from '@preact/signals';
 import { setSelectedFile } from './selectedFileStore.js';
 import { setIsUserScrolling } from './scrollSyncStore.js';
 
@@ -75,7 +75,7 @@ export function clearCommentModal() {
  */
 export function getAllReviewThreadsInOrder() {
   const threads = [];
-  
+
   // Iterate through all files in directory order
   for (const file of diffsByFile.value) {
     // Iterate through all diffs in this file
@@ -89,7 +89,7 @@ export function getAllReviewThreadsInOrder() {
       }
     }
   }
-  
+
   return threads;
 }
 
@@ -101,10 +101,10 @@ export function getCurrentThreadIndex() {
   if (!selectedCommentChain.value) {
     return -1;
   }
-  
+
   const threads = getAllReviewThreadsInOrder();
   const { filename, lineNumber } = selectedCommentChain.value;
-  
+
   return threads.findIndex(
     thread => thread.filename === filename && thread.lineNumber === lineNumber
   );
@@ -118,20 +118,20 @@ export function navigateToPreviousThread() {
   if (currentIndex <= 0) {
     return; // Already at first thread or not in a thread
   }
-  
+
   const threads = getAllReviewThreadsInOrder();
   const previousThread = threads[currentIndex - 1];
-  
+
   if (previousThread) {
     selectedCommentChain.value = {
       filename: previousThread.filename,
       lineNumber: previousThread.lineNumber
     };
     selectedCommentLocation.value = null;
-    
+
     // Scroll to the thread location
     scrollToThread(previousThread.filename, previousThread.lineNumber);
-    
+
     // Focus the modal
     if (modalRef && modalRef.current) {
       modalRef.current.focus();
@@ -145,23 +145,23 @@ export function navigateToPreviousThread() {
 export function navigateToNextThread() {
   const currentIndex = getCurrentThreadIndex();
   const threads = getAllReviewThreadsInOrder();
-  
+
   if (currentIndex < 0 || currentIndex >= threads.length - 1) {
     return; // Not in a thread or already at last thread
   }
-  
+
   const nextThread = threads[currentIndex + 1];
-  
+
   if (nextThread) {
     selectedCommentChain.value = {
       filename: nextThread.filename,
       lineNumber: nextThread.lineNumber
     };
     selectedCommentLocation.value = null;
-    
+
     // Scroll to the thread location
     scrollToThread(nextThread.filename, nextThread.lineNumber);
-    
+
     // Focus the modal
     if (modalRef && modalRef.current) {
       modalRef.current.focus();
@@ -179,16 +179,16 @@ function scrollToThread(filename, lineNumber) {
   setTimeout(() => {
     // Set flag to indicate we're programmatically scrolling
     setIsUserScrolling(false);
-    
+
     // Select the file - this will trigger directory browser scrolling via DirectoryEntry
     setSelectedFile(filename);
-    
+
     // Scroll to the file card
     const fileCard = document.querySelector(`[data-filename="${filename}"]`);
     if (fileCard) {
       fileCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    
+
     // After file card scrolls, scroll to the specific line
     setTimeout(() => {
       const diffLine = document.querySelector(
@@ -197,7 +197,7 @@ function scrollToThread(filename, lineNumber) {
       if (diffLine) {
         diffLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      
+
       // Reset flag after scroll animation completes
       setTimeout(() => {
         setIsUserScrolling(true);
