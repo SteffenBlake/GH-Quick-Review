@@ -427,10 +427,10 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await expect(submitButton).toBeEnabled(); // Wait for button to be enabled after typing
       await submitButton.click();
 
-      // The modal should transition from "New Comment" to "Comment Thread"
+      // The modal should transition from "New Comment" to "Comment Thread - <filename>:"
       // Make sure we're checking the FOCUSED modal, not some other modal on the page
       const modal = page.locator('.comment-modal:focus');
-      await expect(modal.locator('h2')).toContainText('Comment Thread', { timeout: 2000 });
+      await expect(modal.locator('h2')).toContainText('Comment Thread -', { timeout: 2000 });
 
       // The comment should appear immediately in the modal
       await expect(modal.locator('.comment-item')).toHaveCount(1);
@@ -490,7 +490,7 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Modal should appear and be focused
       const modal = page.locator('.comment-modal:focus');
       await expect(modal).toBeVisible({ timeout: 1000 });
-      await expect(modal.locator('h2')).toContainText('Comment Thread');
+      await expect(modal.locator('h2')).toContainText('Comment Thread -');
 
       // Verify resolve button exists
       const resolveButton = modal.locator('.comment-modal-resolve-btn');

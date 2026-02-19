@@ -339,7 +339,9 @@ export function CommentModal() {
         {/* Header with navigation and Resolve buttons */}
         <div className="comment-modal-header">
           <h2>
-            {isNewComment ? 'New Comment' : 'Comment Thread'}
+            {isNewComment 
+              ? `New Comment - ${selectedCommentLocation.value?.filename}:` 
+              : `Comment Thread - ${selectedCommentChain.value?.filename}:`}
           </h2>
           <div className="comment-modal-header-actions">
             {canNavigate && (
