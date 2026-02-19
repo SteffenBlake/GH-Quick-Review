@@ -5,6 +5,8 @@
  */
 
 import { signal } from '@preact/signals';
+import { setSelectedFile } from './selectedFileStore.js';
+import { setIsUserScrolling } from './scrollSyncStore.js';
 
 // Currently selected comment chain (null when no chain is selected)
 export const selectedCommentChain = signal(null);
@@ -14,6 +16,10 @@ export const selectedCommentLocation = signal(null);
 
 // Ref to the modal element for direct focus control
 let modalRef = null;
+
+// Store reference to diffsByFile for navigation
+// This will be set by DiffViewer when it renders
+export const diffsByFile = signal([]);
 
 /**
  * Register the modal ref so we can focus it directly
@@ -61,4 +67,141 @@ export function showNewCommentModal(filename, lineNumber) {
 export function clearCommentModal() {
   selectedCommentChain.value = null;
   selectedCommentLocation.value = null;
+}
+
+/**
+ * Get all review threads in order (by file directory order, then line number)
+ * @returns {Array} Array of {filename, lineNumber} objects representing all review threads
+ */
+export function getAllReviewThreadsInOrder() {
+  const threads = [];
+
+  // Iterate through all files in directory order
+  for (const file of diffsByFile.value) {
+    // Iterate through all diffs in this file
+    for (const diff of file.diffs) {
+      // Get all unresolved chains in this diff
+      for (const { lineNumber } of diff.unresolvedChains) {
+        threads.push({
+          filename: file.filename,
+          lineNumber
+        });
+      }
+    }
+  }
+
+  return threads;
+}
+
+/**
+ * Get the index of the current review thread in the ordered list
+ * @returns {number} Index of current thread, or -1 if not found
+ */
+export function getCurrentThreadIndex() {
+  if (!selectedCommentChain.value) {
+    return -1;
+  }
+
+  const threads = getAllReviewThreadsInOrder();
+  const { filename, lineNumber } = selectedCommentChain.value;
+
+  return threads.findIndex(
+    thread => thread.filename === filename && thread.lineNumber === lineNumber
+  );
+}
+
+/**
+ * Navigate to the previous review thread
+ */
+export function navigateToPreviousThread() {
+  const currentIndex = getCurrentThreadIndex();
+  if (currentIndex <= 0) {
+    return; // Already at first thread or not in a thread
+  }
+
+  const threads = getAllReviewThreadsInOrder();
+  const previousThread = threads[currentIndex - 1];
+
+  if (previousThread) {
+    selectedCommentChain.value = {
+      filename: previousThread.filename,
+      lineNumber: previousThread.lineNumber
+    };
+    selectedCommentLocation.value = null;
+
+    // Scroll to the thread location
+    scrollToThread(previousThread.filename, previousThread.lineNumber);
+
+    // Focus the modal
+    if (modalRef && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }
+}
+
+/**
+ * Navigate to the next review thread
+ */
+export function navigateToNextThread() {
+  const currentIndex = getCurrentThreadIndex();
+  const threads = getAllReviewThreadsInOrder();
+
+  if (currentIndex < 0 || currentIndex >= threads.length - 1) {
+    return; // Not in a thread or already at last thread
+  }
+
+  const nextThread = threads[currentIndex + 1];
+
+  if (nextThread) {
+    selectedCommentChain.value = {
+      filename: nextThread.filename,
+      lineNumber: nextThread.lineNumber
+    };
+    selectedCommentLocation.value = null;
+
+    // Scroll to the thread location
+    scrollToThread(nextThread.filename, nextThread.lineNumber);
+
+    // Focus the modal
+    if (modalRef && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }
+}
+
+/**
+ * Scroll to a specific thread location in the diff and file browser
+ * @param {string} filename - The file path
+ * @param {number} lineNumber - The line number
+ */
+function scrollToThread(filename, lineNumber) {
+  // Use setTimeout to allow the modal update to complete first
+  setTimeout(() => {
+    // Set flag to indicate we're programmatically scrolling
+    setIsUserScrolling(false);
+
+    // Select the file - this will trigger directory browser scrolling via DirectoryEntry
+    setSelectedFile(filename);
+
+    // Scroll to the file card
+    const fileCard = document.querySelector(`[data-filename="${filename}"]`);
+    if (fileCard) {
+      fileCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // After file card scrolls, scroll to the specific line
+    setTimeout(() => {
+      const diffLine = document.querySelector(
+        `[data-filename="${filename}"][data-line-number="${lineNumber}"]`
+      );
+      if (diffLine) {
+        diffLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Reset flag after scroll animation completes
+      setTimeout(() => {
+        setIsUserScrolling(true);
+      }, 1000);
+    }, 300);
+  }, 100);
 }
