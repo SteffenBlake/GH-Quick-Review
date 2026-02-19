@@ -35,7 +35,7 @@ test.describe('File Navigation and Sticky Headers', { tag: '@parallel' }, () => 
       await page.waitForTimeout(1500);
 
       // Verify the example.js file card is near the top of the viewport
-      const fileCard = page.locator('[data-filename="example.js"]');
+      const fileCard = page.locator('.file-card[data-filename="example.js"]');
       const boundingBox = await fileCard.boundingBox();
 
       expect(boundingBox).not.toBeNull();
