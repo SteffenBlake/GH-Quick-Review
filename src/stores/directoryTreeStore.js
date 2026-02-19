@@ -25,32 +25,32 @@ function buildDirectoryTree(files, comments) {
   const commentCounts = {};
   // Count unresolved threads per file
   const unresolvedThreadCounts = {};
-  
+
   if (comments) {
     // First, count total comments per file
     comments.forEach(comment => {
       const path = comment.path || '';
       commentCounts[path] = (commentCounts[path] || 0) + 1;
     });
-    
+
     // Then, count unresolved threads per file
     // Group by threadId and file path
     const threadsByFile = new Map();
     comments.forEach(comment => {
       const path = comment.path || '';
       const threadId = comment._threadId || comment.id;
-      
+
       if (!threadsByFile.has(path)) {
         threadsByFile.set(path, new Map());
       }
-      
+
       const fileThreads = threadsByFile.get(path);
       if (!fileThreads.has(threadId)) {
         // Store first comment of thread to get _isResolved flag
         fileThreads.set(threadId, comment);
       }
     });
-    
+
     // Count unresolved threads per file
     threadsByFile.forEach((threads, path) => {
       let unresolvedCount = 0;
