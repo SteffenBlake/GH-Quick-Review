@@ -1648,4 +1648,13 @@ body {
   opacity: 0.9;
 }
 
-
+/* apply to spans to add "overlay" text overtop of an icon */
+.icon-badge-counter {
+  position: absolute;
+  left: 1.1rem;
+  top: 0.1rem;
+  font-size: x-small;
+  color: rgb(251, 191, 36);
+  font-weight: 900;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
