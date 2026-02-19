@@ -113,8 +113,12 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
       const messageButtonsBefore = page.locator('.diff-line-message-btn.has-message');
       const countBefore = await messageButtonsBefore.count();
 
-      // PR #1 has 3 comments total (all should have message buttons)
-      expect(countBefore).toBe(3);
+      // PR #1 has 4 unresolved threads total (all should have message buttons):
+      // - empty-lines.txt line 3
+      // - example.cs line 32
+      // - example.js line 4
+      // - example.js line 15
+      expect(countBefore).toBe(4);
       expect(countBefore).toBeGreaterThan(0);
 
       // Reload the page to simulate user refresh
@@ -126,7 +130,7 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
       // Count message buttons after reload - should be the same
       const messageButtonsAfter = page.locator('.diff-line-message-btn.has-message');
       const countAfter = await messageButtonsAfter.count();
-      expect(countAfter).toBe(3);
+      expect(countAfter).toBe(4);
       expect(countAfter).toBe(countBefore);
 
       // Now find and verify the pending comment still has its badge
@@ -193,9 +197,13 @@ test.describe('Pending Review Comments', { tag: '@parallel' }, () => {
       // PR #1 has 3 comments total:
       // - Comment 1001 (submitted, example.js line 15)
       // - Comment 1002 (submitted, example.cs line 32)
-      // - Comment 4001 (pending, example.js line 4)
+      // PR #1 has 4 unresolved threads:
+      // - empty-lines.txt line 3 (pending)
+      // - example.cs line 32
+      // - example.js line 4 (pending)
+      // - example.js line 15
       // All should be displayed as message buttons
-      expect(count).toBe(3);
+      expect(count).toBe(4);
 
       // Also verify count is greater than 0 for backwards compatibility
       expect(count).toBeGreaterThan(0);

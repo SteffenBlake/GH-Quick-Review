@@ -42,13 +42,15 @@ test.describe('Unresolved Thread Badge Counters', { tag: '@parallel' }, () => {
     // Wait for directory entries to render
     await expect(page.locator('.directory-entry').first()).toBeVisible({ timeout: 1000 });
 
-    // example.js has 1 unresolved thread (PRT_kwDOThread1001 at line 15)
+    // example.js has 2 unresolved threads:
+    // - PRT_kwDOThread4001_js at line 4 (pending)
+    // - PRT_kwDOThread1001 at line 15
     // and 1 RESOLVED thread (PRT_kwDOThread1003 at line 20) - resolved threads don't count!
     const exampleJsEntry = page.locator('.directory-entry-content:has(.entry-name:text("example.js"))');
     await expect(exampleJsEntry.locator('.comment-indicator')).toBeVisible();
     const exampleJsBadge = exampleJsEntry.locator('.icon-badge-counter');
     await expect(exampleJsBadge).toBeVisible();
-    await expect(exampleJsBadge).toHaveText('1');
+    await expect(exampleJsBadge).toHaveText('2');
 
     // example.cs has 1 unresolved thread (PRT_kwDOThread1002 at line 32)
     // and 1 RESOLVED thread (PRT_kwDOThread1004 at line 40) - resolved threads don't count!

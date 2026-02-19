@@ -74,7 +74,22 @@ test.describe('Review Thread Navigation', { tag: '@parallel' }, () => {
       // Modal should still be focused
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
 
-      // Verify we're on the third thread (example.js, line 15)
+      // Verify we're on the third thread (example.js, line 4)
+      await expect(page.locator('.comment-item-body').first()).toContainText(
+        'Pending comment on app.js'
+      );
+
+      // Middle thread: both buttons should be enabled
+      await expect(prevButton).toBeEnabled();
+      await expect(nextButton).toBeEnabled();
+
+      // Navigate to next thread again
+      await nextButton.click();
+
+      // Modal should still be focused
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+
+      // Verify we're on the fourth thread (example.js, line 15)
       await expect(page.locator('.comment-item-body').first()).toContainText(
         'Good improvement! Consider also validating the token format'
       );
@@ -84,6 +99,21 @@ test.describe('Review Thread Navigation', { tag: '@parallel' }, () => {
       await expect(nextButton).toBeDisabled();
 
       // Navigate back to previous thread
+      await prevButton.click();
+
+      // Modal should still be focused
+      await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
+
+      // Verify we're back on the third thread (example.js, line 4)
+      await expect(page.locator('.comment-item-body').first()).toContainText(
+        'Pending comment on app.js'
+      );
+
+      // Middle thread: both buttons should be enabled
+      await expect(prevButton).toBeEnabled();
+      await expect(nextButton).toBeEnabled();
+
+      // Navigate back to second thread
       await prevButton.click();
 
       // Modal should still be focused

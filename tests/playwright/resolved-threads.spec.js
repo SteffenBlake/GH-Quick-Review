@@ -157,6 +157,11 @@ test.describe('Resolved Review Threads Filtering - Read Only', { tag: '@parallel
     // Find diff lines in example.js
     const diffLines = exampleJsCard.locator('.diff-line');
 
+    // Line 4 has an unresolved thread (pending) - should show message button
+    const line4 = diffLines.filter({ has: page.locator('.diff-line-number:text("4")') }).first();
+    await expect(line4).toBeVisible();
+    await expect(line4.locator('.diff-line-message-btn.has-message')).toBeVisible();
+
     // Line 15 has an unresolved thread - should show message button
     const line15 = diffLines.filter({ has: page.locator('.diff-line-number:text("15")') }).first();
     await expect(line15).toBeVisible();
@@ -166,11 +171,11 @@ test.describe('Resolved Review Threads Filtering - Read Only', { tag: '@parallel
     // - Have no comments (show add-message button)
     // - Have only resolved comments (show add-message button, not has-message)
     // We can't easily test for "line 20 specifically" because it might not be in the diff
-    // Instead, we verify that only line 15 shows the has-message button
+    // Instead, we verify that only lines 4 and 15 show the has-message button
 
-    // Count how many lines have the has-message button - should be exactly 1 (line 15)
+    // Count how many lines have the has-message button - should be exactly 2 (lines 4 and 15)
     const hasMessageButtons = exampleJsCard.locator('.diff-line-message-btn.has-message');
-    await expect(hasMessageButtons).toHaveCount(1);
+    await expect(hasMessageButtons).toHaveCount(2);
   });
 
   test('should exclude resolved threads when counting comments for files', async ({ page }) => {
@@ -250,7 +255,7 @@ test.describe('Resolved Review Threads Filtering - Dynamic Resolution', { tag: '
     await expect(page.locator('.directory-browser')).toBeVisible({ timeout: 1000 });
     await expect(page.locator('.directory-entry').first()).toBeVisible({ timeout: 1000 });
 
-    // Verify empty-lines.txt has a comment indicator initially (unresolved thread PRT_kwDOThread4001)
+    // Verify empty-lines.txt has a comment indicator initially (unresolved thread PRT_kwDOThread4002)
     const emptyLinesEntry = page.locator('.directory-entry-content:has(.entry-name:text("empty-lines.txt"))');
     await expect(emptyLinesEntry.locator('.comment-indicator')).toBeVisible();
 
@@ -270,7 +275,7 @@ test.describe('Resolved Review Threads Filtering - Dynamic Resolution', { tag: '
     // Now resolve the thread via GraphQL mutation
     const resolveResponse = await request.post('http://localhost:3000/graphql', {
       data: {
-        query: 'mutation { resolveReviewThread(input: {threadId: "PRT_kwDOThread4001"}) { thread { id isResolved } } }'
+        query: 'mutation { resolveReviewThread(input: {threadId: "PRT_kwDOThread4002"}) { thread { id isResolved } } }'
       }
     });
 
