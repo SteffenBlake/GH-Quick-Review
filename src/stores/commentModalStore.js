@@ -71,10 +71,11 @@ export function clearCommentModal() {
 
 /**
  * Get all review threads in order (by file directory order, then line number)
- * @returns {Array} Array of {filename, lineNumber} objects representing all review threads
+ * Returns only unique file+line combinations (groups multiple threads on same line)
+ * @returns {Array} Array of {filename, lineNumber} objects representing unique thread locations
  */
 export function getAllReviewThreadsInOrder() {
-  const threads = [];
+  const uniqueThreads = new Map(); // Use Map to dedupe by "filename:lineNumber" key
 
   // Iterate through all files in directory order
   for (const file of diffsByFile.value) {
@@ -82,15 +83,19 @@ export function getAllReviewThreadsInOrder() {
     for (const diff of file.diffs) {
       // Get all unresolved chains in this diff
       for (const { lineNumber } of diff.unresolvedChains) {
-        threads.push({
-          filename: file.filename,
-          lineNumber
-        });
+        const key = `${file.filename}:${lineNumber}`;
+        // Only add if we haven't seen this file+line combination yet
+        if (!uniqueThreads.has(key)) {
+          uniqueThreads.set(key, {
+            filename: file.filename,
+            lineNumber
+          });
+        }
       }
     }
   }
 
-  return threads;
+  return Array.from(uniqueThreads.values());
 }
 
 /**
@@ -162,7 +167,6 @@ export function hasPreviousThread() {
 
 /**
  * Navigate to the previous review thread
- * Skips to the previous thread on a DIFFERENT line than the current one
  */
 export function navigateToPreviousThread() {
   const currentIndex = getCurrentThreadIndex();
@@ -171,20 +175,7 @@ export function navigateToPreviousThread() {
   }
 
   const threads = getAllReviewThreadsInOrder();
-  const currentThread = threads[currentIndex];
-  const currentLine = currentThread.lineNumber;
-  const currentFilename = currentThread.filename;
-
-  // Find the previous thread on a DIFFERENT line
-  let previousThread = null;
-  for (let i = currentIndex - 1; i >= 0; i--) {
-    const thread = threads[i];
-    // Skip threads on the same file and line as current thread
-    if (thread.filename !== currentFilename || thread.lineNumber !== currentLine) {
-      previousThread = thread;
-      break;
-    }
-  }
+  const previousThread = threads[currentIndex - 1];
 
   if (previousThread) {
     selectedCommentChain.value = {
@@ -205,7 +196,6 @@ export function navigateToPreviousThread() {
 
 /**
  * Navigate to the next review thread
- * Skips to the next thread on a DIFFERENT line than the current one
  */
 export function navigateToNextThread() {
   const currentIndex = getCurrentThreadIndex();
@@ -215,20 +205,7 @@ export function navigateToNextThread() {
     return; // Not in a thread or already at last thread
   }
 
-  const currentThread = threads[currentIndex];
-  const currentLine = currentThread.lineNumber;
-  const currentFilename = currentThread.filename;
-
-  // Find the next thread on a DIFFERENT line
-  let nextThread = null;
-  for (let i = currentIndex + 1; i < threads.length; i++) {
-    const thread = threads[i];
-    // Skip threads on the same file and line as current thread
-    if (thread.filename !== currentFilename || thread.lineNumber !== currentLine) {
-      nextThread = thread;
-      break;
-    }
-  }
+  const nextThread = threads[currentIndex + 1];
 
   if (nextThread) {
     selectedCommentChain.value = {
