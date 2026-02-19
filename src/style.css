@@ -1123,6 +1123,29 @@ body {
   font-size: 1.25rem;
 }
 
+.comment-modal-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.comment-nav-btn {
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+.comment-nav-btn:hover:not(:disabled) {
+  background-color: rgba(251, 191, 36, 0.1);
+  border-color: #fbbf24;
+}
+
+.comment-nav-btn:disabled {
+  color: var(--text-secondary);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .comment-modal-resolve-btn {
   background-color: var(--accent);
   color: var(--bg-primary);

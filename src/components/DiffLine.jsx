@@ -161,6 +161,8 @@ export function DiffLine({
       className={`diff-line diff-line-${lineInfo.type} ${isSelected ? 'selected' : ''}`}
       onClick={onClick}
       tabIndex={0}
+      data-filename={filename}
+      data-line-number={lineNumber}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();

@@ -11,7 +11,11 @@ import {
   selectedCommentLocation,
   clearCommentModal,
   registerModalRef,
-  showCommentModal
+  showCommentModal,
+  navigateToPreviousThread,
+  navigateToNextThread,
+  getCurrentThreadIndex,
+  getAllReviewThreadsInOrder,
 } from '../stores/commentModalStore';
 import {
   useComments,
@@ -36,6 +40,8 @@ import { githubClient } from '../utils/github-client';
 const ICON_PENCIL = '\udb81\ude4f';
 const ICON_X = '\uf467';
 const ICON_SAVE = '\udb80\udd93';
+const ICON_DOUBLE_CHEVRON_LEFT = '\udb80\udd3d';
+const ICON_DOUBLE_CHEVRON_RIGHT = '\udb80\udd3e';
 
 /**
  * Modal for displaying and managing comment chains on PR lines
@@ -309,6 +315,13 @@ export function CommentModal() {
     isCurrentUser: currentUser && comment.user.login === currentUser.login
   }));
 
+  // Calculate navigation state
+  const allThreads = getAllReviewThreadsInOrder();
+  const currentThreadIndex = getCurrentThreadIndex();
+  const isFirstThread = currentThreadIndex === 0;
+  const isLastThread = currentThreadIndex === allThreads.length - 1;
+  const canNavigate = hasCommentChain && allThreads.length > 1;
+
   return (
     <div 
       ref={modalRef}
@@ -323,19 +336,43 @@ export function CommentModal() {
         </div>
       ) : (
         <>
-        {/* Header with Resolve button */}
+        {/* Header with navigation and Resolve buttons */}
         <div className="comment-modal-header">
           <h2>
             {isNewComment ? 'New Comment' : 'Comment Thread'}
           </h2>
-          {hasCommentChain && (
-            <button 
-              className="comment-modal-resolve-btn"
-              onClick={handleResolve}
-            >
-              Resolve
-            </button>
-          )}
+          <div className="comment-modal-header-actions">
+            {canNavigate && (
+              <>
+                <button
+                  className="comment-action-btn comment-nav-btn"
+                  onClick={navigateToPreviousThread}
+                  disabled={isFirstThread}
+                  title="Previous thread"
+                  data-testid="prev-thread-btn"
+                >
+                  {ICON_DOUBLE_CHEVRON_LEFT}
+                </button>
+                <button
+                  className="comment-action-btn comment-nav-btn"
+                  onClick={navigateToNextThread}
+                  disabled={isLastThread}
+                  title="Next thread"
+                  data-testid="next-thread-btn"
+                >
+                  {ICON_DOUBLE_CHEVRON_RIGHT}
+                </button>
+              </>
+            )}
+            {hasCommentChain && (
+              <button 
+                className="comment-modal-resolve-btn"
+                onClick={handleResolve}
+              >
+                Resolve
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Comment chain (scrollable) */}

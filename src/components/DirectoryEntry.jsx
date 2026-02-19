@@ -105,7 +105,7 @@ export function DirectoryEntry({ node, depth = 0 }) {
   const chevronIcon = !isFile ? (isExpanded ? '\uf078' : '\uf054') : null;
   
   return (
-    <li className="directory-entry" ref={entryRef}>
+    <li className="directory-entry" ref={entryRef} data-testid={`directory-entry-${node.path}`}>
       <div
         className={`directory-entry-content ${isSelected ? 'selected' : ''}`}
         style={{ paddingLeft: `${depth * 0.75}rem` }}

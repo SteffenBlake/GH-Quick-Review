@@ -4,7 +4,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  */
 
+import { useEffect } from 'preact/hooks';
 import { useDiffsByFile } from '../stores/diffsByFileStore.js';
+import { diffsByFile as diffsByFileSignal } from '../stores/commentModalStore.js';
 import { FileCard } from './FileCard.jsx';
 import { LoadingSpinner } from './LoadingSpinner.jsx';
 
@@ -13,6 +15,11 @@ import { LoadingSpinner } from './LoadingSpinner.jsx';
  */
 export function DiffViewer() {
   const { diffsByFile, isLoading, error } = useDiffsByFile();
+
+  // Update the diffsByFile signal when data changes
+  useEffect(() => {
+    diffsByFileSignal.value = diffsByFile || [];
+  }, [diffsByFile]);
 
   if (isLoading) {
     return (
