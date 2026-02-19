@@ -287,6 +287,36 @@
     },
     {
       "pull_number": 1,
+      "id": "PRT_kwDOThread1001_dup",
+      "isResolved": false,
+      "isOutdated": false,
+      "isCollapsed": false,
+      "path": "example.js",
+      "originalLine": 15,
+      "line": 15,
+      "comments": [
+        {
+          "id": "PRRC_kwDO1001_dup",
+          "databaseId": 1011,
+          "body": "SECOND thread on same line 15 - navigation should skip to next DIFFERENT line!",
+          "path": "example.js",
+          "line": 15,
+          "startLine": null,
+          "diffHunk": "@@ -10,7 +10,12 @@ export const authenticate = async (req, res, next) => {\n   const token = req.headers.authorization;\n-  if (!token) {\n-    return res.status(401).json({ error: 'No token provided' });\n+  if (!token || !token.startsWith('Bearer ')) {\n+    return res.status(401).json({ \n+      error: 'No token provided',\n+      message: 'Authorization header must include Bearer token'\n+    });",
+          "createdAt": "2024-01-15T11:05:00Z",
+          "updatedAt": "2024-01-15T11:05:00Z",
+          "author": {
+            "login": "reviewer2"
+          },
+          "pullRequestReview": {
+            "id": "PRR_6004",
+            "state": "COMMENTED"
+          }
+        }
+      ]
+    },
+    {
+      "pull_number": 1,
       "id": "PRT_kwDOThread1002",
       "isResolved": false,
       "isOutdated": false,

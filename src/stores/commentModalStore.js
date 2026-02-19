@@ -71,10 +71,11 @@ export function clearCommentModal() {
 
 /**
  * Get all review threads in order (by file directory order, then line number)
- * @returns {Array} Array of {filename, lineNumber} objects representing all review threads
+ * Returns only unique file+line combinations (groups multiple threads on same line)
+ * @returns {Array} Array of {filename, lineNumber} objects representing unique thread locations
  */
 export function getAllReviewThreadsInOrder() {
-  const threads = [];
+  const uniqueThreads = new Map(); // Use Map to dedupe by "filename:lineNumber" key
 
   // Iterate through all files in directory order
   for (const file of diffsByFile.value) {
@@ -82,15 +83,19 @@ export function getAllReviewThreadsInOrder() {
     for (const diff of file.diffs) {
       // Get all unresolved chains in this diff
       for (const { lineNumber } of diff.unresolvedChains) {
-        threads.push({
-          filename: file.filename,
-          lineNumber
-        });
+        const key = `${file.filename}:${lineNumber}`;
+        // Only add if we haven't seen this file+line combination yet
+        if (!uniqueThreads.has(key)) {
+          uniqueThreads.set(key, {
+            filename: file.filename,
+            lineNumber
+          });
+        }
       }
     }
   }
 
-  return threads;
+  return Array.from(uniqueThreads.values());
 }
 
 /**

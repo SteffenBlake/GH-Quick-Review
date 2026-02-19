@@ -409,9 +409,13 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Click the message button to start a new thread
       await messageButton.click();
 
-      // Modal should appear in "New Comment" mode
+      // Get the filename and line number from the line's data attributes for assertion
+      const filename = await lineWithoutComments.getAttribute('data-filename');
+      const lineNumber = await lineWithoutComments.locator('.diff-line-number').first().textContent();
+
+      // Modal should appear in "New Comment - <filename>:<lineNumber>" mode
       await expect(page.locator('.comment-modal')).toBeFocused({ timeout: 1000 });
-      await expect(page.locator('.comment-modal h2')).toContainText('New Comment');
+      await expect(page.locator('.comment-modal h2')).toHaveText(`New Comment - ${filename}:${lineNumber}`);
 
       // No comments should be visible yet (it's a new thread)
       await expect(page.locator('.comment-item')).toHaveCount(0);
@@ -427,10 +431,10 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       await expect(submitButton).toBeEnabled(); // Wait for button to be enabled after typing
       await submitButton.click();
 
-      // The modal should transition from "New Comment" to "Comment Thread"
+      // The modal should transition from "New Comment - <filename>:<lineNumber>" to "Comment Thread - <filename>:<lineNumber>"
       // Make sure we're checking the FOCUSED modal, not some other modal on the page
       const modal = page.locator('.comment-modal:focus');
-      await expect(modal.locator('h2')).toContainText('Comment Thread', { timeout: 2000 });
+      await expect(modal.locator('h2')).toHaveText(`Comment Thread - ${filename}:${lineNumber}`, { timeout: 2000 });
 
       // The comment should appear immediately in the modal
       await expect(modal.locator('.comment-item')).toHaveCount(1);
@@ -490,7 +494,8 @@ test.describe('Comment Management', { tag: '@serial' }, () => {
       // Modal should appear and be focused
       const modal = page.locator('.comment-modal:focus');
       await expect(modal).toBeVisible({ timeout: 1000 });
-      await expect(modal.locator('h2')).toContainText('Comment Thread');
+      // Verify header shows "Comment Thread - example.cs:32" (the file and line we clicked on)
+      await expect(modal.locator('h2')).toHaveText('Comment Thread - example.cs:32');
 
       // Verify resolve button exists
       const resolveButton = modal.locator('.comment-modal-resolve-btn');
