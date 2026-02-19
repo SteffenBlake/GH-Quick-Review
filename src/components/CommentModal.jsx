@@ -16,8 +16,6 @@ import {
   navigateToNextThread,
   getCurrentThreadIndex,
   getAllReviewThreadsInOrder,
-  hasNextThread,
-  hasPreviousThread,
 } from '../stores/commentModalStore';
 import {
   useComments,
@@ -320,8 +318,8 @@ export function CommentModal() {
   // Calculate navigation state
   const allThreads = getAllReviewThreadsInOrder();
   const currentThreadIndex = getCurrentThreadIndex();
-  const isFirstThread = !hasPreviousThread();
-  const isLastThread = !hasNextThread();
+  const isFirstThread = currentThreadIndex === 0;
+  const isLastThread = currentThreadIndex === allThreads.length - 1;
   const canNavigate = hasCommentChain && allThreads.length > 1;
 
   return (

@@ -116,56 +116,6 @@ export function getCurrentThreadIndex() {
 }
 
 /**
- * Check if there is a next thread on a DIFFERENT line than the current one
- * @returns {boolean} True if there is a navigable next thread
- */
-export function hasNextThread() {
-  const currentIndex = getCurrentThreadIndex();
-  if (currentIndex < 0) {return false;}
-
-  const threads = getAllReviewThreadsInOrder();
-  const currentThread = threads[currentIndex];
-  if (!currentThread) {return false;}
-
-  const currentLine = currentThread.lineNumber;
-  const currentFilename = currentThread.filename;
-
-  // Check if there's any thread after current that's on a different line
-  for (let i = currentIndex + 1; i < threads.length; i++) {
-    const thread = threads[i];
-    if (thread.filename !== currentFilename || thread.lineNumber !== currentLine) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Check if there is a previous thread on a DIFFERENT line than the current one
- * @returns {boolean} True if there is a navigable previous thread
- */
-export function hasPreviousThread() {
-  const currentIndex = getCurrentThreadIndex();
-  if (currentIndex <= 0) {return false;}
-
-  const threads = getAllReviewThreadsInOrder();
-  const currentThread = threads[currentIndex];
-  if (!currentThread) {return false;}
-
-  const currentLine = currentThread.lineNumber;
-  const currentFilename = currentThread.filename;
-
-  // Check if there's any thread before current that's on a different line
-  for (let i = currentIndex - 1; i >= 0; i--) {
-    const thread = threads[i];
-    if (thread.filename !== currentFilename || thread.lineNumber !== currentLine) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Navigate to the previous review thread
  */
 export function navigateToPreviousThread() {
