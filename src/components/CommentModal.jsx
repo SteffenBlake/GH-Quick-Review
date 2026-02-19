@@ -340,8 +340,8 @@ export function CommentModal() {
         <div className="comment-modal-header">
           <h2>
             {isNewComment 
-              ? `New Comment - ${selectedCommentLocation.value?.filename}:` 
-              : `Comment Thread - ${selectedCommentChain.value?.filename}:`}
+              ? `New Comment - ${selectedCommentLocation.value?.filename}:${selectedCommentLocation.value?.lineNumber}` 
+              : `Comment Thread - ${selectedCommentChain.value?.filename}:${selectedCommentChain.value?.lineNumber}`}
           </h2>
           <div className="comment-modal-header-actions">
             {canNavigate && (
