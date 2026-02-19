@@ -295,6 +295,11 @@ function processDiffsByFile(prData, tree, mergedComments) {
       }
     });
 
+    // Sort unresolvedChains within each diff by line number
+    diffsWithChains.forEach(diff => {
+      diff.unresolvedChains.sort((a, b) => a.lineNumber - b.lineNumber);
+    });
+
     return {
       filename: filePath,
       status: file.status,
