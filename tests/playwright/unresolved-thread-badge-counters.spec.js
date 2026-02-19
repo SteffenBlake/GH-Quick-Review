@@ -42,15 +42,16 @@ test.describe('Unresolved Thread Badge Counters', { tag: '@parallel' }, () => {
     // Wait for directory entries to render
     await expect(page.locator('.directory-entry').first()).toBeVisible({ timeout: 1000 });
 
-    // example.js has 2 unresolved threads:
+    // example.js has 3 unresolved threads:
     // - PRT_kwDOThread4001_js at line 4 (pending)
     // - PRT_kwDOThread1001 at line 15
+    // - PRT_kwDOThread1001_dup at line 15 (second thread on same line)
     // and 1 RESOLVED thread (PRT_kwDOThread1003 at line 20) - resolved threads don't count!
     const exampleJsEntry = page.locator('.directory-entry-content:has(.entry-name:text("example.js"))');
     await expect(exampleJsEntry.locator('.comment-indicator')).toBeVisible();
     const exampleJsBadge = exampleJsEntry.locator('.icon-badge-counter');
     await expect(exampleJsBadge).toBeVisible();
-    await expect(exampleJsBadge).toHaveText('2');
+    await expect(exampleJsBadge).toHaveText('3');
 
     // example.cs has 1 unresolved thread (PRT_kwDOThread1002 at line 32)
     // and 1 RESOLVED thread (PRT_kwDOThread1004 at line 40) - resolved threads don't count!
@@ -151,14 +152,14 @@ test.describe('Unresolved Thread Badge Counters', { tag: '@parallel' }, () => {
     // Find diff lines in example.js
     const diffLines = exampleJsCard.locator('.diff-line');
 
-    // Line 15 has an unresolved thread - should show message button with badge count of 1
+    // Line 15 has TWO unresolved threads - should show message button with badge count of 2
     const line15 = diffLines.filter({ has: page.locator('.diff-line-number:text("15")') }).first();
     await expect(line15).toBeVisible();
     await expect(line15.locator('.diff-line-message-btn.has-message')).toBeVisible();
 
     const line15Badge = line15.locator('.icon-badge-counter');
     await expect(line15Badge).toBeVisible();
-    await expect(line15Badge).toHaveText('1');
+    await expect(line15Badge).toHaveText('2');
   });
 
   test('should not show badge on diff lines with no unresolved threads', async ({ page }) => {
